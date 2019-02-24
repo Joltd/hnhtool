@@ -9,8 +9,8 @@ package com.evgenltd.hnhtools.util;
  */
 public class ByteUtil {
 
-    public static int unsigned(int value) {
-        return value & 0xFF;
+    public static int unsigned(byte value) {
+        return ((int) value) & 0xFF;
     }
 
 }

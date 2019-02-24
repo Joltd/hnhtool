@@ -10,19 +10,25 @@ import com.evgenltd.hnhtools.common.ApplicationException;
  * <p>Created: 24-02-2019 02:04</p>
  */
 public enum MessageType {
-    MESSAGE_TYPE_SESSION,
-    MESSAGE_TYPE_REL,
-    MESSAGE_TYPE_ACKNOWLEDGE,
-    MESSAGE_TYPE_BEAT,
-    MESSAGE_TYPE_MAP_REQUEST,
-    MESSAGE_TYPE_MAP_DATA,
-    MESSAGE_TYPE_OBJECT_DATA,
-    MESSAGE_TYPE_OBJECT_ACKNOWLEDGE,
-    MESSAGE_TYPE_CLOSE;
+    MESSAGE_TYPE_SESSION(0),
+    MESSAGE_TYPE_REL(1),
+    MESSAGE_TYPE_ACKNOWLEDGE(2),
+    MESSAGE_TYPE_BEAT(3),
+    MESSAGE_TYPE_MAP_REQUEST(4),
+    MESSAGE_TYPE_MAP_DATA(5),
+    MESSAGE_TYPE_OBJECT_DATA(6),
+    MESSAGE_TYPE_OBJECT_ACKNOWLEDGE(7),
+    MESSAGE_TYPE_CLOSE(8);
+
+    private int value;
+
+    MessageType(final int value) {
+        this.value = value;
+    }
 
     public static MessageType of(int value) {
         for (final MessageType messageType : values()) {
-            if (messageType.ordinal() == value) {
+            if (messageType.value == value) {
                 return messageType;
             }
         }

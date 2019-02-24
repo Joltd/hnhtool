@@ -2,7 +2,8 @@ package com.evgenltd.hnhtool.analyzer.service;
 
 import com.evgenltd.hnhtool.analyzer.C;
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
-import com.evgenltd.hnhtools.message.UdpToJson;
+import com.evgenltd.hnhtools.message.InboundMessageConverter;
+import com.evgenltd.hnhtools.message.OutboundMessageConverter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,14 +30,16 @@ public class Gate implements Lifecycle {
     private DatagramSocket outbound;
     private Thread outboundThread;
 
-    private UdpToJson udpToJson;
+    private InboundMessageConverter inboundMessageConverter;
+    private OutboundMessageConverter outboundMessageConverter;
 
     private boolean enabled;
 
     @Override
     public void init() {
         try {
-            udpToJson = new UdpToJson();
+            inboundMessageConverter = new InboundMessageConverter();
+            outboundMessageConverter = new OutboundMessageConverter();
             inbound = new DatagramSocket(new InetSocketAddress("127.0.0.1", 17777));
             inboundThread = new Thread(this::listenInbound);
             inboundThread.setDaemon(true);
@@ -80,10 +83,6 @@ public class Gate implements Lifecycle {
                 return;
             }
 
-            if (!isEnabled()) {
-                return;
-            }
-
             final DatagramPacket packet = new DatagramPacket(new byte[65536], 65536);
             try {
                 inbound.receive(packet);
@@ -91,22 +90,22 @@ public class Gate implements Lifecycle {
                 log.error(e);
             }
 
-            if (!packet.getAddress().getHostName().equals("127.0.0.1")) {
+            if (!isEnabled() || !packet.getAddress().getHostName().equals("127.0.0.1")) {
                 continue;
             }
 
-            final ObjectNode node = udpToJson.convert(packet.getData());
-            C.getMainModel().addInboundMessage(node);
+            try {
+                final ObjectNode node = inboundMessageConverter.convert(packet.getData());
+                C.getMainModel().addInboundMessage(node);
+            } catch (Exception e) {
+                log.error(e);
+            }
         }
     }
 
     private void listenOutbound() {
         while (true) {
             if (outbound.isClosed() || Thread.currentThread().isInterrupted()) {
-                return;
-            }
-
-            if (!isEnabled()) {
                 return;
             }
 
@@ -117,11 +116,11 @@ public class Gate implements Lifecycle {
                 log.error(e);
             }
 
-            if (!packet.getAddress().getHostName().equals("127.0.0.1")) {
+            if (!isEnabled() || !packet.getAddress().getHostName().equals("127.0.0.1")) {
                 continue;
             }
 
-            final ObjectNode node = udpToJson.convert(packet.getData());
+            final ObjectNode node = outboundMessageConverter.convert(packet.getData());
             C.getMainModel().addOutboundMessage(node);
         }
     }
