@@ -31,6 +31,8 @@ public class Gate implements Lifecycle {
 
     private UdpToJson udpToJson;
 
+    private boolean enabled;
+
     @Override
     public void init() {
         try {
@@ -64,9 +66,21 @@ public class Gate implements Lifecycle {
         }
     }
 
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     private void listenInbound() {
         while (true) {
             if (inbound.isClosed() || Thread.currentThread().isInterrupted()) {
+                return;
+            }
+
+            if (!isEnabled()) {
                 return;
             }
 
@@ -82,13 +96,17 @@ public class Gate implements Lifecycle {
             }
 
             final ObjectNode node = udpToJson.convert(packet.getData());
-            C.getMainScreenModel().addInboundMessage(node);
+            C.getMainModel().addInboundMessage(node);
         }
     }
 
     private void listenOutbound() {
         while (true) {
             if (outbound.isClosed() || Thread.currentThread().isInterrupted()) {
+                return;
+            }
+
+            if (!isEnabled()) {
                 return;
             }
 
@@ -104,7 +122,7 @@ public class Gate implements Lifecycle {
             }
 
             final ObjectNode node = udpToJson.convert(packet.getData());
-            C.getMainScreenModel().addOutboundMessage(node);
+            C.getMainModel().addOutboundMessage(node);
         }
     }
 

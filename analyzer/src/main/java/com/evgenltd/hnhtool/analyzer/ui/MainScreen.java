@@ -2,12 +2,16 @@ package com.evgenltd.hnhtool.analyzer.ui;
 
 import com.evgenltd.hnhtool.analyzer.C;
 import com.evgenltd.hnhtool.analyzer.model.Message;
+import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
+import javafx.scene.Parent;
+import javafx.scene.control.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -18,13 +22,23 @@ import javafx.scene.control.TextArea;
  */
 public class MainScreen {
 
-    public ListView<Message> messages;
+    public TableView<Message> messages;
     public TextArea body;
+    public ToggleButton analyzingEnabled;
 
     public void initialize() {
-        messages.setItems(C.getMainScreenModel().getMessages());
+        analyzingEnabled.selectedProperty().bindBidirectional(C.getMainModel().analyzingEnabledProperty());
+        toggleAnalyzing(null);
+
+        final List<TableColumn<Message, String>> columns = C.getMainModel()
+                .getMessageColumns()
+                .stream()
+                .map(this::prepareColumn)
+                .collect(Collectors.toList());
+
+        messages.getColumns().setAll(columns);
+        messages.setItems(C.getMainModel().getMessages());
         messages.getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> showBody());
-        messages.setCellFactory(param -> new MessageListCell());
     }
 
     private void showBody() {
@@ -43,20 +57,37 @@ public class MainScreen {
     }
 
     public void clearMessages(final ActionEvent actionEvent) {
-        C.getMainScreenModel().getMessages().clear();
+        C.getMainModel().getMessages().clear();
     }
 
-    private static final class MessageListCell extends ListCell<Message> {
-
-        @Override
-        protected void updateItem(final Message item, final boolean empty) {
-            super.updateItem(item, empty);
-            if (empty || item == null) {
-                setText(null);
-            } else {
-                setText(item.getType().name());
-            }
+    public void toggleAnalyzing(final ActionEvent actionEvent) {
+        if (C.getGate().isEnabled()) {
+            analyzingEnabled.setText("Pause");
+        } else {
+            analyzingEnabled.setText("Play");
         }
+    }
+
+    private TableColumn<Message, String> prepareColumn(final MessageColumn messageColumn) {
+        final TableColumn<Message, String> column = new TableColumn<>(messageColumn.getName());
+        column.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue(messageColumn)));
+        column.setPrefWidth(messageColumn.getWidth());
+        messageColumn.enabledProperty().addListener(observable -> column.setVisible(messageColumn.isEnabled()));
+        return column;
+    }
+
+    public void configureColumns(final ActionEvent actionEvent) {
+
+        final Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Configure columns");
+        final Parent content = C.load(MessageColumnConfigureScreen.class);
+
+        dialog.getDialogPane().setContent(content);
+
+        final ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.APPLY);
+
+        dialog.getDialogPane().getButtonTypes().addAll(okButton);
+        dialog.show();
 
     }
 

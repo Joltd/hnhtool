@@ -1,0 +1,18 @@
+[
+  {
+    "enabled": true,
+    "name": "Time",
+    "width": 100
+  },
+  {
+    "enabled": true,
+    "name": "Type",
+    "width": 100
+  },
+  {
+    "enabled": true,
+    "name": "Message type",
+    "path": "/messageType",
+    "width": 200
+  }
+]

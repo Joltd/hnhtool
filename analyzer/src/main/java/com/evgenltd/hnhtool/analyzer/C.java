@@ -22,7 +22,9 @@ public class C implements Lifecycle {
     private static C instance = new C();
 
     private Gate gate;
+
     private MainModel mainModel;
+
     private ObjectMapper mapper;
 
     public static C get() {
@@ -31,11 +33,13 @@ public class C implements Lifecycle {
 
     @Override
     public void init() {
+        mapper = new ObjectMapper();
+
         gate = new Gate();
         gate.init();
+
         mainModel = new MainModel();
         mainModel.init();
-        mapper = new ObjectMapper();
     }
 
     @Override
@@ -60,7 +64,7 @@ public class C implements Lifecycle {
         return get().gate;
     }
 
-    public static MainModel getMainScreenModel() {
+    public static MainModel getMainModel() {
         return get().mainModel;
     }
 

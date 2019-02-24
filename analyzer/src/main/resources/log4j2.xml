@@ -9,6 +9,7 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="com.evgenltd.hnhtool.analyzer" level="info"/>
         <Root level="info">
             <AppenderRef ref="console"/>
         </Root>
