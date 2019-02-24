@@ -11,5 +11,12 @@
 
     <artifactId>analyzer</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.evgenltd.hnhtool</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 
 </project>
