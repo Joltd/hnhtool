@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtools.message;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -13,12 +12,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class InboundMessageConverter {
 
-    public ObjectNode convert(final byte[] data) {
+    private RelFragmentBuilder relFragmentBuilder = new RelFragmentBuilder();
+
+    public void convert(final ObjectNode root, final byte[] data) {
 
         final DataReader reader = new DataReader(data);
-        final ObjectMapper mapper = new ObjectMapper();
-
-        final ObjectNode root = mapper.createObjectNode();
 
         final MessageType messageType = MessageType.of(reader.int8());
         root.put("messageType", messageType.name());
@@ -64,23 +62,39 @@ public class InboundMessageConverter {
                 break;
         }
 
-        return root;
-
     }
 
     private void convertRel(final ObjectNode rel, final int relTypeValue, final DataReader reader) {
         final RelType relType = RelType.of(relTypeValue);
         rel.put("relType", relType.name());
-        System.out.println(relType.name());
         switch (relType) {
             case REL_MESSAGE_FRAGMENT:
-                // unknown how to implement
-                break;
+                final boolean result = relFragmentBuilder.build(reader);
+                if (result) {
+                    final int type = relFragmentBuilder.getType();
+                    final DataReader newReader = relFragmentBuilder.getReader();
+                    relFragmentBuilder.clear();
+                    convertRel(rel, type, newReader);
+                }
             case REL_MESSAGE_NEW_WIDGET:
+                rel.put("id", reader.uint16());
+                rel.put("type", reader.string());
+                rel.put("parent", reader.uint16());
+                ListReader.read(rel.putArray("pArgs"), reader);
+                ListReader.read(rel.putArray("cArgs"), reader);
+                break;
             case REL_MESSAGE_WIDGET_MESSAGE:
+                rel.put("id", reader.uint16());
+                rel.put("name", reader.string());
+                ListReader.read(rel.putArray("args"), reader);
+                break;
             case REL_MESSAGE_DESTROY_WIDGET:
+                rel.put("id", reader.uint16());
+                break;
             case REL_MESSAGE_ADD_WIDGET:
-                // ignore
+                rel.put("id", reader.uint16());
+                rel.put("parent", reader.uint16());
+                ListReader.read(rel.putArray("args"), reader);
                 break;
             case REL_MESSAGE_MAPIV:
                 // ignore

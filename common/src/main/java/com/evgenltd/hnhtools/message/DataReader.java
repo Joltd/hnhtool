@@ -56,6 +56,22 @@ public class DataReader {
         return value;
     }
 
+    public long int64() {
+        long value = 0;
+        for (int i = 0; i < 8; i++)
+            value |= (long) unsigned(data[pointer + i]) << (i * 8);
+        pointer = pointer + 8;
+        return value;
+    }
+
+    public float float32() {
+        return Float.intBitsToFloat(int32());
+    }
+
+    public double float64() {
+        return Double.longBitsToDouble(int64());
+    }
+
     public String string() {
         int stringLength = 0;
         while (true) {
@@ -67,8 +83,9 @@ public class DataReader {
                 stringLength++;
             }
         }
+        final String value = new String(data, pointer, stringLength, StandardCharsets.UTF_8);
         pointer = pointer + stringLength;
-        return new String(data, pointer, stringLength, StandardCharsets.UTF_8);
+        return value;
     }
 
     public byte[] bytes() {

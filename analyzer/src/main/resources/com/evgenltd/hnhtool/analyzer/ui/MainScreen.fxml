@@ -2,8 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <VBox spacing="5.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.evgenltd.hnhtool.analyzer.ui.MainScreen">
    <children>
       <HBox spacing="5.0">
@@ -17,12 +16,28 @@
       <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
          <items>
             <TableView fx:id="messages" />
-            <SplitPane dividerPositions="0.7">
-               <items>
-                  <TextArea fx:id="body" editable="false" />
-                  <TextArea fx:id="data" editable="false" prefHeight="200.0" prefWidth="200.0" />
-               </items>
-            </SplitPane>
+            <HBox spacing="5.0">
+               <children>
+                  <TextArea fx:id="body" editable="false" HBox.hgrow="ALWAYS" />
+                  <VBox HBox.hgrow="NEVER">
+                     <children>
+                        <TableView fx:id="data" maxWidth="200.0">
+                          <columns>
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="00" />
+                            <TableColumn maxWidth="20.0" prefWidth="20.0" text="01" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="02" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="03" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="04" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="05" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="06" />
+                              <TableColumn maxWidth="20.0" prefWidth="20.0" text="07" />
+                          </columns>
+                        </TableView>
+                        <Label fx:id="selectedCells" text="&lt;n&gt;" />
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
          </items>
       </SplitPane>
    </children>

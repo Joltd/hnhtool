@@ -80,17 +80,17 @@ public class Message {
 
     // data
 
-    private ObjectProperty<List<String>> data = null;
-    public List<String> getData() {
+    private ObjectProperty<List<Byte>> data = null;
+    public List<Byte> getData() {
         return data != null ? data.get() : new ArrayList<>();
     }
-    public ObjectProperty<List<String>> dataProperty() {
+    public ObjectProperty<List<Byte>> dataProperty() {
         if (data == null) {
             data = new SimpleObjectProperty<>(new ArrayList<>());
         }
         return data;
     }
-    public void setData(final List<String> data) {
+    public void setData(final List<Byte> data) {
         this.dataProperty().set(data != null ? data : new ArrayList<>());
     }
 

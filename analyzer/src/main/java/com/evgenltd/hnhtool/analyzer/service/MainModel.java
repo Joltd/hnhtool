@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.analyzer.service;
 
 import com.evgenltd.hnhtool.analyzer.C;
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
+import com.evgenltd.hnhtool.analyzer.model.DoubleWord;
 import com.evgenltd.hnhtool.analyzer.model.Message;
 import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
 import com.evgenltd.hnhtools.common.Resources;
@@ -53,7 +54,7 @@ public class MainModel implements Lifecycle {
     }
 
 
-    public void addInboundMessage(final ObjectNode node, final List<String> data) {
+    public void addInboundMessage(final ObjectNode node, final List<Byte> data) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.INBOUND);
             message.setBody(node);
@@ -62,7 +63,7 @@ public class MainModel implements Lifecycle {
         });
     }
 
-    public void addOutboundMessage(final ObjectNode node, final List<String> data) {
+    public void addOutboundMessage(final ObjectNode node, final List<Byte> data) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.OUTBOUND);
             message.setBody(node);
@@ -106,6 +107,20 @@ public class MainModel implements Lifecycle {
         } catch (IOException e) {
             log.error(e);
         }
+    }
+
+    public ObservableList<DoubleWord> toDoubleWord(final List<Byte> data) {
+        final ObservableList<DoubleWord> result = FXCollections.observableArrayList();
+        DoubleWord doubleWord = null;
+        for (int index = 0; index < data.size(); index++) {
+            if (index % 8 == 0) {
+                doubleWord = new DoubleWord();
+                result.add(doubleWord);
+            }
+            doubleWord.addByte(index % 8, data.get(index));
+        }
+
+        return result;
     }
 
 }

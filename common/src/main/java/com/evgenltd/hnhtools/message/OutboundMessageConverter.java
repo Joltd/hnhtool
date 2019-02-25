@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtools.message;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -12,13 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class OutboundMessageConverter {
 
-    public ObjectNode convert(final byte[] data) {
-
-        final ObjectMapper mapper = new ObjectMapper();
-
-        final ObjectNode root = mapper.createObjectNode();
-
-        return root;
+    public void convert(final ObjectNode root, final byte[] data) {
 
     }
 

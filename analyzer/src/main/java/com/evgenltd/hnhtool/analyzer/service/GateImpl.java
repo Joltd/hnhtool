@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.analyzer.service;
 
 import com.evgenltd.hnhtool.analyzer.C;
+import com.evgenltd.hnhtool.analyzer.Constants;
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
 import com.evgenltd.hnhtools.message.InboundMessageConverter;
 import com.evgenltd.hnhtools.message.OutboundMessageConverter;
@@ -60,14 +61,14 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         final byte[] truncated = new byte[length];
         System.arraycopy(data, 0, truncated, 0, length);
 
-        ObjectNode node;
+        final ObjectNode root = C.getMapper().createObjectNode();
         try {
-            node = inboundMessageConverter.convert(truncated);
+            inboundMessageConverter.convert(root, truncated);
         } catch (Exception e) {
             log.error("", e);
-            node = printStackTrace(e);
+            printStackTrace(root, e);
         }
-        C.getMainModel().addInboundMessage(node, convertByteData(truncated));
+        C.getMainModel().addInboundMessage(root, convertByteData(truncated));
     }
 
     @Override
@@ -75,31 +76,32 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         if (!isEnabled()) {
             return;
         }
-        ObjectNode node;
+        final ObjectNode root = C.getMapper().createObjectNode();
         try {
-            node = outboundMessageConverter.convert(data);
+            outboundMessageConverter.convert(root, data);
         } catch (Exception e) {
             log.error("", e);
-            node = printStackTrace(e);
+            printStackTrace(root, e);
         }
-        C.getMainModel().addOutboundMessage(node, convertByteData(data));
+        C.getMainModel().addOutboundMessage(root, convertByteData(data));
     }
 
-    private List<String> convertByteData(final byte[] data) {
-        final List<String> result = new ArrayList<>();
+    private List<Byte> convertByteData(final byte[] data) {
+        final List<Byte> result = new ArrayList<>();
         for (final byte b : data) {
-            result.add(String.format("%02X", b));
+            result.add(b);
         }
         return result;
     }
 
-    private ObjectNode printStackTrace(final Throwable throwable) {
+    private void printStackTrace(
+            final ObjectNode node,
+            final Throwable throwable
+    ) {
         final StringWriter writer = new StringWriter();
         throwable.printStackTrace(new PrintWriter(writer));
         final String stackTrace = writer.toString();
-        final ObjectNode errorNode = C.getMapper().createObjectNode();
-        errorNode.put("analyzer_exception", stackTrace);
-        return errorNode;
+        node.put(Constants.ANALYZER_EXCEPTION_TOKEN, stackTrace);
     }
 
 }
