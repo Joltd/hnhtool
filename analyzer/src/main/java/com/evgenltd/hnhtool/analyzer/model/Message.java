@@ -9,6 +9,8 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p></p>
@@ -74,6 +76,22 @@ public class Message {
     }
     public void setBody(final ObjectNode body) {
         this.bodyProperty().set(body);
+    }
+
+    // data
+
+    private ObjectProperty<List<String>> data = null;
+    public List<String> getData() {
+        return data != null ? data.get() : new ArrayList<>();
+    }
+    public ObjectProperty<List<String>> dataProperty() {
+        if (data == null) {
+            data = new SimpleObjectProperty<>(new ArrayList<>());
+        }
+        return data;
+    }
+    public void setData(final List<String> data) {
+        this.dataProperty().set(data != null ? data : new ArrayList<>());
     }
 
     public enum Type {

@@ -71,6 +71,7 @@ public class InboundMessageConverter {
     private void convertRel(final ObjectNode rel, final int relTypeValue, final DataReader reader) {
         final RelType relType = RelType.of(relTypeValue);
         rel.put("relType", relType.name());
+        System.out.println(relType.name());
         switch (relType) {
             case REL_MESSAGE_FRAGMENT:
                 // unknown how to implement
@@ -101,8 +102,8 @@ public class InboundMessageConverter {
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
                 while (reader.hasNext()) {
                     rel.put("attributeName", reader.string());
-                    rel.put("baseValue", reader.uint16());
-                    rel.put("complexValue", reader.uint16());
+                    rel.put("baseValue", reader.int32());
+                    rel.put("complexValue", reader.int32());
                 }
                 break;
             case REL_MESSAGE_MUSIC:

@@ -1,14 +1,17 @@
 package com.evgenltd.hnhtool.analyzer;
 
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
-import com.evgenltd.hnhtool.analyzer.service.Gate;
+import com.evgenltd.hnhtool.analyzer.service.GateImpl;
 import com.evgenltd.hnhtool.analyzer.service.MainModel;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.magenta.hnhtool.gate.Gate;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 
 import java.io.IOException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 /**
  * <p></p>
@@ -21,11 +24,13 @@ public class C implements Lifecycle {
 
     private static C instance = new C();
 
-    private Gate gate;
+    private ObjectMapper mapper;
+    private Registry registry;
+
+    private GateImpl gate;
 
     private MainModel mainModel;
 
-    private ObjectMapper mapper;
 
     public static C get() {
         return instance;
@@ -33,13 +38,19 @@ public class C implements Lifecycle {
 
     @Override
     public void init() {
-        mapper = new ObjectMapper();
+        try {
+            mapper = new ObjectMapper();
+            registry = LocateRegistry.createRegistry(7777);
 
-        gate = new Gate();
-        gate.init();
+            gate = new GateImpl();
+            gate.init();
+            registry.bind(Gate.class.getSimpleName(), gate);
 
-        mainModel = new MainModel();
-        mainModel.init();
+            mainModel = new MainModel();
+            mainModel.init();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -60,7 +71,7 @@ public class C implements Lifecycle {
 
     //
 
-    public static Gate getGate() {
+    public static GateImpl getGate() {
         return get().gate;
     }
 

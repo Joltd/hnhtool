@@ -67,6 +67,7 @@ public class DataReader {
                 stringLength++;
             }
         }
+        pointer = pointer + stringLength;
         return new String(data, pointer, stringLength, StandardCharsets.UTF_8);
     }
 

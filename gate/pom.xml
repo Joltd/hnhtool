@@ -9,19 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>analyzer</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.evgenltd.hnhtool</groupId>
-            <artifactId>common</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.evgenltd.hnhtool</groupId>
-            <artifactId>gate</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-    </dependencies>
+    <artifactId>gate</artifactId>
+    <packaging>jar</packaging>
 
 </project>

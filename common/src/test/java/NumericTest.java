@@ -11,9 +11,8 @@ public class NumericTest {
 
     @Test
     public void test() {
-        int id = 2000;
-        id = id >>> 1;
-        System.out.println(id);
+        System.out.println(String.format("%02X", 255));
+
 //        check(0x0);
 //        check(0x5000);
 //        check(0x7FFF);

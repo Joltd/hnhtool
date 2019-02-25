@@ -17,7 +17,12 @@
       <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
          <items>
             <TableView fx:id="messages" />
-            <TextArea fx:id="body" />
+            <SplitPane dividerPositions="0.7">
+               <items>
+                  <TextArea fx:id="body" editable="false" />
+                  <TextArea fx:id="data" editable="false" prefHeight="200.0" prefWidth="200.0" />
+               </items>
+            </SplitPane>
          </items>
       </SplitPane>
    </children>

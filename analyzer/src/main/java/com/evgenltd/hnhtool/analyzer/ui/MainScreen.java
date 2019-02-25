@@ -4,6 +4,8 @@ import com.evgenltd.hnhtool.analyzer.C;
 import com.evgenltd.hnhtool.analyzer.model.Message;
 import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.event.ActionEvent;
@@ -25,6 +27,7 @@ public class MainScreen {
     public TableView<Message> messages;
     public TextArea body;
     public ToggleButton analyzingEnabled;
+    public TextArea data;
 
     public void initialize() {
         analyzingEnabled.selectedProperty().bindBidirectional(C.getMainModel().analyzingEnabledProperty());
@@ -43,17 +46,34 @@ public class MainScreen {
 
     private void showBody() {
         body.clear();
+        data.clear();
         final Message message = messages.getSelectionModel().getSelectedItem();
         if (message == null) {
             return;
         }
 
         try {
-            final String json = C.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(message.getBody());
-            body.setText(json);
+            final ObjectNode body = message.getBody();
+            final JsonNode analyzerException = body.get("analyzer_exception");
+            if (analyzerException != null) {
+                this.body.setText(analyzerException.asText());
+            } else {
+                final String json = C.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(body);
+                this.body.setText(json);
+            }
         } catch (JsonProcessingException e) {
             body.setText(e.getMessage());
         }
+
+        final StringBuilder sb = new StringBuilder();
+        for (int index = 0; index < message.getData().size(); index++) {
+            if (index != 0 && index % 8 == 0) {
+                sb.append("\n");
+            }
+            final String b = message.getData().get(index);
+            sb.append(b).append(" ");
+        }
+        data.setText(sb.toString());
     }
 
     public void clearMessages(final ActionEvent actionEvent) {

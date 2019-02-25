@@ -53,18 +53,20 @@ public class MainModel implements Lifecycle {
     }
 
 
-    public void addInboundMessage(final ObjectNode node) {
+    public void addInboundMessage(final ObjectNode node, final List<String> data) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.INBOUND);
             message.setBody(node);
+            message.setData(data);
             messages.add(message);
         });
     }
 
-    public void addOutboundMessage(final ObjectNode node) {
+    public void addOutboundMessage(final ObjectNode node, final List<String> data) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.OUTBOUND);
             message.setBody(node);
+            message.setData(data);
             messages.add(message);
         });
     }
