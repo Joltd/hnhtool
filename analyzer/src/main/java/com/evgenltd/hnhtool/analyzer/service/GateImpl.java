@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.analyzer.service;
 import com.evgenltd.hnhtool.analyzer.C;
 import com.evgenltd.hnhtool.analyzer.Constants;
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.message.InboundMessageConverter;
 import com.evgenltd.hnhtools.message.OutboundMessageConverter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,6 +11,8 @@ import com.magenta.hnhtool.gate.Gate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.rmi.RemoteException;
@@ -67,6 +70,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         } catch (Exception e) {
             log.error("", e);
             printStackTrace(root, e);
+            storeErrorPacket("INBOUND", truncated);
         }
         C.getMainModel().addInboundMessage(root, convertByteData(truncated));
     }
@@ -82,6 +86,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         } catch (Exception e) {
             log.error("", e);
             printStackTrace(root, e);
+            storeErrorPacket("OUTBOUND", data);
         }
         C.getMainModel().addOutboundMessage(root, convertByteData(data));
     }
@@ -102,6 +107,15 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         throwable.printStackTrace(new PrintWriter(writer));
         final String stackTrace = writer.toString();
         node.put(Constants.ANALYZER_EXCEPTION_TOKEN, stackTrace);
+    }
+
+    private void storeErrorPacket(final String type, final byte[] data) {
+        final String name = String.format("%s - %s - %s.data", System.currentTimeMillis(), type, data.length);
+        try (final FileOutputStream stream = new FileOutputStream(name)) {
+            stream.write(data);
+        } catch (IOException e) {
+            throw new ApplicationException(e);
+        }
     }
 
 }

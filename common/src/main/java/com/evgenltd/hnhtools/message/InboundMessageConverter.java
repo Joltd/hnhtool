@@ -12,11 +12,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class InboundMessageConverter {
 
+    private boolean debug;
     private RelFragmentBuilder relFragmentBuilder = new RelFragmentBuilder();
+
+    public InboundMessageConverter() {
+        this(false);
+    }
+
+    public InboundMessageConverter(final boolean debug) {
+        this.debug = debug;
+    }
 
     public void convert(final ObjectNode root, final byte[] data) {
 
-        final DataReader reader = new DataReader(data);
+        final DataReader reader = debug ? new DataReaderDebug(data) : new DataReader(data);
 
         final MessageType messageType = MessageType.of(reader.int8());
         root.put("messageType", messageType.name());
@@ -35,9 +44,9 @@ public class InboundMessageConverter {
                     final ObjectNode rel = relList.addObject();
                     rel.put("sequence", sequenceNumber);
                     final int relType = reader.uint8();
-                    if (relType >= 128) {
+                    if ((relType & 0x80) != 0) {
                         final int blockLength = reader.uint16();
-                        convertRel(rel, relType - 128, reader.asReader(blockLength));
+                        convertRel(rel, relType & 0x7f, reader.asReader(blockLength));
                     } else {
                         convertRel(rel, relType, reader.asReader());
                     }
@@ -76,6 +85,7 @@ public class InboundMessageConverter {
                     relFragmentBuilder.clear();
                     convertRel(rel, type, newReader);
                 }
+                break;
             case REL_MESSAGE_NEW_WIDGET:
                 rel.put("id", reader.uint16());
                 rel.put("type", reader.string());
@@ -97,10 +107,29 @@ public class InboundMessageConverter {
                 ListReader.read(rel.putArray("args"), reader);
                 break;
             case REL_MESSAGE_MAPIV:
-                // ignore
+                int mapType = reader.uint8();
+                if (mapType == 0) {
+                    rel.put("mapType", "INVALIDATE");
+                    rel.put("x", reader.int32());
+                    rel.put("y", reader.int32());
+                } else if (mapType == 1) {
+                    rel.put("mapType", "TRIM");
+                    rel.put("upperLeftX", reader.int32());
+                    rel.put("upperLeftY", reader.int32());
+                    rel.put("lowerRightX", reader.int32());
+                    rel.put("lowerRightY", reader.int32());
+                } else if (mapType == 2) {
+                    rel.put("mapType", "TRIM_ALL");
+                }
                 break;
             case REL_MESSAGE_GLOBLOB:
-                // ignore - weather and other graphic shit
+                rel.put("inc", reader.uint8() != 0);
+                final ArrayNode globalsNode = rel.putArray("globals");
+                while (reader.hasNext()) {
+                    final ObjectNode global = globalsNode.addObject();
+                    global.put("globalType", reader.string());
+                    ListReader.read(global.putArray("arguments"), reader);
+                }
                 break;
             case REL_MESSAGE_RESOURCE_ID:
                 rel.put("resourceId", reader.uint16());
@@ -108,10 +137,40 @@ public class InboundMessageConverter {
                 rel.put("resourceVersion", reader.uint16());
                 break;
             case REL_MESSAGE_PARTY:
-                // ignore
+                final ArrayNode partyNode = rel.putArray("party");
+                while (reader.hasNext()) {
+                    final ObjectNode party = partyNode.addObject();
+                    int type = reader.uint8();
+                    party.put("type", type);
+                    if (type == 0) { // PD_LIST
+                        final ArrayNode ids =party.putArray("ids");
+                        while (true) {
+                            long id = reader.int32();
+                            if (id < 0)
+                                break;
+                            ids.add(id);
+                        }
+                    } else if (type == 1) { // PD_LEADER
+                        party.put("leader", reader.int32());
+                    } else if (type == 2) { // PD_MEMBER
+                        party.put("member", reader.int32());
+                        final boolean visible = reader.uint8() == 1;
+                        party.put("visible", visible);
+                        if (visible) {
+                            party.put("x", reader.int32());
+                            party.put("y", reader.int32());
+                        }
+                        party.put("red", reader.uint8());
+                        party.put("green", reader.uint8());
+                        party.put("blue", reader.uint8());
+                        party.put("alpha", reader.uint8());
+                    }
+                }
                 break;
             case REL_MESSAGE_SFX:
-                // audio - long term ignore
+                rel.put("resourceId", reader.uint16());
+                rel.put("volume", ((double) reader.uint16()) / 256.0);
+                rel.put("speed", ((double) reader.uint16()) / 256.0);
                 break;
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
                 while (reader.hasNext()) {
@@ -121,7 +180,9 @@ public class InboundMessageConverter {
                 }
                 break;
             case REL_MESSAGE_MUSIC:
-                // audio - long term ignore
+                rel.put("resourceName", reader.string());
+                rel.put("resourceVersion", reader.uint16());
+                rel.put("loop", reader.hasNext() && (reader.uint8() != 0));
                 break;
             case REL_MESSAGE_SESSION_KEY:
                 rel.put("sessionKey", reader.bytes());
@@ -129,8 +190,10 @@ public class InboundMessageConverter {
         }
     }
 
-    private void convertObjectDelta(final ObjectNode objectData, final DataReader reader) {
+    private void convertObjectDelta(final ObjectNode root, final DataReader reader) {
+        final ArrayNode objectDataArray = root.putArray("objectData");
         while (reader.hasNext()) {
+            final ObjectNode objectData = objectDataArray.addObject();
             objectData.put("fl", reader.uint8());
             objectData.put("id", reader.uint32());
             objectData.put("frame", reader.int32());
@@ -154,14 +217,15 @@ public class InboundMessageConverter {
                         delta.put("ia", reader.uint16());
                         break;
                     case OD_RES:
-                        final int resourceId = reader.uint16();
-                        if ((resourceId & 0x8000) == 0) {
+                        int resourceId = reader.uint16();
+                        if((resourceId & 0x8000) != 0) {
+                            resourceId &= ~0x8000;
                             delta.put("resourceId", resourceId);
+                            final int resourceLength = reader.uint8();
+                            delta.put("resourceContentLength", resourceLength);
+                            delta.put("resourceContent", reader.bytes(resourceLength));
                         } else {
-                            delta.put("resourceId", resourceId & ~0x8000);
-                            final int resourceContentLength = reader.uint8();
-                            delta.put("resourceContentLength", resourceContentLength);
-                            delta.put("resourceContent", reader.bytes(resourceContentLength));
+                            delta.put("resourceId", resourceId);
                         }
                         break;
                     case OD_LINBEG:
@@ -225,18 +289,18 @@ public class InboundMessageConverter {
                         }
                         break;
                     case OD_OVERLAY:
-                        int overlayId = reader.int32();
-                        overlayId >>>= 1;
-                        delta.put("overlayId", overlayId);
+                        delta.put("overlayId", reader.int32() >>> 1);
                         int overlayResourceId = reader.uint16();
-                        if (overlayResourceId != 65535 && (overlayResourceId & 0x8000) != 0) {
-                            overlayResourceId &= ~0x8000;
-                            delta.put("overlayResourceId", overlayResourceId);
-                            int overlayResourceContentLength = reader.uint8();
-                            delta.put("overlayResourceContentLength", overlayResourceContentLength);
-                            delta.put("overlayResourceContent", reader.bytes(overlayResourceContentLength));
+                        if (overlayResourceId == 65535) {
+                            delta.put("resourceId", overlayResourceId);
                         } else {
-                            delta.put("overlayResourceId", overlayResourceId);
+                            if ((overlayResourceId & 0x8000) != 0) {
+                                overlayResourceId &= ~0x8000;
+                                delta.put("resourceId", overlayResourceId);
+                                final int length111 = reader.uint8();
+                                delta.put("resourceContentLength", length111);
+                                delta.put("resourceContent", reader.bytes(length111));
+                            }
                         }
                         break;
                     case OD_HEALTH:
@@ -255,43 +319,49 @@ public class InboundMessageConverter {
                         delta.put("pfl", pfl);
                         delta.put("seq", reader.uint8());
                         if ((pfl & 2) != 0) {
-                            readResourceList(delta.putArray("poses"), reader);
+                            final ArrayNode poses = delta.putArray("poses");
+                            readResource(reader, poses);
                         }
                         if ((pfl & 4) != 0) {
-                            readResourceList(delta.putArray("tposes"), reader);
-                            delta.put("ttime", reader.uint8() / 10F);
+                            final ArrayNode tposes = delta.putArray("tposes");
+                            readResource(reader, tposes);
+                            delta.put("ttime", reader.uint8() / 10.0f);
                         }
                         break;
                     case OD_CMPMOD:
-                        final ArrayNode modsNode = delta.putArray("mods");
+                        final ArrayNode mods = delta.putArray("mods");
                         while (true) {
+                            final ObjectNode mod = mods.addObject();
                             int modId = reader.uint16();
-                            if (modId == 65535) {
+                            mod.put("modId", modId);
+                            if (modId == 65535)
                                 break;
-                            }
-
-                            final ObjectNode modNode = modsNode.addObject();
-                            modNode.put("modId", modId);
-                            readResourceList(modNode.putArray("texs"), reader);
+                            final ArrayNode modResources = mod.putArray("resources");
+                            readResource(reader, modResources);
                         }
                         break;
                     case OD_CMPEQU:
-                        final ArrayNode equsNode = delta.putArray("equs");
+                        final ArrayNode equs = delta.putArray("equs");
                         while (true) {
-                            final int header = reader.uint8();
-                            if (header == 255) {
+                            final ObjectNode equ = equs.addObject();
+                            int h = reader.uint8();
+                            equ.put("h", h);
+                            if (h == 255)
                                 break;
+                            int ef = h & 0x80;
+                            equ.put("at", reader.string());
+                            int equResourceId = reader.uint16();
+                            if ((equResourceId & 0x8000) != 0) {
+                                equResourceId &= ~0x8000;
+                                equ.put("resourceId", equResourceId);
+                                final int equResourceLength = reader.uint8();
+                                equ.put("resourceContentLength", equResourceLength);
+                                equ.put("resourceContent", reader.bytes(equResourceLength));
                             }
-
-                            final ObjectNode equNode = equsNode.addObject();
-                            equNode.put("at", reader.string());
-                            final int equResourceId = reader.uint16();
-                            putResource(reader, equResourceId, equNode);
-                            int ef = header & 0x80;
                             if ((ef & 128) != 0) {
-                                equNode.put("x", reader.int16());
-                                equNode.put("y", reader.int16());
-                                equNode.put("z", reader.int16());
+                                equ.put("x", reader.int16());
+                                equ.put("y", reader.int16());
+                                equ.put("z", reader.int16());
                             }
                         }
                         break;
@@ -314,27 +384,21 @@ public class InboundMessageConverter {
         }
     }
 
-    private void readResourceList(final ArrayNode arrayNode, final DataReader reader) {
+    private void readResource(final DataReader reader, final ArrayNode resourceList) {
         while (true) {
-            int resourceId = reader.uint16();
-            if (resourceId == 65535) {
+            final ObjectNode resource = resourceList.addObject();
+            int poseResourceId = reader.uint16();
+            if (poseResourceId == 65535) {
+                resource.put("resourceId", poseResourceId);
                 return;
             }
-
-            final ObjectNode resourceNode = arrayNode.addObject();
-            putResource(reader, resourceId, resourceNode);
-        }
-    }
-
-    private void putResource(final DataReader reader, int resourceId, final ObjectNode resourceNode) {
-        if ((resourceId & 0x8000) != 0) {
-            resourceId &= ~0x8000;
-            resourceNode.put("resourceId", resourceId);
-            int resourceContentLength = reader.uint8();
-            resourceNode.put("resourceContentLength", resourceContentLength);
-            resourceNode.put("resourceContent", reader.bytes(resourceContentLength));
-        } else {
-            resourceNode.put("resourceId", resourceId);
+            if ((poseResourceId & 0x8000) != 0) {
+                poseResourceId &= ~0x8000;
+                resource.put("resourceId", poseResourceId);
+                final int poseResourceLength = reader.uint8();
+                resource.put("resourceContentLength", poseResourceLength);
+                resource.put("resourceContent", reader.bytes(poseResourceLength));
+            }
         }
     }
 
