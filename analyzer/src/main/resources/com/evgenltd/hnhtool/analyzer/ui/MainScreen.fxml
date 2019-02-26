@@ -32,10 +32,24 @@
                               <TableColumn maxWidth="20.0" prefWidth="20.0" text="06" />
                               <TableColumn maxWidth="20.0" prefWidth="20.0" text="07" />
                           </columns>
+                           <contextMenu>
+                              <ContextMenu>
+                                <items>
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeInt8" text="int8()" />
+                                  <MenuItem mnemonicParsing="false" onAction="#invokeUint8" text="uint8()" />
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeInt16" text="int16()" />
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeUint16" text="uint16()" />
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeInt32" text="int32()" />
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeUint32" text="uint32()" />
+                                    <MenuItem mnemonicParsing="false" onAction="#invokeString" text="string()" />
+                                </items>
+                              </ContextMenu>
+                           </contextMenu>
                         </TableView>
                         <Label fx:id="selectedCells" text="&lt;n&gt;" />
                      </children>
                   </VBox>
+                  <TextArea fx:id="debugInfo" prefWidth="200.0" />
                </children>
             </HBox>
          </items>

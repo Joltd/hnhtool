@@ -5,6 +5,7 @@ import com.evgenltd.hnhtool.analyzer.Constants;
 import com.evgenltd.hnhtool.analyzer.model.DoubleWord;
 import com.evgenltd.hnhtool.analyzer.model.Message;
 import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
+import com.evgenltd.hnhtools.message.DataReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +35,7 @@ public class MainScreen {
     public ToggleButton analyzingEnabled;
     public TableView<DoubleWord> data;
     public Label selectedCells;
+    public TextArea debugInfo;
 
     public void initialize() {
         analyzingEnabled.selectedProperty().bindBidirectional(C.getMainModel().analyzingEnabledProperty());
@@ -60,12 +63,15 @@ public class MainScreen {
             column.setCellFactory(param -> new ByteTableCell());
             data.getColumns().add(column);
         }
-        data.getSelectionModel().getSelectedCells().addListener((InvalidationListener) observable -> selectedCells.setText(String.format("Selected: %s", data.getSelectionModel().getSelectedCells().size())));
+        data.getSelectionModel().getSelectedCells().addListener((InvalidationListener) observable ->
+                selectedCells.setText(String.format("Selected: %s", data.getSelectionModel().getSelectedCells().size())));
     }
 
     private void showBody() {
         body.clear();
         data.getItems().clear();
+        debugInfo.clear();
+
         final Message message = messages.getSelectionModel().getSelectedItem();
         if (message == null) {
             return;
@@ -121,6 +127,58 @@ public class MainScreen {
 
     }
 
+    public void invokeInt8(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.int8()));
+    }
+
+    public void invokeUint8(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.uint8()));
+    }
+
+    public void invokeInt16(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.int16()));
+    }
+
+    public void invokeUint16(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.uint16()));
+    }
+
+    public void invokeInt32(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.int32()));
+    }
+
+    public void invokeUint32(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(reader -> String.valueOf(reader.uint32()));
+    }
+
+    public void invokeString(final ActionEvent actionEvent) {
+        invokeDataReaderMethod(DataReader::string);
+    }
+
+    private void invokeDataReaderMethod(final Function<DataReader,String> invoke) {
+        final ObservableList<TablePosition> selectedCells = data.getSelectionModel().getSelectedCells();
+        if (selectedCells.isEmpty()) {
+            return;
+        }
+
+        final int startPosition = convertToPosition(selectedCells.get(0));
+        final int endPosition = convertToPosition(selectedCells.get(selectedCells.size() - 1));
+
+        final Message message = messages.getSelectionModel().getSelectedItem();
+        if (message == null) {
+            return;
+        }
+        final byte[] data = new byte[endPosition - startPosition + 1];
+        for (int position = startPosition; position <= endPosition; position++) {
+            data[position - startPosition] = message.getData().get(position);
+        }
+
+        final DataReader reader = new DataReader(data);
+        final String result = invoke.apply(reader);
+        debugInfo.appendText(result + "\n");
+    }
+
+
     private static final class ErrorTableRow extends TableRow<Message> {
         @Override
         protected void updateItem(final Message item, final boolean empty) {
@@ -158,7 +216,7 @@ public class MainScreen {
 
                 getTableView().getSelectionModel().clearSelection();
 
-                int firstPosition = convertToPosition(Holder.firstCell.getRow(), Holder.firstCell.getColumn());
+                int firstPosition = convertToPosition(Holder.firstCell);
                 int lastPosition = convertToPosition(getIndex(), getTableView().getColumns().indexOf(getTableColumn()));
 
                 for (
@@ -187,6 +245,10 @@ public class MainScreen {
 
     private static int convertToPosition(final int row, final int column) {
         return row * 8 + column;
+    }
+
+    private static int convertToPosition(final TablePosition tablePosition) {
+        return convertToPosition(tablePosition.getRow(), tablePosition.getColumn());
     }
 
     private static class Holder {
