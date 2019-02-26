@@ -85,19 +85,6 @@ public class DataReader {
     }
 
     public String string() {
-//        int stringLength = 0;
-//        while (true) {
-//            final int endIndex = pointer + stringLength;
-//            final boolean stringEndIsFound = endIndex >= data.length || data[endIndex] == 0;
-//            if (stringEndIsFound) {
-//                break;
-//            } else {
-//                stringLength++;
-//            }
-//        }
-//        final String value = new String(data, pointer, stringLength, StandardCharsets.UTF_8);
-//        pointer = pointer + stringLength;
-//        return value;
         int stringLength = 0;
         while (true) {
             if (data[stringLength + pointer] == 0) {
