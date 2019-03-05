@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.message;
 
+import com.evgenltd.hnhtools.msg.DataReader;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 /**

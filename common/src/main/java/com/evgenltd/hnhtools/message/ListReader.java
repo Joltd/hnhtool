@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtools.message;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.msg.DataReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

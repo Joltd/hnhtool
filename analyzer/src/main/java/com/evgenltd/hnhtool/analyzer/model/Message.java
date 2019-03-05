@@ -3,10 +3,7 @@ package com.evgenltd.hnhtool.analyzer.model;
 import com.evgenltd.hnhtool.analyzer.Constants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,6 +57,20 @@ public class Message {
     }
     public ReadOnlyObjectProperty<Type> typeProperty() {
         return type;
+    }
+
+    private BooleanProperty hide;
+    public boolean isHide() {
+        return hide != null && hide.get();
+    }
+    public BooleanProperty hideProperty() {
+        if (hide == null) {
+            hide = new SimpleBooleanProperty();
+        }
+        return hide;
+    }
+    public void setHide(final boolean hide) {
+        this.hideProperty().set(hide);
     }
 
     // body

@@ -10,6 +10,15 @@ import org.junit.jupiter.api.Test;
 public class NumericTest {
 
     @Test
+    public void testCoordMul() {
+
+        final double x = 0x1.0p-10;
+        System.out.println(x);
+        System.out.println(x * 11);
+
+    }
+
+    @Test
     public void test() {
         System.out.println(String.format("%02X", 255));
 

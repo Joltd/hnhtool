@@ -34,6 +34,8 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
     private InboundMessageConverter inboundMessageConverter;
     private OutboundMessageConverter outboundMessageConverter;
 
+    private MessageFilter messageFilter;
+
     private boolean enabled;
 
     public GateImpl() throws RemoteException {}
@@ -42,6 +44,8 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
     public void init() {
         inboundMessageConverter = new InboundMessageConverter();
         outboundMessageConverter = new OutboundMessageConverter();
+
+        messageFilter = new MessageFilter();
     }
 
     @Override
@@ -72,7 +76,8 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
             printStackTrace(root, e);
             storeErrorPacket("INBOUND", truncated);
         }
-        C.getMainModel().addInboundMessage(root, convertByteData(truncated));
+        C.getMainModel().addInboundMessage(root, convertByteData(truncated), messageFilter.hideInbound(root));
+        C.getStandHandler().handle(root);
     }
 
     @Override
@@ -88,7 +93,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
             printStackTrace(root, e);
             storeErrorPacket("OUTBOUND", data);
         }
-        C.getMainModel().addOutboundMessage(root, convertByteData(data));
+        C.getMainModel().addOutboundMessage(root, convertByteData(data), messageFilter.hideOutbound(root));
     }
 
     private List<Byte> convertByteData(final byte[] data) {

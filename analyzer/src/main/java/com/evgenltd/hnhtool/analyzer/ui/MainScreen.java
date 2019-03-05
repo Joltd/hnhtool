@@ -5,7 +5,7 @@ import com.evgenltd.hnhtool.analyzer.Constants;
 import com.evgenltd.hnhtool.analyzer.model.DoubleWord;
 import com.evgenltd.hnhtool.analyzer.model.Message;
 import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
-import com.evgenltd.hnhtools.message.DataReader;
+import com.evgenltd.hnhtools.msg.DataReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,6 +36,7 @@ public class MainScreen {
     public TableView<DoubleWord> data;
     public Label selectedCells;
     public TextArea debugInfo;
+    public CheckBox showHidden;
 
     public void initialize() {
         analyzingEnabled.selectedProperty().bindBidirectional(C.getMainModel().analyzingEnabledProperty());
@@ -47,7 +48,7 @@ public class MainScreen {
                 .map(this::prepareColumn)
                 .collect(Collectors.toList());
         messages.getColumns().setAll(columns);
-        messages.setItems(C.getMainModel().getMessages());
+        messages.setItems(C.getMainModel().getFilteredMessages());
         messages.getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> showBody());
         messages.setRowFactory(param -> new ErrorTableRow());
 
@@ -65,6 +66,7 @@ public class MainScreen {
         }
         data.getSelectionModel().getSelectedCells().addListener((InvalidationListener) observable ->
                 selectedCells.setText(String.format("Selected: %s", data.getSelectionModel().getSelectedCells().size())));
+        C.getMainModel().showHiddenProperty().bind(showHidden.selectedProperty());
     }
 
     private void showBody() {

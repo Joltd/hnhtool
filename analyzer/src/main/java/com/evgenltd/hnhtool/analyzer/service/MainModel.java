@@ -13,6 +13,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +34,8 @@ public class MainModel implements Lifecycle {
     @Override
     public void init() {
         messages = FXCollections.observableArrayList();
+        filteredMessages = new FilteredList<>(messages);
+        showHiddenProperty().addListener(observable -> updateFilteredMessagesPredicate());
         analyzingEnabledProperty().addListener((observable, oldValue, newValue) -> C.getGate().setEnabled(newValue));
         loadMessageColumn();
     }
@@ -53,21 +56,27 @@ public class MainModel implements Lifecycle {
         return messages;
     }
 
+    private FilteredList<Message> filteredMessages;
+    public FilteredList<Message> getFilteredMessages() {
+        return filteredMessages;
+    }
 
-    public void addInboundMessage(final ObjectNode node, final List<Byte> data) {
+    public void addInboundMessage(final ObjectNode node, final List<Byte> data, final boolean hide) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.INBOUND);
             message.setBody(node);
             message.setData(data);
+            message.setHide(hide);
             messages.add(message);
         });
     }
 
-    public void addOutboundMessage(final ObjectNode node, final List<Byte> data) {
+    public void addOutboundMessage(final ObjectNode node, final List<Byte> data, final boolean hide) {
         Platform.runLater(() -> {
             final Message message = new Message(Message.Type.OUTBOUND);
             message.setBody(node);
             message.setData(data);
+            message.setHide(hide);
             messages.add(message);
         });
     }
@@ -90,6 +99,22 @@ public class MainModel implements Lifecycle {
     private ObservableList<MessageColumn> messageColumns;
     public ObservableList<MessageColumn> getMessageColumns() {
         return messageColumns;
+    }
+
+    // show hidden
+
+    private BooleanProperty showHidden;
+    public boolean isShowHidden() {
+        return showHidden != null && showHidden.get();
+    }
+    public BooleanProperty showHiddenProperty() {
+        if (showHidden == null) {
+            showHidden = new SimpleBooleanProperty();
+        }
+        return showHidden;
+    }
+    public void setShowHidden(final boolean showHidden) {
+        this.showHiddenProperty().set(showHidden);
     }
 
     // ##################################################
@@ -121,6 +146,14 @@ public class MainModel implements Lifecycle {
         }
 
         return result;
+    }
+
+    private void updateFilteredMessagesPredicate() {
+        if (isShowHidden()) {
+            filteredMessages.setPredicate(null);
+        } else {
+            filteredMessages.setPredicate(message -> !message.isHide());
+        }
     }
 
 }

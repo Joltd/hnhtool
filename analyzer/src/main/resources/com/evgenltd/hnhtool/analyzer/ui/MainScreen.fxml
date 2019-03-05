@@ -5,12 +5,14 @@
 <?import javafx.scene.layout.*?>
 <VBox spacing="5.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.evgenltd.hnhtool.analyzer.ui.MainScreen">
    <children>
-      <HBox spacing="5.0">
+      <HBox alignment="CENTER_LEFT" spacing="5.0">
          <children>
             <Button mnemonicParsing="false" onAction="#clearMessages" text="Clear" />
             <ToggleButton fx:id="analyzingEnabled" mnemonicParsing="false" onAction="#toggleAnalyzing" text="Play/Paue analyzing" />
             <Separator orientation="VERTICAL" />
             <Button mnemonicParsing="false" onAction="#configureColumns" text="Columns..." />
+            <Separator orientation="VERTICAL" />
+            <CheckBox fx:id="showHidden" mnemonicParsing="false" text="Show hidden" />
          </children>
       </HBox>
       <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">

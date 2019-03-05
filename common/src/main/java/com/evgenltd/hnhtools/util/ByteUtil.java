@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.util;
 
+
 /**
  * <p></p>
  * <br/>
@@ -9,8 +10,20 @@ package com.evgenltd.hnhtools.util;
  */
 public class ByteUtil {
 
+    public static final int BIT_8 = 8;
+    public static final int BIT_16 = 16;
+    public static final int BIT_32 = 32;
+
+    public static final int BYTE = 0xFF; // 8
+    public static final int WORD = 0xFF_FF; // 16
+    public static final int DWORD = 0xFF_FF_FF_FF; // 32
+
     public static int unsigned(byte value) {
-        return ((int) value) & 0xFF;
+        return ((int) value) & BYTE;
+    }
+
+    public static byte signed(int value) {
+        return (byte) value;
     }
 
     public static String bytesToString(final byte[] data) {

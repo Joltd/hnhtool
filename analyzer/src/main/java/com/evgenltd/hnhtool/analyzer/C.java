@@ -3,6 +3,8 @@ package com.evgenltd.hnhtool.analyzer;
 import com.evgenltd.hnhtool.analyzer.common.Lifecycle;
 import com.evgenltd.hnhtool.analyzer.service.GateImpl;
 import com.evgenltd.hnhtool.analyzer.service.MainModel;
+import com.evgenltd.hnhtool.analyzer.stand.Stand;
+import com.evgenltd.hnhtool.analyzer.stand.StandHandler;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.magenta.hnhtool.gate.Gate;
@@ -28,6 +30,8 @@ public class C implements Lifecycle {
     private Registry registry;
 
     private GateImpl gate;
+    private Stand stand;
+    private StandHandler standHandler;
 
     private MainModel mainModel;
 
@@ -46,8 +50,13 @@ public class C implements Lifecycle {
             gate.init();
             registry.bind(Gate.class.getSimpleName(), gate);
 
+            stand = new Stand();
+            standHandler = new StandHandler(stand);
+
             mainModel = new MainModel();
             mainModel.init();
+
+            debugThread();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -71,8 +80,37 @@ public class C implements Lifecycle {
 
     //
 
+    private void debugThread() {
+        new Thread(() -> {
+            while (true) {
+                System.out.println("start");
+
+                System.out.println("debug");
+
+                System.out.println("end");
+
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+
+            }
+        }).start();
+    }
+
+    //
+
     public static GateImpl getGate() {
         return get().gate;
+    }
+
+    public static Stand getStand() {
+        return get().stand;
+    }
+
+    public static StandHandler getStandHandler() {
+        return get().standHandler;
     }
 
     public static MainModel getMainModel() {

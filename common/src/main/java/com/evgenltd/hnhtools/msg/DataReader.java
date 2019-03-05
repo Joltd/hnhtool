@@ -1,8 +1,9 @@
-package com.evgenltd.hnhtools.message;
+package com.evgenltd.hnhtools.msg;
+
+import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.nio.charset.StandardCharsets;
 
-import static com.evgenltd.hnhtools.util.ByteUtil.unsigned;
 
 /**
  * <p></p>
@@ -29,50 +30,37 @@ public class DataReader {
     }
 
     public int uint8() {
-        return data[pointer++] & 0xFF;
+        return data[pointer++] & ByteUtil.BYTE;
     }
 
     public int int16() {
-        final int value = (int) (short) (
-                unsigned(data[pointer])
-                | (unsigned(data[pointer+1]) << 8)
-        );
-        pointer = pointer + 2;
-        return value;
+        return (short) read(2);
     }
 
     public int uint16() {
-        final int value = unsigned(data[pointer])
-                | (unsigned(data[pointer+1]) << 8);
-        pointer = pointer + 2;
-        return value;
+        return (int) read(2);
     }
 
     public int int32() {
-        final int value = (int) (
-                (long) unsigned(data[pointer])
-                | (long) (unsigned(data[pointer+1]) << 8)
-                | (long) (unsigned(data[pointer+2]) << 16)
-                | (long) (unsigned(data[pointer+3]) << 24)
-        );
-        pointer = pointer + 4;
-        return value;
+        return (int) read(4);
     }
 
     public long uint32() {
-        final long value = (long) unsigned(data[pointer])
-                | (long) (unsigned(data[pointer+1]) << 8)
-                | (long) (unsigned(data[pointer+2]) << 16)
-                | (long) (unsigned(data[pointer+3]) << 24);
-        pointer = pointer + 4;
-        return value;
+        return read(4);
     }
 
     public long int64() {
+        return read(8);
+    }
+
+    private long read(final int length) {
         long value = 0;
-        for (int i = 0; i < 8; i++)
-            value |= (long) unsigned(data[pointer + i]) << (i * 8);
-        pointer = pointer + 8;
+        for (int index = 0; index < length; index++) {
+            final long unsignedLongValue = Byte.toUnsignedLong(data[pointer + index]);
+            final int bitOffset = index * ByteUtil.BIT_8;
+            value |= unsignedLongValue << bitOffset;
+        }
+        pointer += length;
         return value;
     }
 
