@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtools.message;
 
-import com.evgenltd.hnhtools.msg.DataReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -13,20 +12,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class InboundMessageConverter {
 
-    private boolean debug;
     private RelFragmentBuilder relFragmentBuilder = new RelFragmentBuilder();
 
-    public InboundMessageConverter() {
-        this(false);
-    }
-
-    public InboundMessageConverter(final boolean debug) {
-        this.debug = debug;
-    }
+    public InboundMessageConverter() {}
 
     public void convert(final ObjectNode root, final byte[] data) {
 
-        final DataReader reader = debug ? new DataReaderDebug(data) : new DataReader(data);
+        final DataReader reader = new DataReader(data);
 
         final MessageType messageType = MessageType.of(reader.int8());
         root.put("messageType", messageType.name());

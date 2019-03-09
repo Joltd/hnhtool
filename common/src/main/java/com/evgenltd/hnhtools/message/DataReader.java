@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.msg;
+package com.evgenltd.hnhtools.message;
 
 import com.evgenltd.hnhtools.util.ByteUtil;
 

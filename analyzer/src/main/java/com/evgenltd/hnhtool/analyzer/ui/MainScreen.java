@@ -5,7 +5,7 @@ import com.evgenltd.hnhtool.analyzer.Constants;
 import com.evgenltd.hnhtool.analyzer.model.DoubleWord;
 import com.evgenltd.hnhtool.analyzer.model.Message;
 import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
-import com.evgenltd.hnhtools.msg.DataReader;
+import com.evgenltd.hnhtools.message.DataReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
