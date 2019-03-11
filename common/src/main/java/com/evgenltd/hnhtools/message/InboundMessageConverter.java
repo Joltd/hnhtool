@@ -21,21 +21,21 @@ public class InboundMessageConverter {
         final DataReader reader = new DataReader(data);
 
         final MessageType messageType = MessageType.of(reader.int8());
-        root.put("messageType", messageType.name());
+        root.put(MessageFields.MESSAGE_TYPE, messageType.name());
 
         switch (messageType) {
             case MESSAGE_TYPE_SESSION:
                 final int errorCode = reader.uint8();
-                root.put("errorCode", errorCode);
+                root.put(MessageFields.ERROR_CODE, errorCode);
                 break;
             case MESSAGE_TYPE_REL:
                 int sequenceNumber = reader.uint16();
 
-                final ArrayNode relList = root.putArray("rels");
+                final ArrayNode relList = root.putArray(MessageFields.RELS);
                 while (reader.hasNext()) {
 
                     final ObjectNode rel = relList.addObject();
-                    rel.put("sequence", sequenceNumber);
+                    rel.put(MessageFields.SEQUENCE, sequenceNumber);
                     final int relType = reader.uint8();
                     if ((relType & 0x80) != 0) {
                         final int blockLength = reader.uint16();
@@ -184,12 +184,12 @@ public class InboundMessageConverter {
     }
 
     private void convertObjectDelta(final ObjectNode root, final DataReader reader) {
-        final ArrayNode objectDataArray = root.putArray("objectData");
+        final ArrayNode objectDataArray = root.putArray(MessageFields.OBJECT_DATA);
         while (reader.hasNext()) {
             final ObjectNode objectData = objectDataArray.addObject();
             objectData.put("fl", reader.uint8());
-            objectData.put("id", reader.uint32());
-            objectData.put("frame", reader.int32());
+            objectData.put(MessageFields.ID, reader.uint32());
+            objectData.put(MessageFields.FRAME, reader.int32());
             final ArrayNode deltas = objectData.putArray("deltas");
             while (true) {
 

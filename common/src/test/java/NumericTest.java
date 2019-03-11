@@ -1,3 +1,4 @@
+import com.evgenltd.hnhtools.util.ByteUtil;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -39,6 +40,37 @@ public class NumericTest {
                 ~0x8000,
                 value & ~0x800
         ));
+    }
+
+    @Test
+    public void testHandleRel() {
+        checkHandleRel(0, 32800);
+    }
+
+    private void checkHandleRel(final int messageSequence, final int expectedSequence) {
+        if (messageSequence == expectedSequence) {
+            System.out.println("Regular handling, expectedSequence will be incremented");
+        } else if (floormod(messageSequence - expectedSequence, 65536) < 32768) {
+            System.out.println("Put in awaiting");
+        } else {
+            System.out.println("Ignore");
+        }
+    }
+
+    private int floormod(int a, int b) {
+        int r = a % b;
+        System.out.println("r = " + r);
+        if (r < 0) {
+            r += b;
+            System.out.println("r = " + r);
+        }
+        return (r);
+    }
+
+    @Test
+    public void divTest() {
+        System.out.println(ByteUtil.toShort(-70000));
+        System.out.println(ByteUtil.toShort(-5));
     }
 
 }

@@ -37,4 +37,17 @@ public class ByteUtil {
         return sb.toString();
     }
 
+    /**
+     * <p>Passed value will be adjusted to a range of 0..0xFF_FF.
+     * Negative values will be adjusted by a 0xFF_FF offset</p>
+     * @param value target value
+     * @return 0..0xFF_FF representation
+     */
+    public static int toShort(final int value) {
+        final int shortValue = value % WORD;
+        return shortValue >= 0
+                ? shortValue
+                : shortValue + WORD;
+    }
+
 }
