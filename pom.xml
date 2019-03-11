@@ -12,6 +12,7 @@
         <module>common</module>
         <module>analyzer</module>
         <module>gate</module>
+        <module>auth</module>
     </modules>
 
     <build>
