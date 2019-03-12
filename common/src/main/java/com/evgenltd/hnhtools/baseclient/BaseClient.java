@@ -9,6 +9,7 @@ import com.evgenltd.hnhtools.message.MessageType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.magenta.hnhtool.gate.Monitor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,7 +37,19 @@ public final class BaseClient {
 
     private State state = State.INIT;
 
+    // dependencies
     private final ObjectMapper objectMapper;
+
+    // configurable
+    private RelQueue relQueue;
+    private ObjectDataQueue objectDataQueue;
+
+    private String username;
+    private byte[] cookie;
+
+    private Monitor monitor;
+
+    // inner
 
     @UsedInInboundThread
     @UsedInOutboundThread
@@ -54,12 +67,6 @@ public final class BaseClient {
 
     private final Thread inbound;
     private final Thread outbound;
-
-    private RelQueue relQueue;
-    private ObjectDataQueue objectDataQueue;
-
-    private String username;
-    private byte[] cookie;
 
     public BaseClient(final ObjectMapper objectMapper) {
         try {
@@ -179,6 +186,10 @@ public final class BaseClient {
         outboundRelHolder.register(id, name, args);
     }
 
+    public void withMonitor() {
+        monitor = new Monitor();
+    }
+
     // ##################################################
     // #                                                #
     // #  Inbound processing                            #
@@ -217,6 +228,10 @@ public final class BaseClient {
             socket.receive(packet);
             final byte[] data = packet.getData();
             final int length = packet.getLength();
+            if (monitor != null) {
+                monitor.sendInbound(data, length);
+            }
+
             final byte[] truncatedDate = new byte[length];
             System.arraycopy(data, 0, truncatedDate, 0, length);
             inboundConverter.convert(rootNode, truncatedDate);
@@ -358,6 +373,10 @@ public final class BaseClient {
     private void send(final DataWriter data) {
         try {
             final byte[] byteData = data.bytes();
+            if (monitor != null) {
+                monitor.sendOutbound(byteData);
+            }
+
             final DatagramPacket packet = new DatagramPacket(byteData, byteData.length);
             socket.send(packet);
         } catch (final IOException e) {
