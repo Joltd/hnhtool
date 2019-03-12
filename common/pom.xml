@@ -20,9 +20,17 @@
             <artifactId>annotations</artifactId>
             <version>15.0</version>
         </dependency>
+
+        <!-- temp -->
+
         <dependency>
             <groupId>com.evgenltd.hnhtool</groupId>
             <artifactId>gate</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.evgenltd.hnhtool</groupId>
+            <artifactId>auth</artifactId>
             <version>1.0.0</version>
         </dependency>
 

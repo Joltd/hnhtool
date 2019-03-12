@@ -27,7 +27,7 @@ public class InboundMessageAccessor {
     @Nullable
     public MessageType getType() {
         final JsonNode messageTypeNode = data.get(MessageFields.MESSAGE_TYPE);
-        if (messageTypeNode.isNull()) {
+        if (messageTypeNode == null || messageTypeNode.isNull()) {
             return null;
         }
 
@@ -42,7 +42,7 @@ public class InboundMessageAccessor {
 
     public ConnectionErrorCode getConnectionErrorCode() {
         final JsonNode errorCodeNode = data.get(MessageFields.ERROR_CODE);
-        if (errorCodeNode.isNull()) {
+        if (errorCodeNode == null || errorCodeNode.isNull()) {
             return ConnectionErrorCode.UNKNOWN;
         }
 
@@ -57,7 +57,7 @@ public class InboundMessageAccessor {
 
     public List<RelAccessor> getRel() {
         final JsonNode relListNode = data.get(MessageFields.RELS);
-        if (relListNode.isNull()) {
+        if (relListNode == null || relListNode.isNull()) {
             return Collections.emptyList();
         }
 
@@ -81,7 +81,7 @@ public class InboundMessageAccessor {
 
     public List<ObjectDataAccessor> getObjectData() {
         final JsonNode objectDataListNode = data.get(MessageFields.OBJECT_DATA);
-        if (objectDataListNode.isNull()) {
+        if (objectDataListNode == null || objectDataListNode.isNull()) {
             return Collections.emptyList();
         }
 

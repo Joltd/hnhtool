@@ -56,7 +56,6 @@ public class C implements Lifecycle {
             mainModel = new MainModel();
             mainModel.init();
 
-            debugThread();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -76,27 +75,6 @@ public class C implements Lifecycle {
         } catch (final IOException e) {
             throw new ApplicationException(e);
         }
-    }
-
-    //
-
-    private void debugThread() {
-        new Thread(() -> {
-            while (true) {
-                System.out.println("start");
-
-                System.out.println("debug");
-
-                System.out.println("end");
-
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-
-            }
-        }).start();
     }
 
     //

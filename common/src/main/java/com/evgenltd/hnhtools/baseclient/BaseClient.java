@@ -14,8 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -29,13 +28,17 @@ import java.util.Objects;
  */
 public final class BaseClient {
 
+    // todo make connect and disconnect async
+
     private static final int PROTOCOL_VERSION = 17;
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;
 
     private static final Logger log = LogManager.getLogger(BaseClient.class);
+    private static final int AUTH_TIMEOUT = 200;
 
     private State state = State.INIT;
+    private ConnectionErrorCode connectionErrorCode;
 
     // dependencies
     private final ObjectMapper objectMapper;
@@ -44,6 +47,7 @@ public final class BaseClient {
     private RelQueue relQueue;
     private ObjectDataQueue objectDataQueue;
 
+    private SocketAddress server;
     private String username;
     private byte[] cookie;
 
@@ -119,6 +123,25 @@ public final class BaseClient {
         return state.equals(State.CLOSED);
     }
 
+    public ConnectionErrorCode getConnectionErrorCode() {
+        return connectionErrorCode;
+    }
+
+    public void printHealth() {
+        System.out.printf("state = [%s]\n", state);
+        System.out.printf("errorCode = [%s]\n", connectionErrorCode);
+    }
+
+    public void setServer(final String host, final int port) {
+        Assert.valueRequireNonEmpty(host, "Host");
+        Assert.valueRequireNonEmpty(port, "Port");
+        try {
+            server = new InetSocketAddress(InetAddress.getByName(host), port);
+        } catch (UnknownHostException e) {
+            throw new ApplicationException(e, "Unknown host [%s]", host);
+        }
+    }
+
     public void setCredentials(final String username, final byte[] cookie) {
         Assert.valueRequireNonEmpty(username, "Username");
         Assert.valueRequireNonEmpty(cookie, "Cookie");
@@ -142,6 +165,7 @@ public final class BaseClient {
 
         Assert.valueRequireNonEmpty(relQueue, "RelQueue");
         Assert.valueRequireNonEmpty(objectDataQueue, "ObjectDataQueue");
+        Assert.valueRequireNonEmpty(server, "Server");
         Assert.valueRequireNonEmpty(username, "Username");
         Assert.valueRequireNonEmpty(cookie, "Cookie");
 
@@ -151,15 +175,6 @@ public final class BaseClient {
 
         state = State.CONNECTION;
 
-        final DataWriter writer = new DataWriter();
-        writer.adduint16(2);
-        writer.addString("Hafen");
-        writer.adduint16(PROTOCOL_VERSION);
-        writer.addString(username);
-        writer.adduint16(cookie.length);
-        writer.addbytes(cookie);
-        send(writer);
-
         inbound.start();
         outbound.start();
     }
@@ -168,9 +183,7 @@ public final class BaseClient {
         if (!isLife() && !isClosing()) {
             return; // needed light error response
         }
-        final DataWriter writer = new DataWriter();
-        writer.adduint8(MessageType.MESSAGE_TYPE_CLOSE.getValue());
-        send(writer);
+
         state = State.CLOSING;
     }
 
@@ -213,7 +226,6 @@ public final class BaseClient {
                 authProcessor(data);
             } else if (isLife()) {
                 baseInboundProcessor(data);
-            } else if (isClosing()) {
                 closingProcessor(data);
             }
 
@@ -226,6 +238,10 @@ public final class BaseClient {
         final InboundMessageAccessor accessor = new InboundMessageAccessor(rootNode);
         try {
             socket.receive(packet);
+            if (!packet.getSocketAddress().equals(server)) {
+                return accessor;
+            }
+
             final byte[] data = packet.getData();
             final int length = packet.getLength();
             if (monitor != null) {
@@ -235,6 +251,7 @@ public final class BaseClient {
             final byte[] truncatedDate = new byte[length];
             System.arraycopy(data, 0, truncatedDate, 0, length);
             inboundConverter.convert(rootNode, truncatedDate);
+        } catch (final SocketTimeoutException ignored) {
         } catch (final Exception e) {
             log.debug("Unable to receive message", e);
         }
@@ -247,7 +264,7 @@ public final class BaseClient {
             return;
         }
 
-        final ConnectionErrorCode connectionErrorCode = data.getConnectionErrorCode();
+        connectionErrorCode = data.getConnectionErrorCode();
         if (connectionErrorCode.equals(ConnectionErrorCode.OK)) {
             state = State.LIFE;
         } else {
@@ -309,22 +326,60 @@ public final class BaseClient {
                 continue;
             }
 
+            if (isConnection()) {
+                doAuth();
+                continue;
+            }
+
+            if (isClosing()) {
+                doClose();
+                continue;
+            }
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
+
             long now = System.currentTimeMillis();
             long timeElapsed = now - previousTime;
-            boolean sendBeat = processRel();
-            sendBeat = sendBeat || processObjectDataAcknowledge();
-            sendBeat = sendBeat || processRelAcknowledge();
+            boolean skipBeat = relProcessor();
+            skipBeat = skipBeat || objectDataAcknowledgeProcessor();
+            skipBeat = skipBeat || relAcknowledgeProcessor();
 
-            if (sendBeat && timeElapsed > BEAT_TIMEOUT) {
+            if (!skipBeat && timeElapsed > BEAT_TIMEOUT) {
                 final DataWriter beat = new DataWriter();
                 beat.adduint8(MessageType.MESSAGE_TYPE_BEAT.getValue());
                 send(beat);
             }
+            previousTime = now;
 
         }
     }
 
-    private boolean processRel() {
+    private void doAuth() {
+        final DataWriter writer = new DataWriter();
+        writer.adduint8(MessageType.MESSAGE_TYPE_SESSION.getValue());
+        writer.adduint16(2);
+        writer.addString("Hafen");
+        writer.adduint16(PROTOCOL_VERSION);
+        writer.addString(username);
+        writer.adduint16(cookie.length);
+        writer.addbytes(cookie);
+        send(writer);
+        try {
+            Thread.sleep(AUTH_TIMEOUT);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    private void doClose() {
+        final DataWriter writer = new DataWriter();
+        writer.adduint8(MessageType.MESSAGE_TYPE_CLOSE.getValue());
+        send(writer);
+    }
+
+    private boolean relProcessor() {
         return outboundRelHolder.getNextAwaiting()
                 .stream()
                 .map(RelRequest::toWriter)
@@ -332,7 +387,7 @@ public final class BaseClient {
                 .count() > 0;
     }
 
-    private boolean processObjectDataAcknowledge() {
+    private boolean objectDataAcknowledgeProcessor() {
         final List<ObjectDataHolder.ObjectDataEntry> objectDataForAcknowledge = objectDataHolder.getObjectDataForAcknowledge();
         if (objectDataForAcknowledge.isEmpty()) {
             return false;
@@ -357,7 +412,7 @@ public final class BaseClient {
         return true;
     }
 
-    private boolean processRelAcknowledge() {
+    private boolean relAcknowledgeProcessor() {
         final Integer relSequenceForAcknowledge = inboundRelHolder.getAcknowledgeSequence();
         if (relSequenceForAcknowledge == null) {
             return false;
@@ -377,7 +432,7 @@ public final class BaseClient {
                 monitor.sendOutbound(byteData);
             }
 
-            final DatagramPacket packet = new DatagramPacket(byteData, byteData.length);
+            final DatagramPacket packet = new DatagramPacket(byteData, byteData.length, server);
             socket.send(packet);
         } catch (final IOException e) {
             log.debug("Unable to send message", e);

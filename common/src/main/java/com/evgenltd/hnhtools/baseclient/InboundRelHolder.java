@@ -33,15 +33,14 @@ final class InboundRelHolder {
     @UsedInInboundThread
     synchronized InboundMessageAccessor.RelAccessor register(final InboundMessageAccessor.RelAccessor data) {
         final Integer relSequence = data.getSequence();
-        final boolean isFutureRel = ByteUtil.toShort(relSequence - nextSequence) < ByteUtil.WORD / 2;
-        if (isFutureRel) {
-            awaiting.put(relSequence, data);
-            return null;
-        }
-
         if (Objects.equals(relSequence, nextSequence)) {
             incrementNextSequence();
             return data;
+        }
+
+        final boolean isFutureRel = ByteUtil.toShort(relSequence - nextSequence) < ByteUtil.WORD / 2;
+        if (isFutureRel) {
+            awaiting.put(relSequence, data);
         }
 
         return null;
