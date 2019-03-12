@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.message;
 
+import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -49,7 +50,7 @@ public class InboundMessageConverter {
 
                 break;
             case MESSAGE_TYPE_ACKNOWLEDGE:
-                root.put("acknowledgeSequence", reader.uint16());
+                root.put(MessageFields.ACKNOWLEDGE_SEQUENCE, reader.uint16());
                 break;
             case MESSAGE_TYPE_MAP_DATA:
                 root.put("pktId", reader.uint32());
@@ -83,13 +84,13 @@ public class InboundMessageConverter {
                 rel.put("id", reader.uint16());
                 rel.put("type", reader.string());
                 rel.put("parent", reader.uint16());
-                ListReader.read(rel.putArray("pArgs"), reader);
-                ListReader.read(rel.putArray("cArgs"), reader);
+                ByteUtil.readList(rel.putArray("pArgs"), reader);
+                ByteUtil.readList(rel.putArray("cArgs"), reader);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
                 rel.put("id", reader.uint16());
                 rel.put("name", reader.string());
-                ListReader.read(rel.putArray("args"), reader);
+                ByteUtil.readList(rel.putArray("args"), reader);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
                 rel.put("id", reader.uint16());
@@ -97,7 +98,7 @@ public class InboundMessageConverter {
             case REL_MESSAGE_ADD_WIDGET:
                 rel.put("id", reader.uint16());
                 rel.put("parent", reader.uint16());
-                ListReader.read(rel.putArray("args"), reader);
+                ByteUtil.readList(rel.putArray("args"), reader);
                 break;
             case REL_MESSAGE_MAPIV:
                 int mapType = reader.uint8();
@@ -121,7 +122,7 @@ public class InboundMessageConverter {
                 while (reader.hasNext()) {
                     final ObjectNode global = globalsNode.addObject();
                     global.put("globalType", reader.string());
-                    ListReader.read(global.putArray("arguments"), reader);
+                    ByteUtil.readList(global.putArray("arguments"), reader);
                 }
                 break;
             case REL_MESSAGE_RESOURCE_ID:

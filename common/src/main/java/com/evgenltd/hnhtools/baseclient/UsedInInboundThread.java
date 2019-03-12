@@ -14,5 +14,5 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.SOURCE)
-public @interface UsedInInboundThread {
+@interface UsedInInboundThread {
 }

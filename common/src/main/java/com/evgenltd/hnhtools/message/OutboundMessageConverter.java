@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.message;
 
+import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -37,14 +38,14 @@ public class OutboundMessageConverter {
                 final int cookieLength = reader.uint16();
                 root.put("cookieLength", cookieLength);
                 root.put("cookie", reader.bytes(cookieLength));
-                ListReader.read(root.putArray("arguments"), reader);
+                ByteUtil.readList(root.putArray("arguments"), reader);
                 break;
             case MESSAGE_TYPE_REL:
                 root.put("sequence", reader.uint16());
                 root.put("type", reader.uint8());
                 root.put("id", reader.uint16());
                 root.put("name", reader.string());
-                ListReader.read(root.putArray("arguments"), reader);
+                ByteUtil.readList(root.putArray("arguments"), reader);
                 break;
             case MESSAGE_TYPE_OBJECT_ACKNOWLEDGE:
                 root.put("id", reader.uint32());

@@ -69,6 +69,10 @@ public class InboundMessageAccessor {
         return result;
     }
 
+    public int getRelAcknowledge() {
+        return data.get(MessageFields.ACKNOWLEDGE_SEQUENCE).asInt();
+    }
+
     // ##################################################
     // #                                                #
     // #  Object data                                   #

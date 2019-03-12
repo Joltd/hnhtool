@@ -1,11 +1,11 @@
-package com.evgenltd.hnhtools.util;
+package com.evgenltd.hnhtools.entity;
 
 /**
  * <p></p>
  * <br/>
  * <p>Project: hnhtool</p>
  * <p>Author:  lebed</p>
- * <p>Created: 25-02-2019 23:54</p>
+ * <p>Created: 13-03-2019 00:02</p>
  */
 public class Point {
 
@@ -24,5 +24,4 @@ public class Point {
     public int getY() {
         return y;
     }
-
 }

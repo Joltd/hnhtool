@@ -64,10 +64,6 @@ public class DataWriter {
         }
     }
 
-    public void addlist() {
-
-    }
-
     public byte[] bytes() {
         final byte[] result = new byte[data.size()];
         for (int index = 0; index < data.size(); index++) {

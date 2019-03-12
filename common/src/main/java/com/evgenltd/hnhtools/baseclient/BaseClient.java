@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtools.baseclient;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.message.DataWriter;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.InboundMessageConverter;
@@ -39,7 +40,14 @@ public final class BaseClient {
 
     @UsedInInboundThread
     @UsedInOutboundThread
-    private final StateHolder stateHolder;
+    private final ObjectDataHolder objectDataHolder;
+    @UsedInInboundThread
+    @UsedInOutboundThread
+    private final InboundRelHolder inboundRelHolder;
+    @UsedInInboundThread
+    @UsedInOutboundThread
+    private final OutboundRelHolder outboundRelHolder;
+
     private final InboundMessageConverter inboundConverter;
 
     private final DatagramSocket socket;
@@ -47,13 +55,18 @@ public final class BaseClient {
     private final Thread inbound;
     private final Thread outbound;
 
+    private RelQueue relQueue;
+    private ObjectDataQueue objectDataQueue;
+
     private String username;
     private byte[] cookie;
 
     public BaseClient(final ObjectMapper objectMapper) {
         try {
             this.objectMapper = objectMapper;
-            stateHolder = new StateHolder();
+            objectDataHolder = new ObjectDataHolder();
+            inboundRelHolder = new InboundRelHolder();
+            outboundRelHolder = new OutboundRelHolder();
             inboundConverter = new InboundMessageConverter();
 
             socket = new DatagramSocket();
@@ -100,13 +113,31 @@ public final class BaseClient {
     }
 
     public void setCredentials(final String username, final byte[] cookie) {
+        Assert.valueRequireNonEmpty(username, "Username");
+        Assert.valueRequireNonEmpty(cookie, "Cookie");
         this.username = username;
         this.cookie = cookie;
         inbound.setName(String.format("baseClient-%s-inbound", username));
         outbound.setName(String.format("baseClient-%s-outbound", username));
     }
 
+    public void setRelQueue(final RelQueue relQueue) {
+        Assert.valueRequireNonEmpty(relQueue, "RelQueue");
+        this.relQueue = relQueue;
+    }
+
+    public void setObjectDataQueue(final ObjectDataQueue objectDataQueue) {
+        Assert.valueRequireNonEmpty(objectDataQueue, "ObjectDataQueue");
+        this.objectDataQueue = objectDataQueue;
+    }
+
     public void connect() {
+
+        Assert.valueRequireNonEmpty(relQueue, "RelQueue");
+        Assert.valueRequireNonEmpty(objectDataQueue, "ObjectDataQueue");
+        Assert.valueRequireNonEmpty(username, "Username");
+        Assert.valueRequireNonEmpty(cookie, "Cookie");
+
         if (!state.equals(State.INIT)) {
             return; // needed light error response
         }
@@ -136,12 +167,16 @@ public final class BaseClient {
         state = State.CLOSING;
     }
 
-    private void pushRel(final InboundMessageAccessor.RelAccessor relAccessor) {
-
+    private void pushInboundRel(final InboundMessageAccessor.RelAccessor relAccessor) {
+        relQueue.push(relAccessor);
     }
 
     private void pushObjectData(final InboundMessageAccessor.ObjectDataAccessor objectDataAccessor) {
+        objectDataQueue.push(objectDataAccessor);
+    }
 
+    public void pushOutboundRel(final int id, final String name, final Object... args) {
+        outboundRelHolder.register(id, name, args);
     }
 
     // ##################################################
@@ -214,22 +249,23 @@ public final class BaseClient {
         switch (type) {
             case MESSAGE_TYPE_REL:
                 for (InboundMessageAccessor.RelAccessor relAccessor : data.getRel()) {
-                    final InboundMessageAccessor.RelAccessor actualRelAccessor = stateHolder.registerRel(relAccessor);
+                    final InboundMessageAccessor.RelAccessor actualRelAccessor = inboundRelHolder.register(relAccessor);
                     if (actualRelAccessor == null) {
                         continue;
                     }
 
-                    pushRel(relAccessor);
-                    stateHolder.getNearestAwaitingRel().forEach(this::pushRel);
+                    pushInboundRel(relAccessor);
+                    inboundRelHolder.getNearestAwaiting().forEach(this::pushInboundRel);
                 }
                 break;
             case MESSAGE_TYPE_OBJECT_DATA:
                 for (InboundMessageAccessor.ObjectDataAccessor objectDataAccessor : data.getObjectData()) {
-                    stateHolder.registerObjectData(objectDataAccessor);
+                    objectDataHolder.registerObjectData(objectDataAccessor);
                     pushObjectData(objectDataAccessor);
                 }
                 break;
             case MESSAGE_TYPE_ACKNOWLEDGE:
+                outboundRelHolder.acknowledge(data.getRelAcknowledge());
                 break;
         }
     }
@@ -260,9 +296,8 @@ public final class BaseClient {
 
             long now = System.currentTimeMillis();
             long timeElapsed = now - previousTime;
-            boolean sendBeat;
-            // process outbound rel
-            sendBeat = processObjectDataAcknowledge();
+            boolean sendBeat = processRel();
+            sendBeat = sendBeat || processObjectDataAcknowledge();
             sendBeat = sendBeat || processRelAcknowledge();
 
             if (sendBeat && timeElapsed > BEAT_TIMEOUT) {
@@ -274,8 +309,41 @@ public final class BaseClient {
         }
     }
 
+    private boolean processRel() {
+        return outboundRelHolder.getNextAwaiting()
+                .stream()
+                .map(RelRequest::toWriter)
+                .peek(this::send)
+                .count() > 0;
+    }
+
+    private boolean processObjectDataAcknowledge() {
+        final List<ObjectDataHolder.ObjectDataEntry> objectDataForAcknowledge = objectDataHolder.getObjectDataForAcknowledge();
+        if (objectDataForAcknowledge.isEmpty()) {
+            return false;
+        }
+
+        final int batchSize = 125;
+        final int objectDataSize = objectDataForAcknowledge.size();
+        for (int index = 0; index < objectDataSize; index = index + batchSize) {
+            final List<ObjectDataHolder.ObjectDataEntry> batch = objectDataForAcknowledge.subList(
+                    index,
+                    Math.min(index + batchSize, objectDataSize)
+            );
+
+            final DataWriter writer = new DataWriter();
+            writer.adduint8(MessageType.MESSAGE_TYPE_OBJECT_ACKNOWLEDGE.getValue());
+            for (ObjectDataHolder.ObjectDataEntry entry : batch) {
+                writer.adduint32(entry.getId());
+                writer.addint32(entry.getFrame());
+            }
+            send(writer);
+        }
+        return true;
+    }
+
     private boolean processRelAcknowledge() {
-        final Integer relSequenceForAcknowledge = stateHolder.getRelSequenceForAcknowledge();
+        final Integer relSequenceForAcknowledge = inboundRelHolder.getAcknowledgeSequence();
         if (relSequenceForAcknowledge == null) {
             return false;
         }
@@ -284,31 +352,6 @@ public final class BaseClient {
         writer.adduint8(MessageType.MESSAGE_TYPE_ACKNOWLEDGE.getValue());
         writer.adduint16(relSequenceForAcknowledge);
         send(writer);
-        return true;
-    }
-
-    private boolean processObjectDataAcknowledge() {
-        final List<StateHolder.ObjectDataEntry> objectDataForAcknowledge = stateHolder.getObjectDataForAcknowledge();
-        if (objectDataForAcknowledge.isEmpty()) {
-            return false;
-        }
-
-        final int batchSize = 125;
-        final int objectDataSize = objectDataForAcknowledge.size();
-        for (int index = 0; index < objectDataSize; index = index + batchSize) {
-            final List<StateHolder.ObjectDataEntry> batch = objectDataForAcknowledge.subList(
-                    index,
-                    Math.min(index + batchSize, objectDataSize)
-            );
-
-            final DataWriter writer = new DataWriter();
-            writer.adduint8(MessageType.MESSAGE_TYPE_OBJECT_ACKNOWLEDGE.getValue());
-            for (StateHolder.ObjectDataEntry entry : batch) {
-                writer.adduint32(entry.getId());
-                writer.addint32(entry.getFrame());
-            }
-            send(writer);
-        }
         return true;
     }
 

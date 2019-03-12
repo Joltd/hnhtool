@@ -35,6 +35,10 @@ public enum RelType {
         this.value = value;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     public static RelType of(int value) {
         for (final RelType relType : values()) {
             if (relType.value == value) {

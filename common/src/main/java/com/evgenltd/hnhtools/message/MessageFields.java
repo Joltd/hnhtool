@@ -17,11 +17,11 @@ public class MessageFields {
     // rel
     static final String RELS = "rels";
     static final String SEQUENCE = "sequence";
+    static final String ACKNOWLEDGE_SEQUENCE = "acknowledgeSequence";
 
     // object data
     static final String OBJECT_DATA = "objectData";
     static final String ID = "id";
     static final String FRAME = "frame";
-
 
 }
