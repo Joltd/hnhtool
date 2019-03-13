@@ -101,7 +101,7 @@ public class InboundMessageAccessor {
         }
 
         public long getId() {
-            return data.get(MessageFields.ID).asLong();
+            return data.get(MessageFields.OBJECT_ID).asLong();
         }
 
         public int getFrame() {
@@ -120,6 +120,23 @@ public class InboundMessageAccessor {
         public int getSequence() {
             return data.get(MessageFields.SEQUENCE).asInt();
         }
+
+        public RelType getRelType() {
+            final JsonNode relTypeNode = data.get(MessageFields.REL_TYPE);
+            if (relTypeNode == null || relTypeNode.isNull()) {
+                return null;
+            }
+            return RelType.valueOf(relTypeNode.asText());
+        }
+
+        public int getWidgetId() {
+            return data.get(MessageFields.WIDGET_ID).asInt();
+        }
+
+        public String getWidgetType() {
+            return data.get(MessageFields.WIDGET_TYPE).asText();
+        }
+
     }
 
 }

@@ -28,14 +28,14 @@ import java.util.Objects;
  */
 public final class BaseClient {
 
-    // todo make connect and disconnect async
-
     private static final int PROTOCOL_VERSION = 17;
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;
 
     private static final Logger log = LogManager.getLogger(BaseClient.class);
     private static final int AUTH_TIMEOUT = 200;
+    private static final int CLOSE_TIMEOUT = 200;
+    private static final int LIFE_TIMEOUT = 100;
 
     private State state = State.INIT;
     private ConnectionErrorCode connectionErrorCode;
@@ -227,6 +227,8 @@ public final class BaseClient {
             } else if (isLife()) {
                 baseInboundProcessor(data);
                 closingProcessor(data);
+            } else if (isClosing()) {
+                closingProcessor(data);
             }
 
         }
@@ -336,10 +338,7 @@ public final class BaseClient {
                 continue;
             }
 
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ignored) {
-            }
+            sleep(LIFE_TIMEOUT);
 
             long now = System.currentTimeMillis();
             long timeElapsed = now - previousTime;
@@ -351,8 +350,8 @@ public final class BaseClient {
                 final DataWriter beat = new DataWriter();
                 beat.adduint8(MessageType.MESSAGE_TYPE_BEAT.getValue());
                 send(beat);
+                previousTime = now;
             }
-            previousTime = now;
 
         }
     }
@@ -367,16 +366,14 @@ public final class BaseClient {
         writer.adduint16(cookie.length);
         writer.addbytes(cookie);
         send(writer);
-        try {
-            Thread.sleep(AUTH_TIMEOUT);
-        } catch (InterruptedException ignored) {
-        }
+        sleep(AUTH_TIMEOUT);
     }
 
     private void doClose() {
         final DataWriter writer = new DataWriter();
         writer.adduint8(MessageType.MESSAGE_TYPE_CLOSE.getValue());
         send(writer);
+        sleep(CLOSE_TIMEOUT);
     }
 
     private boolean relProcessor() {
@@ -437,6 +434,12 @@ public final class BaseClient {
         } catch (final IOException e) {
             log.debug("Unable to send message", e);
         }
+    }
+
+    private void sleep(final long timeout) {
+        try {
+            Thread.sleep(timeout);
+        } catch (InterruptedException ignored) {}
     }
 
     private enum State {

@@ -69,7 +69,7 @@ public class InboundMessageConverter {
 
     private void convertRel(final ObjectNode rel, final int relTypeValue, final DataReader reader) {
         final RelType relType = RelType.of(relTypeValue);
-        rel.put("relType", relType.name());
+        rel.put(MessageFields.REL_TYPE, relType.name());
         switch (relType) {
             case REL_MESSAGE_FRAGMENT:
                 final boolean result = relFragmentBuilder.build(reader);
@@ -81,22 +81,22 @@ public class InboundMessageConverter {
                 }
                 break;
             case REL_MESSAGE_NEW_WIDGET:
-                rel.put("id", reader.uint16());
-                rel.put("type", reader.string());
+                rel.put(MessageFields.WIDGET_ID, reader.uint16());
+                rel.put(MessageFields.WIDGET_TYPE, reader.string());
                 rel.put("parent", reader.uint16());
                 ByteUtil.readList(rel.putArray("pArgs"), reader);
                 ByteUtil.readList(rel.putArray("cArgs"), reader);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
-                rel.put("id", reader.uint16());
+                rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 rel.put("name", reader.string());
                 ByteUtil.readList(rel.putArray("args"), reader);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
-                rel.put("id", reader.uint16());
+                rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 break;
             case REL_MESSAGE_ADD_WIDGET:
-                rel.put("id", reader.uint16());
+                rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 rel.put("parent", reader.uint16());
                 ByteUtil.readList(rel.putArray("args"), reader);
                 break;
@@ -189,7 +189,7 @@ public class InboundMessageConverter {
         while (reader.hasNext()) {
             final ObjectNode objectData = objectDataArray.addObject();
             objectData.put("fl", reader.uint8());
-            objectData.put(MessageFields.ID, reader.uint32());
+            objectData.put(MessageFields.OBJECT_ID, reader.uint32());
             objectData.put(MessageFields.FRAME, reader.int32());
             final ArrayNode deltas = objectData.putArray("deltas");
             while (true) {

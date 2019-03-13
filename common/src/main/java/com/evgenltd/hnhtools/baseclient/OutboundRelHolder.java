@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  */
 final class OutboundRelHolder {
 
-    private Integer acknowledgeSequence = null;
+    private Integer acknowledgeSequence = 0;
     private List<RelRequest> awaiting = new ArrayList<>();
 
     synchronized void register(final int id, final String name, final Object... args) {

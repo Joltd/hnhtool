@@ -30,11 +30,8 @@ final class ObjectDataHolder {
 
     @UsedInOutboundThread
     synchronized List<ObjectDataEntry> getObjectDataForAcknowledge() {
-        final List<ObjectDataEntry> result = new ArrayList<>();
-        for (Long objectId : objectDataAcknowledge.keySet()) {
-            final ObjectDataEntry objectData = objectDataAcknowledge.remove(objectId);
-            result.add(objectData);
-        }
+        final List<ObjectDataEntry> result = new ArrayList<>(objectDataAcknowledge.values());
+        objectDataAcknowledge.clear();
         return result;
     }
 
