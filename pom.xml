@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evgenltd.hnhtool</groupId>
-    <artifactId>root</artifactId>
+    <artifactId>hnhtool-root</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0</version>
     <modules>
@@ -13,6 +13,7 @@
         <module>analyzer</module>
         <module>gate</module>
         <module>auth</module>
+        <module>harvester</module>
     </modules>
 
     <build>
