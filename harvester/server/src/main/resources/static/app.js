@@ -6,8 +6,8 @@
 // #                                                #
 // ##################################################
 
-let tasks = [];
-let ganttChart = gantt();
+// let tasks = [];
+// let ganttChart = gantt();
 
 function handleTaskEvent(taskEvent) {
     if (taskEvent.type === 'START') {
@@ -50,15 +50,80 @@ function updateTasks() {
 
 function connect() {
 
-    let socket = new SockJS('/harvester');
-    let client = Stomp.over(socket);
-    client.connect(
-        {},
-        frame => client.subscribe(
-            '/topic/tasks',
-            ( task => handleTaskEvent( JSON.parse(task.body) ) )
-        )
-    );
+    let data = [
+        {x: 0, width: 200, color: '#00FF00'},
+        {x: 200, width: 200, color: '#0000FF'},
+        {x: 400, width: 200, color: '#FF0000'},
+        {x: 600, width: 200, color: '#FFF000'},
+        {x: 800, width: 200, color: '#00FFFF'}
+    ];
+
+    let svgGroup = d3.selectAll('svg')
+        .data([null]);
+    svgGroup = svgGroup.merge(svgGroup.enter()
+        .append('svg'))
+        .attr('width', 400)
+        .attr('height', 400);
+
+    let paneGroup = svgGroup.selectAll('.pane')
+        .data([{x:0,y:0}]);
+    paneGroup = paneGroup.merge(paneGroup.enter().append('g').attr('class', 'pane'));
+
+    let blockGroup = paneGroup.selectAll('.block')
+        .data(data);
+    blockGroup.merge(blockGroup.enter().append('rect').attr('class', '.block'))
+        .attr('x', d => d.x)
+        .attr('y', d => d.x)
+        .attr('width', d => d.width)
+        .attr('height', d => d.width)
+        .attr('fill', d => d.color);
+
+    let scrollBarX = scroll()
+        .orientation('HORIZONTAL')
+        .onScroll(d => {
+            let offset = paneGroup.datum();
+            offset.x = -d;
+            paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
+        });
+    let scrollXGroup = svgGroup.selectAll('.scroll-x')
+        .data([{
+            viewportSize: 400,
+            fullSize: 1000
+        }]);
+    scrollXGroup.merge(scrollXGroup.enter().append('g').attr('class', 'scroll-x'))
+        .call(scrollBarX);
+
+    let scrollBarY = scroll()
+        .orientation('VERTICAL')
+        .onScroll(d => {
+            let offset = paneGroup.datum();
+            offset.y = -d;
+            paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
+        });
+    let scrollYGroup = svgGroup.selectAll('.scroll-y')
+        .data([{
+            viewportSize: 400,
+            fullSize: 1000
+        }]);
+    scrollYGroup.merge(scrollYGroup.enter().append('g').attr('class', 'scroll-y'))
+        .call(scrollBarY);
+
+    // let chart = dragable();
+
+    //
+    // d3.select('#tasks')
+    //     .data([data])
+    //     .call(chart);
+
+    // let socket = new SockJS('/harvester');
+    // let client = Stomp.over(socket);
+    // client.connect(
+    //     {},
+    //     frame => client.subscribe(
+    //         '/topic/tasks',
+    //         ( task => handleTaskEvent( JSON.parse(task.body) ) )
+    //     )
+    // );
 
 }
 
@@ -83,6 +148,7 @@ function gantt() {
             prepareScaleData(data);
 
             let selection = d3.select(this);
+
             let svgGroup = selection.selectAll('svg')
                 .data([null]);
             svgGroup = svgGroup.merge(svgGroup.enter()
@@ -130,7 +196,107 @@ function gantt() {
 
 }
 
-// [
-//     {id,name,start,end},
-//     {id,name,start,end}
-// ]
+function scroll() {
+
+    let _orientationConfig;
+    let _orientation;
+    let _onScroll;
+    let _scrollThickness = 10;
+    let _scrollScale;
+    let _slider;
+
+    orientation('VERTICAL');
+
+    function visual(_selection) {
+        _selection.each(function (data) {
+
+            prepareScrollScale(data);
+            let scrollData = prepareScrollSliderData(data);
+
+            let selection = d3.select(this);
+
+            let rootGroup = selection.selectAll('.scroll-root')
+                .data(scrollData);
+            rootGroup.exit().remove();
+            rootGroup = rootGroup.merge(rootGroup.enter()
+                .append('g')
+                .attr('class', 'scroll-root'));
+
+            let sliderGroup = rootGroup.selectAll('.scroll-slider')
+                .data(scrollData);
+            sliderGroup.exit().remove();
+            _slider = sliderGroup.merge(sliderGroup.enter()
+                .append('rect')
+                .attr('class', 'scroll-slider'))
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr(_orientationConfig.sliderThicknessSide, _scrollThickness)
+                .attr(_orientationConfig.sliderSizeSide, d => d.scrollSize)
+                .call(d3.drag().on('drag', () => handleDrag(_orientationConfig.positionDelta())));
+
+        });
+    }
+
+    visual.orientation = orientation;
+    visual.onScroll = onScroll;
+    return visual;
+
+    function orientation(_) {
+        _orientation = _;
+        _orientationConfig = _ === 'HORIZONTAL'
+            ? {
+                sliderThicknessSide: 'height',
+                sliderSizeSide: 'width',
+                position: 'x',
+                positionDelta: () => d3.event.dx
+            }
+            : {
+                sliderThicknessSide: 'width',
+                sliderSizeSide: 'height',
+                position: 'y',
+                positionDelta: () => d3.event.dy
+            };
+        return this;
+    }
+
+    function onScroll(_) {
+        _onScroll = _;
+        return this;
+    }
+
+    function prepareScrollSliderData(data) {
+        let relativeSize = data.viewportSize / data.fullSize;
+        if (relativeSize >= 1) {
+            return [];
+        }
+
+        return [{
+            scrollSize: data.viewportSize * (data.viewportSize / data.fullSize < 0.2
+                ? 0.2
+                : data.viewportSize / data.fullSize),
+            viewportSize: data.viewportSize,
+            fullSize: data.fullSize,
+        }];
+    }
+
+    function prepareScrollScale(data) {
+        _scrollScale = d3.scaleLinear()
+            .domain([0, data.viewportSize])
+            .range([0, data.fullSize]);
+    }
+
+    function handleDrag(delta) {
+        let data = _slider.datum();
+        let newPosition = +_slider.attr(_orientationConfig.position) + delta;
+        if (newPosition < 0) {
+            newPosition = 0;
+        } else if (newPosition + data.scrollSize > data.viewportSize) {
+            newPosition = data.viewportSize - data.scrollSize;
+        }
+        _slider.attr(_orientationConfig.position, newPosition);
+        if (_onScroll) {
+            _onScroll(_scrollScale(newPosition));
+        }
+    }
+
+}
