@@ -21,18 +21,23 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class Application extends SpringBootServletInitializer implements WebSocketMessageBrokerConfigurer {
 
+    public static final String BROKER_PATH = "/topic";
+    public static final String APPLICATION_PREFIX = "/app";
+    public static final String ENDPOINT = "/harvester";
+
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
     @Override
     public void configureMessageBroker(final MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.enableSimpleBroker(BROKER_PATH);
+        registry.setApplicationDestinationPrefixes(APPLICATION_PREFIX);
     }
 
     @Override
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
-        registry.addEndpoint("/harvester").withSockJS();
+        registry.addEndpoint(ENDPOINT).withSockJS();
     }
+
 }

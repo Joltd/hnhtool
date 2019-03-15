@@ -8,37 +8,63 @@ package com.evgenltd.hnhtool.harvester.entity;
  * <p>Created: 15-03-2019 00:28</p>
  */
 public final class TaskEvent {
-    private Long id;
-    private Long time;
-    private String type;
 
-    public TaskEvent(final Long id, final Long time, final String type) {
-        this.id = id;
-        this.time = time;
-        this.type = type;
+    private long id;
+    private String name;
+    private long time;
+    private Type type;
+
+    private TaskEvent() {}
+
+    public static TaskEvent start(final long id, final String name, final long time) {
+        final TaskEvent event = new TaskEvent();
+        event.id = id;
+        event.name = name;
+        event.time = time;
+        event.type = Type.START;
+        return event;
     }
 
-    public Long getId() {
+    public static TaskEvent end(final long id, final String name, final long time) {
+        final TaskEvent event = new TaskEvent();
+        event.id = id;
+        event.name = name;
+        event.time = time;
+        event.type = Type.END;
+        return event;
+    }
+
+    public long getId() {
         return id;
     }
-
-    public void setId(final Long id) {
+    public void setId(final long id) {
         this.id = id;
     }
 
-    public Long getTime() {
-        return time;
+    public String getName() {
+        return name;
+    }
+    public void setName(final String name) {
+        this.name = name;
     }
 
-    public void setTime(final Long time) {
+    public long getTime() {
+        return time;
+    }
+    public void setTime(final long time) {
         this.time = time;
     }
 
-    public String getType() {
+    public Type getType() {
         return type;
     }
-
-    public void setType(final String type) {
+    public void setType(final Type type) {
         this.type = type;
     }
+
+    enum Type {
+        START,
+        END
+    }
+
 }

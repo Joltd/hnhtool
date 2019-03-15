@@ -12,6 +12,13 @@
     <artifactId>server</artifactId>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.evgenltd.hnhtool</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- spring boot core -->
 
         <dependency>

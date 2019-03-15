@@ -1,8 +1,10 @@
 package com.evgenltd.hnhtool.harvester.service;
 
+import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.entity.TaskEvent;
+import com.evgenltd.hnhtools.common.Assert;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,21 +17,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class PushService {
 
+    public static final String TASKS_TOPIC = Application.BROKER_PATH + "/tasks";
+
     private SimpMessagingTemplate messagingTemplate;
 
     public PushService(final SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @Scheduled(fixedDelay = 1000L)
-    public void produce() {
-        messagingTemplate.convertAndSend("/topic/tasks", new TaskEvent(100L, System.currentTimeMillis(), Math.random() > 0.5 ? "NEW" : "UPDATE"));
+    public void sendTaskUpdate(@NotNull final TaskEvent taskEvent) {
+        Assert.valueRequireNonEmpty(taskEvent, "TaskEvent");
+        messagingTemplate.convertAndSend(TASKS_TOPIC, taskEvent);
     }
-
-//    public void sendTaskCreate() {
-//
-//    }
-//
-//    public void sendTask
 
 }
