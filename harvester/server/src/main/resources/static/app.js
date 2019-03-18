@@ -51,62 +51,101 @@ function updateTasks() {
 function connect() {
 
     let data = [
-        {x: 0, width: 200, color: '#00FF00'},
-        {x: 200, width: 200, color: '#0000FF'},
-        {x: 400, width: 200, color: '#FF0000'},
-        {x: 600, width: 200, color: '#FFF000'},
-        {x: 800, width: 200, color: '#00FFFF'}
+        {name: 'Test#1'},
+        {name: 'Test#2'},
+        {name: 'Test#3'},
+        {name: 'Test#4'}
     ];
 
-    let svgGroup = d3.selectAll('svg')
+    let timeData = {
+        ticks: [
+            {time: 1245678834},
+            {time: 1245679863},
+            {time: 1245680432},
+            {time: 1245682346}
+        ],
+        tasks: 10
+    };
+    let scale = d3.scaleLinear()
+        .domain([1245678834, 1245682346])
+        .range([0, 500]);
+
+    let position = observable();
+    position.setValue(-50);
+
+    let tasksGroup = d3.select('#tasks');
+    let svg = tasksGroup.selectAll('svg')
         .data([null]);
-    svgGroup = svgGroup.merge(svgGroup.enter()
-        .append('svg'))
-        .attr('width', 400)
-        .attr('height', 400);
 
-    let paneGroup = svgGroup.selectAll('.pane')
-        .data([{x:0,y:0}]);
-    paneGroup = paneGroup.merge(paneGroup.enter().append('g').attr('class', 'pane'));
+    // let tasks = taskList(position);
 
-    let blockGroup = paneGroup.selectAll('.block')
-        .data(data);
-    blockGroup.merge(blockGroup.enter().append('rect').attr('class', '.block'))
-        .attr('x', d => d.x)
-        .attr('y', d => d.x)
-        .attr('width', d => d.width)
-        .attr('height', d => d.width)
-        .attr('fill', d => d.color);
+    svg.merge(svg.enter().append('svg'))
+        // .data([data])
+        // .call(tasks);
+        .data([timeData])
+        .call(timeAxis(scale, position));
 
-    let scrollBarX = scroll()
-        .orientation('HORIZONTAL')
-        .onScroll(d => {
-            let offset = paneGroup.datum();
-            offset.x = -d;
-            paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
-        });
-    let scrollXGroup = svgGroup.selectAll('.scroll-x')
-        .data([{
-            viewportSize: 400,
-            fullSize: 1000
-        }]);
-    scrollXGroup.merge(scrollXGroup.enter().append('g').attr('class', 'scroll-x'))
-        .call(scrollBarX);
+    // =================scroll testing========================
 
-    let scrollBarY = scroll()
-        .orientation('VERTICAL')
-        .onScroll(d => {
-            let offset = paneGroup.datum();
-            offset.y = -d;
-            paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
-        });
-    let scrollYGroup = svgGroup.selectAll('.scroll-y')
-        .data([{
-            viewportSize: 400,
-            fullSize: 1000
-        }]);
-    scrollYGroup.merge(scrollYGroup.enter().append('g').attr('class', 'scroll-y'))
-        .call(scrollBarY);
+    // let data = [
+    //     {x: 0, width: 200, color: '#00FF00'},
+    //     {x: 200, width: 200, color: '#0000FF'},
+    //     {x: 400, width: 200, color: '#FF0000'},
+    //     {x: 600, width: 200, color: '#FFF000'},
+    //     {x: 800, width: 200, color: '#00FFFF'}
+    // ];
+    //
+    // let svgGroup = d3.selectAll('svg')
+    //     .data([null]);
+    // svgGroup = svgGroup.merge(svgGroup.enter()
+    //     .append('svg'))
+    //     .attr('width', 400)
+    //     .attr('height', 400);
+    //
+    // let paneGroup = svgGroup.selectAll('.pane')
+    //     .data([{x:0,y:0}]);
+    // paneGroup = paneGroup.merge(paneGroup.enter().append('g').attr('class', 'pane'));
+    //
+    // let blockGroup = paneGroup.selectAll('.block')
+    //     .data(data);
+    // blockGroup.merge(blockGroup.enter().append('rect').attr('class', '.block'))
+    //     .attr('x', d => d.x)
+    //     .attr('y', d => d.x)
+    //     .attr('width', d => d.width)
+    //     .attr('height', d => d.width)
+    //     .attr('fill', d => d.color);
+    //
+    // let scrollBarX = scroll()
+    //     .orientation('HORIZONTAL')
+    //     .onScroll(d => {
+    //         let offset = paneGroup.datum();
+    //         offset.x = -d;
+    //         paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
+    //     });
+    // let scrollXGroup = svgGroup.selectAll('.scroll-x')
+    //     .data([{
+    //         viewportSize: 400,
+    //         fullSize: 1000
+    //     }]);
+    // scrollXGroup.merge(scrollXGroup.enter().append('g').attr('class', 'scroll-x'))
+    //     .call(scrollBarX);
+    //
+    // let scrollBarY = scroll()
+    //     .orientation('VERTICAL')
+    //     .onScroll(d => {
+    //         let offset = paneGroup.datum();
+    //         offset.y = -d;
+    //         paneGroup.attr('transform', 'translate(' + offset.x + ',' + offset.y + ')')
+    //     });
+    // let scrollYGroup = svgGroup.selectAll('.scroll-y')
+    //     .data([{
+    //         viewportSize: 400,
+    //         fullSize: 1000
+    //     }]);
+    // scrollYGroup.merge(scrollYGroup.enter().append('g').attr('class', 'scroll-y'))
+    //     .call(scrollBarY);
+
+    // =========================================
 
     // let chart = dragable();
 
