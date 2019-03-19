@@ -6,3 +6,7 @@
 .task-list > .task > text {
     dominant-baseline: middle;
 }
+
+.viewport > .bar {
+    fill: #2196F3;
+}

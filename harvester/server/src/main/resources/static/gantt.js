@@ -1,11 +1,19 @@
+// todo y scroll - wrong behavior when too low task count (blinking)
+// todo x scroll - when timeline is to big slider penetrates right side of the chart
+// todo design for remove button
+// todo implementation of buttons panel
+// todo implementation of resize
+// todo deference with colors by task type
+
 function Gantt(selector) {
 
-    let PIXEL_PER_SECOND = 100;
-    let BAND_SIZE = 60;
-    let AXIS_HEIGHT = 40;
-    let TASK_LIST_WIDTH = 200;
+    let PIXEL_PER_SECOND = 50;
+    let BAND_SIZE = 20;
+    let AXIS_HEIGHT = 30;
+    let AXIS_TICK_STEP = 5000; // msec
+    let TASK_LIST_WIDTH = 100;
     let TASK_LIST_PADDING = 5;
-    let TASK_LIST_REMOVE_SIZE = 20;
+    let TASK_LIST_REMOVE_SIZE = 15;
     let BAR_RADIUS = 5;
     let BAR_PADDING = 5;
     let SCROLL_THICKNESS = 10;
@@ -25,14 +33,63 @@ function Gantt(selector) {
         .attr('style','width:100%; height:100%');
 
     let _gantt = gantt();
+    let _tasks = [];
 
-    function refresh(data) {
-        _selection.data([data])
+    function clear() {
+        _tasks = [];
+        refresh();
+    }
+
+    function setTasks(tasks) {
+        _tasks = tasks;
+        refresh();
+    }
+
+    function addTask(task) {
+        if (!task.end) {
+            task.end = new Date().getTime();
+            task.inProgress = true;
+        }
+        _tasks.push(task);
+        refresh();
+    }
+
+    function updateTask(task) {
+        let foundTask = _tasks.find(_task => _task.id === task.id);
+        if (!foundTask) {
+            return;
+        }
+        foundTask.end = task.end;
+        foundTask.inProgress = false;
+        refresh();
+    }
+
+    function removeTask(id) {
+        let index = _tasks.findIndex(task => task.id === id);
+        if (index < 0) {
+            return;
+        }
+        _tasks = _tasks.splice(index, 1);
+        refresh();
+    }
+
+    function refresh() {
+        for (const task of _tasks) {
+            if (task.inProgress) {
+                task.end = new Date().getTime();
+            }
+        }
+        _selection.data([_tasks])
             .call(_gantt);
     }
 
     return {
-        refresh
+        refresh,
+        clear,
+        setTasks,
+        addTask,
+        updateTask,
+        removeTask
     };
 
     // ##################################################
@@ -43,7 +100,7 @@ function Gantt(selector) {
 
     function gantt() {
 
-        let _mainScale = d3.scaleLinear();
+        let _mainScale = d3.scaleLinear().clamp(true);
         let _xOffset = observable();
         let _yOffset = observable();
 
@@ -52,6 +109,7 @@ function Gantt(selector) {
         let _yScroll = scroll(_yOffset).orientation('VERTICAL');
         let _taskList = taskList(() => {}, _yOffset);
         let _timeAxis = timeAxis(_mainScale, _xOffset);
+        let _buttonPanel = buttonPanel();
 
         function visual(_selection) {
             _selection.each(function (data) {
@@ -67,9 +125,10 @@ function Gantt(selector) {
                 _yOffset.removeListeners();
                 _yOffset.setMaxValue(chartData.y.fullSize - chartData.y.viewportSize);
 
-                svgSelection.call(_viewport);
-                svgSelection.call(_timeAxis);
-                svgSelection.call(_taskList);
+                svgSelection.call(_viewport)
+                    .call(_timeAxis)
+                    .call(_taskList)
+                    .call(_buttonPanel);
 
                 groupBuilder(svgSelection, '.x-scroll-group')
                     .style('x-scroll-group')
@@ -114,9 +173,14 @@ function Gantt(selector) {
                 viewportSize: svgBox.height - AXIS_HEIGHT - SCROLL_THICKNESS
             };
 
-            result.ticks = _mainScale.ticks().map(time => {
-                return {time};
-            });
+            result.ticks = [];
+            let tickFrom = AXIS_TICK_STEP * Math.round(timeFrom / AXIS_TICK_STEP);
+            let tickTo = AXIS_TICK_STEP * Math.round(timeTo / AXIS_TICK_STEP) + AXIS_TICK_STEP;
+            for (let step = tickFrom; step <= tickTo; step = step + AXIS_TICK_STEP) {
+                result.ticks.push({
+                    time: step
+                })
+            }
 
             return result;
 
@@ -126,28 +190,33 @@ function Gantt(selector) {
 
     // ##################################################
     // #                                                #
-    // #  Data model                                    #
+    // #  Button panel                                  #
     // #                                                #
     // ##################################################
 
-    function dataModel() {
+    function buttonPanel() {
 
-        let data = {};
+        function visual(_selection) {
+            _selection.each(function (data) {
 
-        return {
-            removeTask
-        };
+                let buttonPanelGroup = groupBuilder(d3.select(this), '.button-panel')
+                    .style('button-panel')
+                    .build();
 
-        // [{id,name,start,end}]
-        function fullRefresh(tasks) {
-            data.tasks = tasks;
-            data.sizes
+                groupBuilder(buttonPanelGroup, 'rect')
+                    .tag('rect')
+                    .data([data])
+                    .build()
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', TASK_LIST_WIDTH)
+                    .attr('height', AXIS_HEIGHT)
+                    .attr('fill', 'white');
+
+            });
         }
 
-        function removeTask(id) {
-
-        }
-
+        return visual;
     }
 
     // ##################################################
@@ -190,9 +259,13 @@ function Gantt(selector) {
                     .tag('rect')
                     .style('bar')
                     .build()
+                    .attr('pointer-events','none')
                     .attr('x', d => mainScale(d.start) + BAR_PADDING)
                     .attr('y', (d, i) => BAND_SIZE * i + BAR_PADDING)
-                    .attr('width', d => mainScale(d.end) - mainScale(d.start) - 2 * BAR_PADDING)
+                    .attr('width', d => {
+                        let width = mainScale(d.end) - mainScale(d.start) - 2 * BAR_PADDING;
+                        return width < 10 ? 10 : width;
+                    })
                     .attr('height', BAND_SIZE - 2 * BAR_PADDING)
                     .attr('rx', BAR_RADIUS)
                     .attr('ry', BAR_RADIUS);
@@ -386,7 +459,8 @@ function Gantt(selector) {
                 .attr('y1', AXIS_HEIGHT)
                 .attr('x2', d => mainScale(d.time))
                 .attr('y2', data.tasks.length * BAND_SIZE + AXIS_HEIGHT)
-                .attr('stroke', 'black');
+                .attr('stroke', 'black')
+                .attr('pointer-events','none');
         }
 
         function initLabels(rootGroup, data) {
@@ -400,7 +474,8 @@ function Gantt(selector) {
                 .build()
                 .attr('x', d => mainScale(d.time))
                 .attr('y', AXIS_HEIGHT/2)
-                .text(d => formatTime(d.time));
+                .text(d => formatTime(d.time))
+                .attr('pointer-events','none');
 
         }
 
@@ -450,7 +525,8 @@ function Gantt(selector) {
                 taskGroupEnter.append('text')
                     .text(d => d.name)
                     .attr('x', TASK_LIST_PADDING)
-                    .attr('y', (d, i) => (i + 1) * BAND_SIZE - BAND_SIZE/2);
+                    .attr('y', (d, i) => (i + 1) * BAND_SIZE - BAND_SIZE/2)
+                    .attr('pointer-events','none');
                 taskGroupEnter.append('rect')
                     .attr('x', TASK_LIST_WIDTH - TASK_LIST_PADDING - TASK_LIST_REMOVE_SIZE)
                     .attr('y', (d, i) => i * BAND_SIZE + BAND_SIZE/2 - TASK_LIST_REMOVE_SIZE/2)
