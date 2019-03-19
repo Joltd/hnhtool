@@ -1,9 +1,28 @@
 function Gantt(selector) {
 
+    let PIXEL_PER_SECOND = 100;
+    let BAND_SIZE = 60;
+    let AXIS_HEIGHT = 40;
+    let TASK_LIST_WIDTH = 200;
+    let TASK_LIST_PADDING = 5;
+    let TASK_LIST_REMOVE_SIZE = 20;
+    let BAR_RADIUS = 5;
+    let BAR_PADDING = 5;
+    let SCROLL_THICKNESS = 10;
+    let TIME_FORMAT = new Intl.DateTimeFormat(
+        'ru-RU',
+        {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }
+    );
+
     let svgGroup = d3.select(selector)
         .selectAll('svg')
         .data([null]);
-    let _selection = svgGroup.merge(svgGroup.enter().append('svg'));
+    let _selection = svgGroup.merge(svgGroup.enter().append('svg'))
+        .attr('style','width:100%; height:100%');
 
     let _gantt = gantt();
 
@@ -28,22 +47,78 @@ function Gantt(selector) {
         let _xOffset = observable();
         let _yOffset = observable();
 
-        let _viewport = viewport(_mainScale);
-        let _xScroll = scroll(_xOffset);
-        let _yScroll = scroll(_yOffset);
-        let _taskList = taskList(() => {});
-        let _timeAxis = timeAxis(_mainScale);
+        let _viewport = viewport(_mainScale, _xOffset, _yOffset);
+        let _xScroll = scroll(_xOffset).orientation('HORIZONTAL');
+        let _yScroll = scroll(_yOffset).orientation('VERTICAL');
+        let _taskList = taskList(() => {}, _yOffset);
+        let _timeAxis = timeAxis(_mainScale, _xOffset);
 
         function visual(_selection) {
             _selection.each(function (data) {
-                let svgNodeBox = d3.select(this).node().getBoundingClientRect();
+
+                let svgSelection = d3.select(this);
+
+                let svgBox = svgSelection.node().getBoundingClientRect();
+                let chartData = prepareData(data, svgBox);
+                svgSelection.datum(chartData);
+
+                _xOffset.removeListeners();
+                _xOffset.setMaxValue(chartData.x.fullSize - chartData.x.viewportSize);
+                _yOffset.removeListeners();
+                _yOffset.setMaxValue(chartData.y.fullSize - chartData.y.viewportSize);
+
+                svgSelection.call(_viewport);
+                svgSelection.call(_timeAxis);
+                svgSelection.call(_taskList);
+
+                groupBuilder(svgSelection, '.x-scroll-group')
+                    .style('x-scroll-group')
+                    .build()
+                    .attr('transform', 'translate(' + TASK_LIST_WIDTH + ',' + (svgBox.height - SCROLL_THICKNESS) + ')')
+                    .datum(chartData.x)
+                    .call(_xScroll);
+
+                groupBuilder(svgSelection, '.y-scroll-group')
+                    .style('y-scroll-group')
+                    .build()
+                    .attr('transform', 'translate(' + (svgBox.width - SCROLL_THICKNESS) + ',' + AXIS_HEIGHT + ')')
+                    .datum(chartData.y)
+                    .call(_yScroll);
 
             });
         }
 
         return visual;
 
-        function prepareData() {
+        function prepareData(data, svgBox) {
+
+            let timeFrom = d3.min(data.map(d => d.start));
+            let timeTo = d3.max(data.map(d => d.end));
+            let rangeDelta = timeTo - timeFrom;
+            let rangeTo = rangeDelta / 1000 * PIXEL_PER_SECOND;
+
+            _mainScale.domain([timeFrom, timeTo])
+                .range([0, rangeTo]);
+
+            let result = {};
+            result.tasks = data;
+
+            result.x = {
+                svgSize: svgBox.width,
+                fullSize: rangeTo,
+                viewportSize: svgBox.width - TASK_LIST_WIDTH - SCROLL_THICKNESS
+            };
+            result.y = {
+                svgSize: svgBox.height,
+                fullSize: BAND_SIZE * result.tasks.length,
+                viewportSize: svgBox.height - AXIS_HEIGHT - SCROLL_THICKNESS
+            };
+
+            result.ticks = _mainScale.ticks().map(time => {
+                return {time};
+            });
+
+            return result;
 
         }
 
@@ -82,33 +157,55 @@ function Gantt(selector) {
     // ##################################################
 
     // [{start, end}]
-    function viewport(mainScale) {
+    function viewport(mainScale, xOffsetProperty, yOffsetProperty) {
 
-        let _bandSize = 30;
+        let x = 0;
+        let y = 0;
 
         function visual(_selection) {
             _selection.each(function (data) {
 
-                let _selection = d3.select(this);
-                let viewportGroup = _selection.selectAll('.viewport')
-                    .data([null]);
-
-                viewportGroup = viewportGroup.merge(viewportGroup.enter()
+                let root = d3.select(this)
+                    .selectAll('.viewport-group')
+                    .data([data]);
+                let rootEnter = root.enter()
                     .append('g')
-                    .attr('class', 'viewport'));
+                    .attr('class', 'viewport-group');
+                rootEnter.append('rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', data.x.viewportSize)
+                    .attr('height', data.y.viewportSize)
+                    .attr('fill', 'white')
+                    .on('wheel', d => yOffsetProperty.accumulateValue(-d3.event.wheelDelta));
+                root = root.merge(rootEnter)
+                    .attr('transform', 'translate(' + TASK_LIST_WIDTH + ',' + AXIS_HEIGHT + ')');
 
-                let barGroup = viewportGroup.selectAll('.bar')
-                    .data(data);
+                let viewportGroup = groupBuilder(root, '.viewport')
+                    .style('viewport')
+                    .build();
 
-                barGroup.exit().remove();
+                groupBuilder(viewportGroup, '.bar')
+                    .data(data.tasks)
+                    .tag('rect')
+                    .style('bar')
+                    .build()
+                    .attr('x', d => mainScale(d.start) + BAR_PADDING)
+                    .attr('y', (d, i) => BAND_SIZE * i + BAR_PADDING)
+                    .attr('width', d => mainScale(d.end) - mainScale(d.start) - 2 * BAR_PADDING)
+                    .attr('height', BAND_SIZE - 2 * BAR_PADDING)
+                    .attr('rx', BAR_RADIUS)
+                    .attr('ry', BAR_RADIUS);
 
-                barGroup.merge(barGroup.enter()
-                    .append('rect')
-                    .attr('class', 'bar'))
-                    .attr('x', d => mainScale(d.start))
-                    .attr('y', (d, i) => _bandSize * i)
-                    .attr('width', d => mainScale(d.end) - mainScale(d.start))
-                    .attr('height', _bandSize);
+                xOffsetProperty.addOnChange(newPosition => {
+                    x = -newPosition;
+                    viewportGroup.attr('transform','translate('+x+','+y+')');
+                });
+
+                yOffsetProperty.addOnChange(newPosition => {
+                    y = -newPosition;
+                    viewportGroup.attr('transform','translate('+x+','+y+')');
+                });
 
             });
         }
@@ -129,12 +226,8 @@ function Gantt(selector) {
         let _orientation;
         let _orientationConfig;
 
-        let _scrollThickness = 10;
-
         let _scrollScale;
         let _slider;
-
-        orientation('VERTICAL');
 
         function visual(_selection) {
             _selection.each(function (data) {
@@ -145,28 +238,36 @@ function Gantt(selector) {
                     .range([0, data.fullSize])
                     .clamp(true);
 
-                let rootGroup = selection.selectAll('.scroll-root')
+                let root = d3.select(this)
+                    .selectAll('.scroll-root')
                     .data(scrollData);
-                rootGroup.exit().remove();
-                rootGroup = rootGroup.merge(rootGroup.enter()
+                root.exit().remove();
+                let rootGroupEnter = root.enter()
                     .append('g')
-                    .attr('class', 'scroll-root'));
-
-                let sliderGroup = rootGroup.selectAll('.scroll-slider')
-                    .data(scrollData);
-                sliderGroup.exit().remove();
-                _slider = sliderGroup.merge(sliderGroup.enter()
-                    .append('rect')
-                    .attr('class', 'scroll-slider'))
+                    .attr('class', 'scroll-root');
+                rootGroupEnter.append('rect')
                     .attr('x', 0)
                     .attr('y', 0)
-                    .attr(_orientationConfig.sliderThicknessSide, _scrollThickness)
+                    .attr(_orientationConfig.sliderThicknessSide, SCROLL_THICKNESS)
+                    .attr(_orientationConfig.sliderSizeSide, data.viewportSize)
+                    .attr('fill', 'white')
+                    .on('click', () => handleClick(d3.mouse(this)));
+                root = root.merge(rootGroupEnter);
+
+                _slider = groupBuilder(root, '.scroll-slider')
+                    .data(scrollData)
+                    .tag('rect')
+                    .style('scroll-slider')
+                    .build()
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr(_orientationConfig.sliderThicknessSide, SCROLL_THICKNESS)
                     .attr(_orientationConfig.sliderSizeSide, d => d.scrollSize)
-                    .call(d3.drag().on('drag', () => handleDrag(_orientationConfig.positionDelta())));
+                    .call(d3.drag().on('drag', () => handleDrag()));
 
                 // may lead from handleDrag()
-                offsetProperty.addOnChange(newOffset => {
-                    let newSliderPosition = _scrollScale.invert(newOffset);
+                offsetProperty.addOnChange(newViewportPosition => {
+                    let newSliderPosition = _scrollScale.invert(newViewportPosition);
                     _slider.attr(_orientationConfig.position, newSliderPosition);
                 })
 
@@ -183,13 +284,15 @@ function Gantt(selector) {
                     sliderThicknessSide: 'height',
                     sliderSizeSide: 'width',
                     position: 'x',
-                    positionDelta: () => d3.event.dx
+                    positionDelta: () => d3.event.dx,
+                    mouseEvent: event => event[0]
                 }
                 : {
                     sliderThicknessSide: 'width',
                     sliderSizeSide: 'height',
                     position: 'y',
-                    positionDelta: () => d3.event.dy
+                    positionDelta: () => d3.event.dy,
+                    mouseEvent: event => event[1]
                 };
             return this;
         }
@@ -209,15 +312,16 @@ function Gantt(selector) {
             }];
         }
 
-        function handleDrag(delta) {
-            let data = _slider.datum();
-            let newPosition = +_slider.attr(_orientationConfig.position) + delta;
-            if (newPosition < 0) {
-                newPosition = 0;
-            } else if (newPosition + data.scrollSize > data.viewportSize) {
-                newPosition = data.viewportSize - data.scrollSize;
-            }
-            offsetProperty.setValue(newPosition);
+        function handleDrag() {
+            let newSliderPosition = +_slider.attr(_orientationConfig.position)
+                + _orientationConfig.positionDelta();
+            let newViewportPosition = _scrollScale(newSliderPosition);
+            offsetProperty.setValue(newViewportPosition);
+        }
+
+        function handleClick(event) {
+            let newViewportPosition = _scrollScale(_orientationConfig.mouseEvent(event));
+            offsetProperty.setValue(newViewportPosition);
         }
 
     }
@@ -232,24 +336,37 @@ function Gantt(selector) {
     //  ticks: [{time}],
     //  tasks: <number>
     // }
-    function timeAxis(mainScale) {
-
-        let _axisHeight = 30;
-        let _bandSize = 30;
+    function timeAxis(mainScale, offsetProperty) {
 
         function visual(_selection) {
             _selection.each(function (data) {
 
-                let timeAxisGroup = d3.select(this)
-                    .selectAll('.time-axis')
-                    .data([null]);
-
-                timeAxisGroup = timeAxisGroup.merge(timeAxisGroup.enter()
+                let root = d3.select(this)
+                    .selectAll('.time-axis-group')
+                    .data([data]);
+                let rootEnter = root.enter()
                     .append('g')
-                    .attr('class', 'time-axis'));
+                    .attr('class', 'time-axis-group');
+                rootEnter.append('rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', data.x.viewportSize + SCROLL_THICKNESS)
+                    .attr('height', AXIS_HEIGHT)
+                    .attr('fill', 'white')
+                    .on('wheel', d => offsetProperty.accumulateValue(-d3.event.wheelDelta));
+                root = root.merge(rootEnter)
+                    .attr('transform', 'translate(' + TASK_LIST_WIDTH + ',0)');
+
+                let timeAxisGroup = groupBuilder(root, '.time-axis')
+                    .style('time-axis')
+                    .build();
 
                 initLines(timeAxisGroup, data);
                 initLabels(timeAxisGroup, data);
+
+                offsetProperty.addOnChange(newPosition => {
+                    timeAxisGroup.attr('transform', 'translate(' + (-newPosition) + ',0)')
+                })
 
             });
         }
@@ -257,44 +374,39 @@ function Gantt(selector) {
         return visual;
 
         function initLines(rootGroup, data) {
-            let linesGroup = rootGroup.selectAll('.lines')
-                .data([null]);
-            linesGroup = linesGroup.merge(linesGroup.enter()
-                .append('g')
-                .attr('class', 'lines'));
+            let linesGroup = groupBuilder(rootGroup, '.lines')
+                .style('lines')
+                .build();
 
-            let lineSelection = linesGroup.selectAll('line')
-                .data(data.ticks);
-
-            lineSelection.exit().remove();
-
-            lineSelection.merge(lineSelection.enter()
-                .append('line'))
+            groupBuilder(linesGroup, 'line')
+                .data(data.ticks)
+                .tag('line')
+                .build()
                 .attr('x1', d => mainScale(d.time))
-                .attr('y1', 0)
+                .attr('y1', AXIS_HEIGHT)
                 .attr('x2', d => mainScale(d.time))
-                .attr('y2', data.tasks * _bandSize + _axisHeight)
+                .attr('y2', data.tasks.length * BAND_SIZE + AXIS_HEIGHT)
                 .attr('stroke', 'black');
         }
 
         function initLabels(rootGroup, data) {
-            let labelsGroup = rootGroup.selectAll('.labels')
-                .data([null]);
-            labelsGroup = labelsGroup.merge(labelsGroup.enter()
-                .append('g')
-                .attr('class', 'labels'));
+            let labelsGroup = groupBuilder(rootGroup, '.labels')
+                .style('labels')
+                .build();
 
-            let labelGroup = labelsGroup.selectAll('text')
-                .data(data.ticks);
-
-            labelGroup.exit().remove();
-
-            labelGroup.merge(labelGroup.enter()
-                .append('text'))
+            groupBuilder(labelsGroup, 'text')
+                .data(data.ticks)
+                .tag('text')
+                .build()
                 .attr('x', d => mainScale(d.time))
-                .attr('y', _axisHeight)
-                .text(d => d.time); // todo format time
+                .attr('y', AXIS_HEIGHT/2)
+                .text(d => formatTime(d.time));
 
+        }
+
+        function formatTime(value) {
+            let date = new Date(value);
+            return TIME_FORMAT.format(date);
         }
 
     }
@@ -306,41 +418,51 @@ function Gantt(selector) {
     // ##################################################
 
     // [{id,name}]
-    function taskList(onTaskRemove) {
-
-        let _bandSize = 30;
+    function taskList(onTaskRemove, offsetProperty) {
 
         function visual(_selection) {
             _selection.each(function (data) {
 
-                let selection = d3.select(this);
-
-                let taskListGroup = selection.selectAll('.task-list')
-                    .data([null]);
-                taskListGroup = taskListGroup.merge(taskListGroup.enter()
+                let root = d3.select(this)
+                    .selectAll('.task-list-group')
+                    .data([data]);
+                let rootEnter = root.enter()
                     .append('g')
-                    .attr('class', 'task-list'));
+                    .attr('class', 'task-list-group');
+                rootEnter.append('rect')
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('width', TASK_LIST_WIDTH)
+                    .attr('height', data.y.viewportSize + SCROLL_THICKNESS)
+                    .attr('fill', 'white');
+                root = root.merge(rootEnter)
+                    .attr('transform', 'translate(0,' + AXIS_HEIGHT + ')');
+
+                let taskListGroup = groupBuilder(root, '.task-list')
+                    .style('task-list')
+                    .build();
 
                 let taskGroup = taskListGroup.selectAll('.task')
-                    .data(data);
-
+                    .data(data.tasks);
                 let taskGroupEnter = taskGroup.enter()
                     .append('g')
-                    .attr('class', '.task');
+                    .attr('class', 'task');
                 taskGroupEnter.append('text')
                     .text(d => d.name)
-                    .attr('x', 0)
-                    .attr('y', (d, i) => (i + 1) * _bandSize);
+                    .attr('x', TASK_LIST_PADDING)
+                    .attr('y', (d, i) => (i + 1) * BAND_SIZE - BAND_SIZE/2);
                 taskGroupEnter.append('rect')
-                    .attr('x', 0)
-                    .attr('y', (d, i) => i * _bandSize)
-                    .attr('width', 10)
-                    .attr('height', 10)
+                    .attr('x', TASK_LIST_WIDTH - TASK_LIST_PADDING - TASK_LIST_REMOVE_SIZE)
+                    .attr('y', (d, i) => i * BAND_SIZE + BAND_SIZE/2 - TASK_LIST_REMOVE_SIZE/2)
+                    .attr('width', TASK_LIST_REMOVE_SIZE)
+                    .attr('height', TASK_LIST_REMOVE_SIZE)
                     .on('click', d => onTaskRemove(d.id));
-
                 taskGroup.exit().remove();
-
                 taskGroup.merge(taskGroupEnter);
+
+                offsetProperty.addOnChange(newPosition => {
+                    taskListGroup.attr('transform', 'translate(0,' + (-newPosition) + ')')
+                })
 
             });
         }
@@ -358,12 +480,16 @@ function Gantt(selector) {
     function observable() {
 
         let _value = 0;
+        let _maxValue = 0;
         let _listeners = [];
 
         return {
             addOnChange,
+            accumulateValue,
             setValue,
-            getValue
+            setMaxValue,
+            getValue,
+            removeListeners
         };
 
         function addOnChange(onChange) {
@@ -374,7 +500,12 @@ function Gantt(selector) {
             _listeners.push(onChange);
         }
 
+        function accumulateValue(value) {
+            setValue(getValue() + value);
+        }
+
         function setValue(value) {
+            value = limitValue(value);
             if (value === _value) {
                 return;
             }
@@ -384,8 +515,93 @@ function Gantt(selector) {
             }
         }
 
+        function setMaxValue(maxValue) {
+            _maxValue = maxValue;
+        }
+
+        function removeListeners() {
+            _listeners = [];
+        }
+
         function getValue() {
             return _value;
+        }
+
+        function limitValue(value) {
+            if (value < 0) {
+                return 0;
+            } else if (value > _maxValue) {
+                return _maxValue;
+            } else {
+                return value;
+            }
+        }
+
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Group builder                                 #
+    // #                                                #
+    // ##################################################
+
+    function groupBuilder(selection, selector) {
+
+        let _data = [null];
+        let _getKey = (d,i) => i;
+        let _tag = 'g';
+        let _style = null;
+
+        return {
+            data,
+            tag,
+            style,
+            build
+        };
+
+        function build() {
+
+            let group = selection.selectAll(selector)
+                .data(_data, _getKey);
+            let groupEnter = group.enter()
+                .append(_tag);
+
+            if (_style) {
+                groupEnter.attr('class', _style);
+            }
+
+            group.exit().remove();
+
+            return group.merge(groupEnter);
+
+        }
+
+        /**
+         * Specify data which will be joined to selection and optional data key function.
+         * Default is a [null] and getKey is depend on data entry index.
+         */
+        function data(data, getKey) {
+            _data = data;
+            if (getKey) {
+                _getKey = getKey;
+            }
+            return this;
+        }
+
+        /**
+         * Specify 'tag' which will be appended for new join entries. Default is a 'g'
+         */
+        function tag(_) {
+            _tag = _;
+            return this;
+        }
+
+        /**
+         * All new appended elements will be marked with specified style class
+         */
+        function style(_) {
+            _style = _;
+            return this;
         }
 
     }

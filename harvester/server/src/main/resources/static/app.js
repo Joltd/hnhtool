@@ -51,39 +51,52 @@ function updateTasks() {
 function connect() {
 
     let data = [
-        {name: 'Test#1'},
-        {name: 'Test#2'},
-        {name: 'Test#3'},
-        {name: 'Test#4'}
+        {id: 1001, name: 'Test#1', start: 15679764, end: 15681764},
+        {id: 1002, name: 'Test#2', start: 15679889, end: 15682100},
+        {id: 1003, name: 'Test#3', start: 15682100, end: 15684100},
+        {id: 1005, name: 'Test#4', start: 15665100, end: 15680000},
+        {id: 1006, name: 'Test#5', start: 15683500, end: 15684100},
+        {id: 1007, name: 'Test#6', start: 15681500, end: 15681700},
+        {id: 1008, name: 'Test#7', start: 15682500, end: 15683000}
     ];
 
-    let timeData = {
-        ticks: [
-            {time: 1245678834},
-            {time: 1245679863},
-            {time: 1245680432},
-            {time: 1245682346}
-        ],
-        tasks: 10
-    };
-    let scale = d3.scaleLinear()
-        .domain([1245678834, 1245682346])
-        .range([0, 500]);
+    let chart = Gantt('#tasks');
+    chart.refresh(data);
 
-    let position = observable();
-    position.setValue(-50);
-
-    let tasksGroup = d3.select('#tasks');
-    let svg = tasksGroup.selectAll('svg')
-        .data([null]);
+    // let data = [
+    //     {name: 'Test#1'},
+    //     {name: 'Test#2'},
+    //     {name: 'Test#3'},
+    //     {name: 'Test#4'}
+    // ];
+    //
+    // let timeData = {
+    //     ticks: [
+    //         {time: 1245678834},
+    //         {time: 1245679863},
+    //         {time: 1245680432},
+    //         {time: 1245682346}
+    //     ],
+    //     tasks: 10
+    // };
+    // let scale = d3.scaleLinear()
+    //     .domain([1245678834, 1245682346])
+    //     .range([0, 500]);
+    //
+    // let position = observable();
+    // position.setValue(-50);
+    //
+    // let tasksGroup = d3.select('#tasks');
+    // let svg = tasksGroup.selectAll('svg')
+    //     .data([null]);
 
     // let tasks = taskList(position);
 
-    svg.merge(svg.enter().append('svg'))
-        // .data([data])
-        // .call(tasks);
-        .data([timeData])
-        .call(timeAxis(scale, position));
+    // svg.merge(svg.enter().append('svg'))
+    //     // .data([data])
+    //     // .call(tasks);
+    //     .data([timeData])
+    //     .call(timeAxis(scale, position));
 
     // =================scroll testing========================
 
@@ -171,7 +184,7 @@ function connect() {
 // #  Gantt                                         #
 // #                                                #
 // ##################################################
-
+/*
 function gantt() {
 
     let mainScale;
@@ -338,4 +351,4 @@ function scroll() {
         }
     }
 
-}
+}*/

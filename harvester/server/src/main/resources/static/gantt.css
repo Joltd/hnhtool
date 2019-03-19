@@ -1,0 +1,8 @@
+.time-axis > .labels > text {
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+.task-list > .task > text {
+    dominant-baseline: middle;
+}
