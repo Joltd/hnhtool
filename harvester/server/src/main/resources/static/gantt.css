@@ -1,6 +1,6 @@
 .gantt {
-    width: 100%;
-    height: 100%;
+    width: 600px;
+    height: 300px;
 }
 
 text {
@@ -30,4 +30,16 @@ text {
 
 .scroll-slider {
     fill: #e1e2e6;
+}
+
+.button-panel .button-background {
+    fill: white;
+}
+
+.button-panel .button-background:hover {
+    fill: lightgray;
+}
+
+.button-panel .button-background.active {
+    fill: gray;
 }

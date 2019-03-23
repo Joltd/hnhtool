@@ -1,8 +1,6 @@
-// todo design for remove button
-// todo implementation of buttons panel
-// todo implementation of resize
 // todo deference with colors by task type
-// todo check listeners size over time
+// todo impl highlight
+// todo tooltips
 
 function Gantt(selector) {
 
@@ -12,10 +10,10 @@ function Gantt(selector) {
     let AXIS_TICK_STEP = 5000; // msec
     let TASK_LIST_WIDTH = 100;
     let TASK_LIST_PADDING = 5;
-    let TASK_LIST_REMOVE_SIZE = 15;
     let BAR_RADIUS = 5;
     let BAR_PADDING = 5;
     let SCROLL_THICKNESS = 10;
+    let BUTTON_SIZE = 20;
     let TIME_FORMAT = new Intl.DateTimeFormat(
         'ru-RU',
         {
@@ -101,13 +99,15 @@ function Gantt(selector) {
         let _mainScale = d3.scaleLinear().clamp(true);
         let _xOffset = observable();
         let _yOffset = observable();
+        let _autoScroll = observable();
 
         let _viewport = viewport(_mainScale, _xOffset, _yOffset);
         let _xScroll = scroll(_xOffset).orientation('HORIZONTAL');
         let _yScroll = scroll(_yOffset).orientation('VERTICAL');
         let _taskList = taskList(() => {}, _yOffset);
         let _timeAxis = timeAxis(_mainScale, _xOffset);
-        let _buttonPanel = buttonPanel();
+        let _buttonPanel = buttonPanel(_autoScroll, _xOffset, _yOffset);
+        let _resize = resize();
 
         function visual(_selection) {
             _selection.each(function (data) {
@@ -120,13 +120,24 @@ function Gantt(selector) {
 
                 _xOffset.removeListeners();
                 _xOffset.setMaxValue(chartData.x.fullSize - chartData.x.viewportSize);
+                _xOffset.addOnChange(newValue => {
+                    if (newValue < _xOffset.getMaxValue()) {
+                        _autoScroll.setValue(0);
+                    }
+                });
                 _yOffset.removeListeners();
                 _yOffset.setMaxValue(chartData.y.fullSize - chartData.y.viewportSize);
+                _yOffset.addOnChange(newVlue => {
+                    if (newVlue < _yOffset.getMaxValue()) {
+                        _autoScroll.setValue(0);
+                    }
+                });
 
                 svgSelection.call(_viewport)
                     .call(_timeAxis)
                     .call(_taskList)
-                    .call(_buttonPanel);
+                    .call(_buttonPanel)
+                    .call(_resize);
 
                 groupBuilder(svgSelection, '.x-scroll-group')
                     .style('x-scroll-group')
@@ -141,6 +152,11 @@ function Gantt(selector) {
                     .attr('transform', 'translate(' + (svgBox.width - SCROLL_THICKNESS) + ',' + AXIS_HEIGHT + ')')
                     .datum(chartData.y)
                     .call(_yScroll);
+
+                if (_autoScroll.getValue() === 1) {
+                    _xOffset.toMax();
+                    _yOffset.toMax();
+                }
 
             });
         }
@@ -193,29 +209,151 @@ function Gantt(selector) {
     // #                                                #
     // ##################################################
 
-    function buttonPanel() {
+    function buttonPanel(autoScrollProperty, xOffsetProperty, yOffsetProperty) {
+
+        let padding = (AXIS_HEIGHT - BUTTON_SIZE) / 2;
 
         function visual(_selection) {
             _selection.each(function (data) {
 
-                let buttonPanelGroup = groupBuilder(d3.select(this), '.button-panel')
-                    .style('button-panel')
-                    .build();
+                autoScrollProperty.setMaxValue(1);
 
-                groupBuilder(buttonPanelGroup, 'rect')
-                    .tag('rect')
-                    .data([data])
-                    .build()
+                let root = d3.select(this)
+                    .selectAll('.button-panel')
+                    .data([null]);
+                let rootEnter = root.enter()
+                    .append('g')
+                    .attr('class', 'button-panel');
+
+                rootEnter.append('rect')
                     .attr('x', 0)
                     .attr('y', 0)
                     .attr('width', TASK_LIST_WIDTH)
                     .attr('height', AXIS_HEIGHT)
                     .attr('fill', 'white');
 
+                let autoScroll = rootEnter.append('g')
+                    .attr('class', 'auto-scroll');
+
+                autoScroll.append('rect')
+                    .attr('class', 'button-background')
+                    .attr('x', padding)
+                    .attr('y', padding)
+                    .attr('width', BUTTON_SIZE)
+                    .attr('height', BUTTON_SIZE)
+                    .on('click', () => {
+                        autoScrollProperty.toggle()
+                    });
+
+                autoScroll.append('path')
+                    .attr('class', 'button-icon')
+                    .attr('d', drawArrow(padding, padding, BUTTON_SIZE))
+                    .attr('stroke', 'green')
+                    .attr('stroke-width', 2)
+                    .attr('pointer-events','none');
+
+                let removeAll = rootEnter.append('g')
+                    .attr('class', 'remove-all');
+
+                removeAll.append('rect')
+                    .attr('class', 'button-background')
+                    .attr('x', padding * 2 + BUTTON_SIZE)
+                    .attr('y', padding)
+                    .attr('width', BUTTON_SIZE)
+                    .attr('height', BUTTON_SIZE)
+                    .on('click', () => {
+                        setTasks([]);
+                    });
+
+                removeAll.append('path')
+                    .attr('class', 'button-icon')
+                    .attr('d', drawCross(padding * 2 + BUTTON_SIZE, padding, BUTTON_SIZE))
+                    .attr('stroke', 'green')
+                    .attr('stroke-width', 2)
+                    .attr('pointer-events','none');
+
+                root = root.merge(rootEnter);
+
+                let autoScrollButton = root.select('.auto-scroll')
+                    .select('.button-background');
+
+                toggleButton(autoScrollButton);
+
+                autoScrollProperty.addOnChange(value => {
+                    toggleButton(autoScrollButton);
+                });
+
             });
         }
 
         return visual;
+
+        function toggleButton(button) {
+            if (autoScrollProperty.getValue() === 1) {
+                button.attr('class', 'button-background active');
+                xOffsetProperty.toMax();
+                yOffsetProperty.toMax();
+            } else {
+                button.attr('class', 'button-background');
+            }
+        }
+
+        function drawArrow(x,y, size) {
+            let padding = size * 0.2;
+            let path = d3.path();
+            path.moveTo(x+padding, y+padding);
+            path.lineTo(x+size-padding, y+size-padding);
+            path.moveTo(x+size-padding, x+size*0.3);
+            path.lineTo(x+size-padding, y+size-padding);
+            path.moveTo(x+size*0.3, x+size-padding);
+            path.lineTo(x+size-padding, y+size-padding);
+            return path.toString();
+        }
+
+        function drawCross(x,y, size) {
+            let padding = size * 0.2;
+            let path = d3.path();
+            path.moveTo(x+padding, y+padding);
+            path.lineTo(x+size-padding, y+size-padding);
+            path.moveTo(x+size-padding, y+padding);
+            path.lineTo(x+padding, y+size-padding);
+            return path.toString();
+        }
+
+    }
+
+    function resize() {
+
+        function visual(_selection) {
+            _selection.each(function (data) {
+
+                let resizeGroup = groupBuilder(d3.select(this), '.resize')
+                    .style('resize')
+                    .build();
+
+                groupBuilder(resizeGroup, 'rect')
+                    .tag('rect')
+                    .data([null])
+                    .build()
+                    .attr('x', TASK_LIST_WIDTH + data.x.viewportSize)
+                    .attr('y', AXIS_HEIGHT + data.y.viewportSize)
+                    .attr('width', SCROLL_THICKNESS)
+                    .attr('height', SCROLL_THICKNESS)
+                    .attr('fill', 'gray')
+                    .call(d3.drag().on('drag', () => handleDrag(data)))
+
+            });
+        }
+
+        return visual;
+
+        function handleDrag(d) {
+            let rect = _selection.node().getBoundingClientRect();
+            _selection.style('width', rect.width + d3.event.dx)
+                .style('height', rect.height + d3.event.dy);
+            refresh();
+        }
+
     }
 
     // ##################################################
@@ -262,12 +400,14 @@ function Gantt(selector) {
             rootEnter.append('rect')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('width', data.x.viewportSize)
-                .attr('height', data.y.viewportSize)
                 .attr('fill', 'white')
                 .on('wheel', d => yOffsetProperty.accumulateValue(-d3.event.wheelDelta));
             root = root.merge(rootEnter)
                 .attr('transform', 'translate(' + TASK_LIST_WIDTH + ',' + AXIS_HEIGHT + ')');
+
+            root.select('rect')
+                .attr('width', data.x.viewportSize)
+                .attr('height', data.y.viewportSize);
 
             return groupBuilder(root, '.viewport')
                 .style('viewport')
@@ -326,6 +466,10 @@ function Gantt(selector) {
                 .attr('ry', BAR_RADIUS);
         }
 
+        function initHighlight(viewportGroup) {
+            groupBuilder()
+        }
+
     }
 
     // ##################################################
@@ -362,11 +506,12 @@ function Gantt(selector) {
                 rootGroupEnter.append('rect')
                     .attr('x', 0)
                     .attr('y', 0)
-                    .attr(_orientationConfig.sliderThicknessSide, SCROLL_THICKNESS)
-                    .attr(_orientationConfig.sliderSizeSide, scrollData.viewportSize)
                     .attr('fill', 'white')
                     .on('click', () => handleClick(d3.mouse(this)));
                 root = root.merge(rootGroupEnter);
+                root.select('rect')
+                    .attr(_orientationConfig.sliderThicknessSide, SCROLL_THICKNESS)
+                    .attr(_orientationConfig.sliderSizeSide, scrollData.viewportSize);
 
                 _slider = groupBuilder(root, '.scroll-slider')
                     .data(scrollData.isNoScroll ? [] : [scrollData])
@@ -384,17 +529,17 @@ function Gantt(selector) {
                 }
 
                 // may lead from handleDrag()
+                moveScroll(offsetProperty.getValue());
                 offsetProperty.addOnChange(newViewportPosition => {
-                    let newSliderPosition = _scrollScale.invert(newViewportPosition);
-                    _slider.attr(_orientationConfig.position, newSliderPosition);
+                    moveScroll(newViewportPosition);
                 })
 
             });
         }
 
         visual.orientation = orientation;
-        return visual;
 
+        return visual;
         function orientation(_) {
             _orientation = _;
             _orientationConfig = _ === 'HORIZONTAL'
@@ -446,6 +591,11 @@ function Gantt(selector) {
             offsetProperty.setValue(newViewportPosition);
         }
 
+        function moveScroll(newViewportPosition) {
+            let newSliderPosition = _scrollScale.invert(newViewportPosition);
+            _slider.attr(_orientationConfig.position, newSliderPosition);
+        }
+
     }
 
     // ##################################################
@@ -489,12 +639,16 @@ function Gantt(selector) {
             rootEnter.append('rect')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('width', data.x.viewportSize + SCROLL_THICKNESS)
-                .attr('height', AXIS_HEIGHT)
                 .attr('fill', 'white')
                 .on('wheel', d => offsetProperty.accumulateValue(-d3.event.wheelDelta));
-            return root.merge(rootEnter)
+            root = root.merge(rootEnter)
                 .attr('transform', 'translate(' + TASK_LIST_WIDTH + ',0)');
+
+            root.select('rect')
+                .attr('width', data.x.viewportSize + SCROLL_THICKNESS)
+                .attr('height', AXIS_HEIGHT);
+
+            return root;
         }
 
         function initLabels(rootGroup, data) {
@@ -553,11 +707,13 @@ function Gantt(selector) {
             rootEnter.append('rect')
                 .attr('x', 0)
                 .attr('y', 0)
-                .attr('width', TASK_LIST_WIDTH)
-                .attr('height', data.y.viewportSize + SCROLL_THICKNESS)
                 .attr('fill', 'white');
             root = root.merge(rootEnter)
                 .attr('transform', 'translate(0,' + AXIS_HEIGHT + ')');
+
+            root.select('rect')
+                .attr('width', TASK_LIST_WIDTH)
+                .attr('height', data.y.viewportSize + SCROLL_THICKNESS);
 
             return groupBuilder(root, '.task-list')
                 .style('task-list')
@@ -601,11 +757,14 @@ function Gantt(selector) {
 
         return {
             addOnChange,
-            accumulateValue,
+            removeListeners,
             setValue,
-            setMaxValue,
             getValue,
-            removeListeners
+            setMaxValue,
+            getMaxValue,
+            toMax,
+            toggle,
+            accumulateValue
         };
 
         function addOnChange(onChange) {
@@ -616,8 +775,8 @@ function Gantt(selector) {
             _listeners.push(onChange);
         }
 
-        function accumulateValue(value) {
-            setValue(getValue() + value);
+        function removeListeners() {
+            _listeners = [];
         }
 
         function setValue(value) {
@@ -631,18 +790,32 @@ function Gantt(selector) {
             }
         }
 
+        function getValue() {
+            return _value;
+        }
+
         function setMaxValue(maxValue) {
-            if (maxValue > 0) {
-                _maxValue = maxValue;
+            _maxValue = maxValue > 0 ? maxValue : 0
+        }
+
+        function getMaxValue() {
+            return _maxValue;
+        }
+
+        function toMax() {
+            setValue(_maxValue);
+        }
+
+        function toggle() {
+            if (_value === 1) {
+                setValue(0);
+            } else {
+                setValue(1);
             }
         }
 
-        function removeListeners() {
-            _listeners = [];
-        }
-
-        function getValue() {
-            return _value;
+        function accumulateValue(value) {
+            setValue(getValue() + value);
         }
 
         function limitValue(value) {
