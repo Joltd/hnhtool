@@ -126,9 +126,9 @@ public class InboundMessageConverter {
                 }
                 break;
             case REL_MESSAGE_RESOURCE_ID:
-                rel.put("resourceId", reader.uint16());
-                rel.put("resourceName", reader.string());
-                rel.put("resourceVersion", reader.uint16());
+                rel.put(MessageFields.RESOURCE_ID, reader.uint16());
+                rel.put(MessageFields.RESOURCE_NAME, reader.string());
+                rel.put(MessageFields.RESOURCE_VERSION, reader.uint16());
                 break;
             case REL_MESSAGE_PARTY:
                 final ArrayNode partyNode = rel.putArray("party");

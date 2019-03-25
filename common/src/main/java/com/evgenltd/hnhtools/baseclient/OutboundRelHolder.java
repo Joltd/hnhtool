@@ -3,7 +3,9 @@ package com.evgenltd.hnhtools.baseclient;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -18,14 +20,22 @@ final class OutboundRelHolder {
     private Integer acknowledgeSequence = 0;
     private List<RelRequest> awaiting = new ArrayList<>();
 
-    synchronized void register(final int id, final String name, final Object... args) {
+    synchronized CompletableFuture<Void> register(final int id, final String name, final Object... args) {
         final RelRequest relRequest = new RelRequest(id, acknowledgeSequence, name, args);
         acknowledgeSequence = ByteUtil.toShort(acknowledgeSequence + 1);
         awaiting.add(relRequest);
+        return relRequest.getFuture();
     }
 
     synchronized void acknowledge(final Integer sequence) {
-        awaiting.removeIf(relRequest -> relRequest.getSequence() <= sequence);
+        final Iterator<RelRequest> iterator = awaiting.iterator();
+        while (iterator.hasNext()) {
+            final RelRequest relRequest = iterator.next();
+            if (relRequest.getSequence() <= sequence) {
+                iterator.remove();
+                relRequest.getFuture().complete(null);
+            }
+        }
     }
 
     synchronized List<RelRequest> getNextAwaiting() {

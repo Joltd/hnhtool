@@ -100,6 +100,10 @@ public class InboundMessageAccessor {
             this.data = data;
         }
 
+        public JsonNode getData() {
+            return data;
+        }
+
         public long getId() {
             return data.get(MessageFields.OBJECT_ID).asLong();
         }
@@ -135,6 +139,14 @@ public class InboundMessageAccessor {
 
         public String getWidgetType() {
             return data.get(MessageFields.WIDGET_TYPE).asText();
+        }
+
+        public int getResourceId() {
+            return data.get(MessageFields.RESOURCE_ID).asInt();
+        }
+
+        public String getResourceName() {
+            return data.get(MessageFields.RESOURCE_NAME).asText();
         }
 
     }

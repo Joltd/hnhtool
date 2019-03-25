@@ -5,6 +5,8 @@ import com.evgenltd.hnhtools.message.MessageType;
 import com.evgenltd.hnhtools.message.RelType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * <p></p>
  * <br/>
@@ -20,16 +22,22 @@ final class RelRequest {
     private Object[] args;
     private long lastAttemptTime = System.currentTimeMillis();
     private int attemptCount = 0;
+    private CompletableFuture<Void> future;
 
     RelRequest(final int id, final int sequence, final String name, final Object[] args) {
         this.id = id;
         this.sequence = sequence;
         this.name = name;
         this.args = args;
+        this.future = new CompletableFuture<>();
     }
 
     int getSequence() {
         return sequence;
+    }
+
+    CompletableFuture<Void> getFuture() {
+        return future;
     }
 
     DataWriter toWriter() {

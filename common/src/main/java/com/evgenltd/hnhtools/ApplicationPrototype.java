@@ -5,9 +5,14 @@ import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hnh.auth.Authentication;
 import com.hnh.auth.AuthenticationResult;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +34,7 @@ public class ApplicationPrototype {
 
     private static Map<Integer, Widget> relIndex = new ConcurrentHashMap<>();
     private static Map<Long,List<InboundMessageAccessor.ObjectDataAccessor>> objectDataIndex = new ConcurrentHashMap<>();
+    private static Map<Integer, String> resourceNameIndex = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
 
@@ -36,6 +42,7 @@ public class ApplicationPrototype {
         baseClient.withMonitor();
         baseClient.setServer("game.havenandhearth.com", 1870);
         baseClient.setCredentials("Grafbredbery", auth());
+//        baseClient.setCredentials("temedrou", auth());
         baseClient.setRelQueue(ApplicationPrototype::handleRel);
         baseClient.setObjectDataQueue(objectDataAccessor -> {
             objectDataIndex.putIfAbsent(objectDataAccessor.getId(), new ArrayList<>());
@@ -51,6 +58,8 @@ public class ApplicationPrototype {
                     break;
                 case "d":
                     baseClient.disconnect();
+                    storeObjectIndex();
+                    storeResourceNameIndex();
                     return;
                 case "i":
                     baseClient.printHealth();
@@ -67,6 +76,9 @@ public class ApplicationPrototype {
                 case "play":
                     baseClient.pushOutboundRel(3, "play", "Surname");
                     break;
+                case "p_tem":
+                    baseClient.pushOutboundRel(3, "play", "temedrou");
+                    break;
                 default:
                     handleWidgetCommand(command);
             }
@@ -82,6 +94,8 @@ public class ApplicationPrototype {
             final AuthenticationResult result = auth.login(
                     "Grafbredbery",
                     Authentication.passwordHash("15051953")
+//                    "temedrou",
+//                    Authentication.passwordHash("nRJWfd2v")
             );
             return result.getCookie();
         } catch (Exception e) {
@@ -108,6 +122,10 @@ public class ApplicationPrototype {
                 if (widget != null) {
                     widget.getMessages().add(relAccessor);
                 }
+                break;
+            case REL_MESSAGE_RESOURCE_ID:
+                resourceNameIndex.put(relAccessor.getResourceId(), relAccessor.getResourceName());
+                break;
         }
     }
 
@@ -120,6 +138,29 @@ public class ApplicationPrototype {
         } catch (Exception e) {
             System.out.println("Unable to send widget command or unknown [" + command + "]");
             e.printStackTrace();
+        }
+    }
+
+    private static void storeObjectIndex() {
+        final ArrayNode rootNode = mapper.createArrayNode();
+        objectDataIndex.forEach((id,deltas) -> {
+            final ObjectNode objectNode = rootNode.addObject();
+            objectNode.put("id", id);
+            final ArrayNode deltasNode = objectNode.putArray("deltas");
+            deltas.forEach(delta -> deltasNode.add(delta.getData()));
+        });
+        try (final FileOutputStream stream = new FileOutputStream("objectIndex.json")) {
+            stream.write(rootNode.toString().getBytes());
+        } catch (final IOException e) {
+            throw new ApplicationException(e);
+        }
+    }
+
+    private static void storeResourceNameIndex() {
+        try {
+            mapper.writeValue(new File("resourceNameIndex.json"), resourceNameIndex);
+        } catch (IOException e) {
+            throw new ApplicationException(e);
         }
     }
 

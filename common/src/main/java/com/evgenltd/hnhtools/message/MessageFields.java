@@ -21,6 +21,9 @@ public class MessageFields {
     static final String ACKNOWLEDGE_SEQUENCE = "acknowledgeSequence";
     static final String WIDGET_ID = "id";
     static final String WIDGET_TYPE = "type";
+    static final String RESOURCE_ID = "resourceId";
+    static final String RESOURCE_NAME = "resourceName";
+    static final String RESOURCE_VERSION = "resourceVersion";
 
     // object data
     static final String OBJECT_DATA = "objectData";
