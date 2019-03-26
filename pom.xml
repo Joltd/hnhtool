@@ -13,7 +13,6 @@
         <module>analyzer</module>
         <module>gate</module>
         <module>auth</module>
-        <module>harvester</module>
     </modules>
 
     <build>
