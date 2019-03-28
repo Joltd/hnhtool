@@ -2,7 +2,7 @@ package com.evgenltd.hnhtools.util;
 
 
 import com.evgenltd.hnhtools.common.ApplicationException;
-import com.evgenltd.hnhtools.entity.Point;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.message.DataReader;
 import com.evgenltd.hnhtools.message.DataWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -125,9 +125,9 @@ public class ByteUtil {
             } else if(value instanceof String) {
                 writer.adduint8(Type.T_STR.getValue());
                 writer.addString((String) value);
-            } else if(value instanceof Point) {
+            } else if(value instanceof IntPoint) {
                 writer.adduint8(Type.T_COORD.getValue());
-                final Point point = (Point) value;
+                final IntPoint point = (IntPoint) value;
                 writer.addint32(point.getX());
                 writer.addint32(point.getY());
             } else if(value instanceof byte[]) {

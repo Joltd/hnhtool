@@ -11,11 +11,18 @@ import org.junit.jupiter.api.Test;
 public class NumericTest {
 
     @Test
+    public void testMath() {
+        System.out.println(0x0E & 0x80);
+    }
+
+    @Test
     public void testCoordMul() {
 
-        final double x = 0x1.0p-10;
-        System.out.println(x);
-        System.out.println(x * 11);
+        final double pos = 0x1.0p-10 * 11;
+        final int x = -956928;
+        final int y = -916992;
+        System.out.println(x * pos);
+        System.out.println(y * pos);
 
     }
 

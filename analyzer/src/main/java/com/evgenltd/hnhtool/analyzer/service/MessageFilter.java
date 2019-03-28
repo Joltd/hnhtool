@@ -18,14 +18,29 @@ public class MessageFilter {
     private List<Integer> acknowledgeToSkip = new ArrayList<>();
 
     public boolean hideInbound(final ObjectNode root) {
-        return hideGlut(root);
+        return false;
     }
 
     public boolean hideOutbound(final ObjectNode root) {
-        return hideKnownAcknowledge(root);
+        return false;
     }
 
     //
+
+    private boolean hideNonFragment(final ObjectNode root) {
+        if (!root.get("messageType").asText().equals("MESSAGE_TYPE_REL")) {
+            return true;
+        }
+
+//        final JsonNode rels = root.get("rels");
+//        for (final JsonNode rel : rels) {
+//            if (rel.get("relType").asText().equals("REL_MESSAGE_FRAGMENT")) {
+//                return false;
+//            }
+//        }
+
+        return false;
+    }
 
     private boolean hideGlut(final ObjectNode root) {
         if (!root.get("messageType").asText().equals("MESSAGE_TYPE_REL")) {

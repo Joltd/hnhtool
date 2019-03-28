@@ -41,8 +41,8 @@ public class RelFragmentBuilder {
         return type;
     }
 
-    public DataReader getReader() {
-        return new DataReader(composition);
+    public byte[] getData() {
+        return composition;
     }
 
     void clear() {

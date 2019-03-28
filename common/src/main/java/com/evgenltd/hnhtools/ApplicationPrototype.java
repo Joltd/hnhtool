@@ -2,6 +2,8 @@ package com.evgenltd.hnhtools;
 
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.environment.Environment;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +33,7 @@ public class ApplicationPrototype {
 
     private static ObjectMapper mapper = new ObjectMapper();
     private static BaseClient baseClient;
+    private static Environment environment;
 
     private static Map<Integer, Widget> relIndex = new ConcurrentHashMap<>();
     private static Map<Long,List<InboundMessageAccessor.ObjectDataAccessor>> objectDataIndex = new ConcurrentHashMap<>();
@@ -43,11 +46,13 @@ public class ApplicationPrototype {
         baseClient.setServer("game.havenandhearth.com", 1870);
         baseClient.setCredentials("Grafbredbery", auth());
 //        baseClient.setCredentials("temedrou", auth());
-        baseClient.setRelQueue(ApplicationPrototype::handleRel);
-        baseClient.setObjectDataQueue(objectDataAccessor -> {
-            objectDataIndex.putIfAbsent(objectDataAccessor.getId(), new ArrayList<>());
-            objectDataIndex.get(objectDataAccessor.getId()).add(objectDataAccessor);
-        });
+        environment = new Environment(mapper);
+        environment.linkBaseClient(baseClient);
+//        baseClient.setRelQueue(ApplicationPrototype::handleRel);
+//        baseClient.setObjectDataQueue(objectDataAccessor -> {
+//            objectDataIndex.putIfAbsent(objectDataAccessor.getId(), new ArrayList<>());
+//            objectDataIndex.get(objectDataAccessor.getId()).add(objectDataAccessor);
+//        });
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -58,8 +63,9 @@ public class ApplicationPrototype {
                     break;
                 case "d":
                     baseClient.disconnect();
-                    storeObjectIndex();
-                    storeResourceNameIndex();
+                    environment.store();
+//                    storeObjectIndex();
+//                    storeResourceNameIndex();
                     return;
                 case "i":
                     baseClient.printHealth();
@@ -78,6 +84,11 @@ public class ApplicationPrototype {
                     break;
                 case "p_tem":
                     baseClient.pushOutboundRel(3, "play", "temedrou");
+                    break;
+                case "move":
+                    final Integer mapViewId = environment.getMapViewId();
+                    final IntPoint newPosition = environment.getPlayerPosition().add(5000,5000);
+                    baseClient.pushOutboundRel(mapViewId, "click", new IntPoint(), newPosition, 1, 0);
                     break;
                 default:
                     handleWidgetCommand(command);

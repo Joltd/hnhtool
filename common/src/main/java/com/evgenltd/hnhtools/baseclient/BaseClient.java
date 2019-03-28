@@ -2,10 +2,7 @@ package com.evgenltd.hnhtools.baseclient;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.common.Assert;
-import com.evgenltd.hnhtools.message.DataWriter;
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
-import com.evgenltd.hnhtools.message.InboundMessageConverter;
-import com.evgenltd.hnhtools.message.MessageType;
+import com.evgenltd.hnhtools.message.*;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -188,7 +185,21 @@ public final class BaseClient {
     }
 
     private void pushInboundRel(final InboundMessageAccessor.RelAccessor relAccessor) {
-        relQueue.push(relAccessor);
+        final RelType relType = relAccessor.getRelType();
+        if (!Objects.equals(relType, RelType.REL_MESSAGE_FRAGMENT)) {
+            relQueue.push(relAccessor);
+            return;
+        }
+
+        final boolean result = inboundConverter.appendRelFragment(relAccessor);
+        if (result) {
+            final InboundMessageAccessor.RelAccessor relFragmentComposition = new InboundMessageAccessor.RelAccessor(objectMapper.createObjectNode());
+            final byte[] data = inboundConverter.convertRelFragment(relFragmentComposition);
+            relQueue.push(relFragmentComposition);
+            if (monitor != null) {
+                monitor.sendInbound(data, data.length);
+            }
+        }
     }
 
     private void pushObjectData(final InboundMessageAccessor.ObjectDataAccessor objectDataAccessor) {
