@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.entity;
 
+import java.util.Objects;
+
 /**
  * <p></p>
  * <br/>
@@ -35,5 +37,28 @@ public class IntPoint {
 
     public DoublePoint multiple(final DoublePoint point) {
         return new DoublePoint(x * point.getX(), y * point.getY());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%s;%s)", x, y);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final IntPoint intPoint = (IntPoint) o;
+        return x == intPoint.x &&
+                y == intPoint.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 }

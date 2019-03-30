@@ -18,11 +18,37 @@ public class MessageFilter {
     private List<Integer> acknowledgeToSkip = new ArrayList<>();
 
     public boolean hideInbound(final ObjectNode root) {
-        return false;
+        return hideMapResponse(root)
+                || hideRelAcknowledge(root);
     }
 
     public boolean hideOutbound(final ObjectNode root) {
-        return false;
+        return hideMapRequest(root)
+                || hideObjectAcknowledge(root)
+                || hideRelAcknowledge(root)
+                || hideBeat(root);
+    }
+
+    //
+
+    private boolean hideMapRequest(final ObjectNode root) {
+        return root.get("messageType").asText().equals("MESSAGE_TYPE_MAP_REQUEST");
+    }
+
+    private boolean hideMapResponse(final ObjectNode root) {
+        return root.get("messageType").asText().equals("MESSAGE_TYPE_MAP_DATA");
+    }
+
+    private boolean hideRelAcknowledge(final ObjectNode root) {
+        return root.get("messageType").asText().equals("MESSAGE_TYPE_ACKNOWLEDGE");
+    }
+
+    private boolean hideObjectAcknowledge(final ObjectNode root) {
+        return root.get("messageType").asText().equals("MESSAGE_TYPE_OBJECT_ACKNOWLEDGE");
+    }
+
+    private boolean hideBeat(final ObjectNode root) {
+        return root.get("messageType").asText().equals("MESSAGE_TYPE_BEAT");
     }
 
     //

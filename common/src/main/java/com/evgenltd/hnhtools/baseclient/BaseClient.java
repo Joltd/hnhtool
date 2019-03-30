@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.magenta.hnhtool.gate.Monitor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.*;
@@ -69,9 +70,10 @@ public final class BaseClient {
     private final Thread inbound;
     private final Thread outbound;
 
-    public BaseClient(final ObjectMapper objectMapper) {
+    public BaseClient(@NotNull final ObjectMapper objectMapper) {
+        Assert.valueRequireNonEmpty(objectMapper, "ObjectMapper");
+        this.objectMapper = objectMapper;
         try {
-            this.objectMapper = objectMapper;
             objectDataHolder = new ObjectDataHolder();
             inboundRelHolder = new InboundRelHolder();
             outboundRelHolder = new OutboundRelHolder();
@@ -108,7 +110,7 @@ public final class BaseClient {
         return state.equals(State.CONNECTION);
     }
 
-    private boolean isLife() {
+    public boolean isLife() {
         return state.equals(State.LIFE);
     }
 
@@ -116,7 +118,7 @@ public final class BaseClient {
         return state.equals(State.CLOSING);
     }
 
-    private boolean isClosed() {
+    public boolean isClosed() {
         return state.equals(State.CLOSED);
     }
 
@@ -124,6 +126,7 @@ public final class BaseClient {
         return connectionErrorCode;
     }
 
+    @Deprecated
     public void printHealth() {
         System.out.printf("state = [%s]\n", state);
         System.out.printf("errorCode = [%s]\n", connectionErrorCode);

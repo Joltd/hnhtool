@@ -1,6 +1,6 @@
-package com.evgenltd.hnhtools.environment;
+package com.evgenltd.hnhtools.agent;
 
-import com.evgenltd.hnhtools.entity.DoublePoint;
+import com.evgenltd.hnhtools.entity.IntPoint;
 
 /**
  * <p></p>
@@ -9,14 +9,15 @@ import com.evgenltd.hnhtools.entity.DoublePoint;
  * <p>Author:  lebed</p>
  * <p>Created: 26-03-2019 23:12</p>
  */
-public class WorldObject {
+final class WorldObject {
 
     private long id;
     private int frame;
-    private DoublePoint position;
+    private IntPoint position;
     private int resourceId;
+    private boolean moving;
 
-    public WorldObject(final Long id) {
+    WorldObject(final Long id) {
         this.id = id;
     }
 
@@ -27,24 +28,29 @@ public class WorldObject {
     public int getFrame() {
         return frame;
     }
-
     public void setFrame(final int frame) {
         this.frame = frame;
     }
 
-    public DoublePoint getPosition() {
+    public IntPoint getPosition() {
         return position;
     }
-
-    public void setPosition(final DoublePoint position) {
+    public void setPosition(final IntPoint position) {
         this.position = position;
     }
 
     public int getResourceId() {
         return resourceId;
     }
-
     public void setResourceId(final int resourceId) {
         this.resourceId = resourceId;
     }
+
+    public boolean isMoving() {
+        return moving;
+    }
+    public void setMoving(final boolean moving) {
+        this.moving = moving;
+    }
+
 }

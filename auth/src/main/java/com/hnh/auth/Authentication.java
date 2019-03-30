@@ -28,6 +28,7 @@ public class Authentication implements AutoCloseable {
 	private static final String HASH_ALGORITHM = "SHA-256";
 
 	private static final String COMMAND_LOGIN = "pw";
+	private static final String COMMAND_LOGIN_BY_TOKEN = "token";
 	private static final String COMMAND_GET_COOKIE = "cookie";
 	private static final String COMMAND_GET_TOKEN = "mktoken";
 
@@ -110,18 +111,27 @@ public class Authentication implements AutoCloseable {
 	}
 
 	public AuthenticationResult login(final String username, final byte[] passwordHash) {
-
 		Objects.requireNonNull(username, "[Username] should not be empty");
 
-		doLogin(username, passwordHash);
+		doLogin(COMMAND_LOGIN, username, passwordHash);
 		final byte[] cookie = retrieveCookie();
 		final byte[] token = retrieveToken();
 
 		close();
 
 		return new AuthenticationResult(cookie, token);
-
 	}
+
+    public AuthenticationResult loginByToken(final String username, final byte[] token) {
+	    Objects.requireNonNull(username, "[Username] should not be empty");
+
+	    doLogin(COMMAND_LOGIN_BY_TOKEN, username, token);
+        final byte[] cookie = retrieveCookie();
+
+        close();
+
+	    return new AuthenticationResult(cookie, null);
+    }
 
 	@Override
 	public void close() {
@@ -134,9 +144,9 @@ public class Authentication implements AutoCloseable {
 
 	// logic
 
-	private void doLogin(final String username, final byte[] passwordHash) {
+	private void doLogin(final String command, final String username, final byte[] passwordHash) {
 	    final DataWriter writer = new DataWriter();
-	    writer.addString(COMMAND_LOGIN);
+	    writer.addString(command);
 		writer.addString(username);
 		writer.addbytes(passwordHash);
 		sendMessage(writer);

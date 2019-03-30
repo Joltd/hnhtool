@@ -158,6 +158,10 @@ public class InboundMessageAccessor {
             return data.get(MessageFields.Y).asInt();
         }
 
+        public int getW() {
+            return data.get(MessageFields.W).asInt();
+        }
+
         public int getResourceId() {
             return data.get(MessageFields.RESOURCE_ID).asInt();
         }
@@ -195,28 +199,40 @@ public class InboundMessageAccessor {
             return RelType.valueOf(relTypeNode.asText());
         }
 
-        public int getWidgetId() {
-            return data.get(MessageFields.WIDGET_ID).asInt();
-        }
-
-        public String getWidgetType() {
-            return data.get(MessageFields.WIDGET_TYPE).asText();
-        }
-
-        public String getWidgetMessageName() {
-            return data.get(MessageFields.WIDGET_MESSAGE_NAME).asText();
-        }
+        //
 
         public int getResourceId() {
             return data.get(MessageFields.RESOURCE_ID).asInt();
         }
-
         public String getResourceName() {
             return data.get(MessageFields.RESOURCE_NAME).asText();
         }
 
+        //
+
+        public int getWidgetId() {
+            return data.get(MessageFields.WIDGET_ID).asInt();
+        }
+        public String getWidgetType() {
+            return data.get(MessageFields.WIDGET_TYPE).asText();
+        }
+        public String getWidgetMessageName() {
+            return data.get(MessageFields.WIDGET_MESSAGE_NAME).asText();
+        }
+        public int getWidgetParentId() {
+            return data.get(MessageFields.WIDGET_PARENT_ID).asInt();
+        }
+
         private RelArgsAccessor getArgs(final String field) {
             return new RelArgsAccessor(data.get(field));
+        }
+
+        public RelArgsAccessor getArgs() {
+            return getArgs(MessageFields.WIDGET_C_ARGS);
+        }
+
+        private RelArgsAccessor getPArgs() {
+            return getArgs(MessageFields.WIDGET_P_ARGS);
         }
 
         public RelArgsAccessor getCArgs() {
@@ -227,25 +243,31 @@ public class InboundMessageAccessor {
 
     public static final class RelArgsAccessor {
 
-        private JsonNode data;
         private Iterator<JsonNode> iterator;
 
         RelArgsAccessor(final JsonNode data) {
-            this.data = data;
             iterator = data.iterator();
         }
 
-        public void next() {
+        public void skip() {
             iterator.next();
         }
 
-        public Integer asInt() {
+        public Integer nextInt() {
             final JsonNode next = iterator.next();
             return next.asInt();
         }
 
-        public Long asLong() {
+        public Long nextLong() {
             return iterator.next().asLong();
+        }
+
+        public String nextString() {
+            return iterator.next().asText();
+        }
+
+        public JsonNode nextNode() {
+            return iterator.next();
         }
 
     }

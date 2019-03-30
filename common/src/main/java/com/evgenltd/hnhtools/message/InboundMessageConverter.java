@@ -77,22 +77,22 @@ public class InboundMessageConverter {
             case REL_MESSAGE_NEW_WIDGET:
                 rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 rel.put(MessageFields.WIDGET_TYPE, reader.string());
-                rel.put("parent", reader.uint16());
-                ByteUtil.readList(rel.putArray("pArgs"), reader);
+                rel.put(MessageFields.WIDGET_PARENT_ID, reader.uint16());
+                ByteUtil.readList(rel.putArray(MessageFields.WIDGET_P_ARGS), reader);
                 ByteUtil.readList(rel.putArray(MessageFields.WIDGET_C_ARGS), reader);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
                 rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 rel.put(MessageFields.WIDGET_MESSAGE_NAME, reader.string());
-                ByteUtil.readList(rel.putArray("args"), reader);
+                ByteUtil.readList(rel.putArray(MessageFields.WIDGET_ARGS), reader);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
                 rel.put(MessageFields.WIDGET_ID, reader.uint16());
                 break;
             case REL_MESSAGE_ADD_WIDGET:
                 rel.put(MessageFields.WIDGET_ID, reader.uint16());
-                rel.put("parent", reader.uint16());
-                ByteUtil.readList(rel.putArray("args"), reader);
+                rel.put(MessageFields.WIDGET_PARENT_ID, reader.uint16());
+                ByteUtil.readList(rel.putArray(MessageFields.WIDGET_ARGS), reader);
                 break;
             case REL_MESSAGE_MAPIV:
                 int mapType = reader.uint8();
@@ -227,7 +227,7 @@ public class InboundMessageConverter {
                         if (w != -1 && (w & 0x80000000) != 0) {
                             w = reader.int32();
                         }
-                        delta.put("w", w);
+                        delta.put(MessageFields.W, w);
                         break;
                     case OD_SPEECH:
                         delta.put("zo", reader.int16() / 100F);

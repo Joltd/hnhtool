@@ -25,7 +25,10 @@ public class MessageFields {
     static final String ACKNOWLEDGE_SEQUENCE = "acknowledgeSequence";
     static final String WIDGET_ID = "id";
     static final String WIDGET_TYPE = "type";
+    static final String WIDGET_PARENT_ID = "parent";
     static final String WIDGET_MESSAGE_NAME = "name";
+    static final String WIDGET_ARGS = "args";
+    static final String WIDGET_P_ARGS = "pArgs";
     static final String WIDGET_C_ARGS = "cArgs";
     static final String RESOURCE_NAME = "resourceName";
     static final String RESOURCE_VERSION = "resourceVersion";
@@ -39,4 +42,5 @@ public class MessageFields {
     static final String X = "x";
     static final String Y = "y";
     static final String Z = "z";
+    static final String W = "w";
 }
