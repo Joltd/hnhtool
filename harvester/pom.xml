@@ -6,7 +6,7 @@
 
     <groupId>com.evgenltd.hnhtool.harvester</groupId>
     <artifactId>harvester-root</artifactId>
-    <version>1.0.0</version>
+    <version>1.0</version>
     <packaging>pom</packaging>
     <modules>
         <module>server</module>
