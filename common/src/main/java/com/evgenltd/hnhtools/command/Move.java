@@ -39,13 +39,11 @@ public class Move extends AbstractCommand {
     protected Result<Boolean> isDone() {
         final Result<Boolean> isReached = client.getCharacterPosition()
                 .map(characterPosition -> characterPosition.equals(target));
-        System.out.println(isReached);
         if (isReached.isFailed() || isReached.getValue()) {
             return isReached;
         }
 
         final Result<Boolean> isMoving = client.isCharacterMoving();
-        System.out.println(isMoving);
         if (isMoving.isFailed() || isMoving.getValue()) {
             return Result.of(false);
         }

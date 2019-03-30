@@ -22,6 +22,7 @@ public enum ResultCode {
 
     NOT_REACHED,
 
+    NO_INVENTORY,
     NO_POSITION,
     NO_MAP_VIEW,
     NO_WORLD_OBJECT,

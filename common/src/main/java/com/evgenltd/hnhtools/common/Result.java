@@ -43,6 +43,10 @@ public class Result<T> {
         return !code.isSuccess();
     }
 
+    public boolean isSuccess() {
+        return code.isSuccess();
+    }
+
     public ResultCode getCode() {
         return code;
     }

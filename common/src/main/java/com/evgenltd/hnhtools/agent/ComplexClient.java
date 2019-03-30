@@ -3,12 +3,14 @@ package com.evgenltd.hnhtools.agent;
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.IntPoint;
-import com.evgenltd.hnhtools.entity.ResultCode;
+import com.evgenltd.hnhtools.entity.*;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -94,7 +96,7 @@ public final class ComplexClient {
 
     // ##################################################
     // #                                                #
-    // #  API                                           #
+    // #  Connection API                                #
     // #                                                #
     // ##################################################
 
@@ -122,19 +124,79 @@ public final class ComplexClient {
         baseClient.pushOutboundRel(3, PLAY_COMMAND, character); // magic number
     }
 
-    //
+    // ##################################################
+    // #                                                #
+    // #  Character API                                 #
+    // #                                                #
+    // ##################################################
 
     public Result<IntPoint> getCharacterPosition() {
         return objectIndex.getCharacter()
-                .map(WorldObject::getPosition);
+                .map(ObjectIndex.WorldObject::getPosition);
     }
 
     public Result<Boolean> isCharacterMoving() {
         return objectIndex.getCharacter()
-                .map(WorldObject::isMoving);
+                .map(ObjectIndex.WorldObject::isMoving);
     }
 
-    //
+    public Result<Inventory> getCharacterInvetory() {
+        final Integer characterInventoryId = widgetIndex.getCharacterInventoryId();
+        if (characterInventoryId == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
+        }
+
+        return Result.of(prepareInventory(characterInventoryId));
+    }
+
+    public Result<Inventory> getCharacterEquip() {
+        final Integer characterEquipId = widgetIndex.getCharacterEquipId();
+        if (characterEquipId == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
+        }
+
+        return Result.of(prepareInventory(characterEquipId));
+    }
+
+    public Result<Inventory> getLastOpenedInventory() {
+        final Integer astOpenedInventory = widgetIndex.getLastOpenedInventory();
+        if (astOpenedInventory == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
+        }
+
+        return Result.of(prepareInventory(astOpenedInventory));
+    }
+
+    private Inventory prepareInventory(final Integer inventoryId) {
+        final Inventory inventory = new Inventory(inventoryId);
+        widgetIndex.getInventoryItems(inventoryId)
+                .stream()
+                .map(this::convertItem)
+                .forEach(item -> inventory.getItems().add(item));
+        return inventory;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Object API                                    #
+    // #                                                #
+    // ##################################################
+
+    public Result<Map<Long,String>> getWorldObjects() {
+        return Result.of(objectIndex.getObjectList()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    final String resourceName = resourceProvider.getResourceName(entry.getValue());
+                    return Assert.isEmpty(resourceName) ? "" : resourceName;
+                })));
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Commands                                      #
+    // #                                                #
+    // ##################################################
 
     public Result<Void> move(final IntPoint position) {
         final Integer mapViewId = widgetIndex.getMapViewId();
@@ -154,15 +216,15 @@ public final class ComplexClient {
         return Result.ok();
     }
 
-    public ResultCode interact(final Long objectId) {
+    public Result<Void> interact(final Long objectId) {
         final Integer mapViewId = widgetIndex.getMapViewId();
         if (mapViewId == null) {
-            return ResultCode.NO_MAP_VIEW;
+            return Result.fail(ResultCode.NO_MAP_VIEW);
         }
 
-        final WorldObject worldObject = objectIndex.getWorldObject(objectId);
+        final ObjectIndex.WorldObject worldObject = objectIndex.getWorldObject(objectId);
         if (worldObject == null) {
-            return ResultCode.NO_WORLD_OBJECT;
+            return Result.fail(ResultCode.NO_WORLD_OBJECT);
         }
 
         baseClient.pushOutboundRel(
@@ -179,11 +241,11 @@ public final class ComplexClient {
                 SKIP_FLAG
         );
 
-        return ResultCode.OK;
+        return Result.ok();
     }
 
     public ResultCode takeItem(final Integer itemId) {
-        final Item item = widgetIndex.getItem(itemId);
+        final WidgetIndex.Item item = widgetIndex.getItem(itemId);
         if (item == null) {
             return ResultCode.NO_ITEM;
         }
@@ -215,7 +277,7 @@ public final class ComplexClient {
             return ResultCode.NO_MAP_VIEW;
         }
 
-        final Result<WorldObject> character = objectIndex.getCharacter();
+        final Result<ObjectIndex.WorldObject> character = objectIndex.getCharacter();
         if (character.isFailed()) {
             return character.getCode();
         }
@@ -253,6 +315,27 @@ public final class ComplexClient {
                 NO_KEYBOARD_MODIFIER
         );
         return ResultCode.OK;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Util                                          #
+    // #                                                #
+    // ##################################################
+
+    // maybe move outside
+
+    private Item convertItem(final WidgetIndex.Item item) {
+        final Item newItem = new Item(item.getId());
+        return newItem;
+    }
+
+    private WorldObject convertWorldObject(final ObjectIndex.WorldObject worldObject) {
+        final WorldObject newWorldObject = new WorldObject(worldObject.getId());
+        newWorldObject.setPosition(worldObject.getPosition());
+        newWorldObject.setResourceId(worldObject.getResourceId());
+        newWorldObject.setResourceName(resourceProvider.getResourceName(worldObject.getResourceId()));
+        return newWorldObject;
     }
 
 }

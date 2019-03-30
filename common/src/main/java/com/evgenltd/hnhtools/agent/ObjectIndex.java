@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -28,8 +29,19 @@ final class ObjectIndex {
         this.getCharacterObjectId = getCharacterObjectId;
     }
 
+    synchronized void printState() {
+        System.out.println("Object index");
+        index.forEach((id,object) -> System.out.println(String.format("id=[%s], resourceId=[%s], position=[%s]", id, object.getResourceId(), object.getPosition())));
+    }
+
+    synchronized Map<Long, Integer> getObjectList() {
+        return index.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getResourceId()));
+    }
+
     @NotNull
-    public synchronized Result<WorldObject> getCharacter() {
+    synchronized Result<WorldObject> getCharacter() {
         if (character == null) {
             character = index.get(getCharacterObjectId.get());
         }
@@ -40,7 +52,7 @@ final class ObjectIndex {
     }
 
     @Nullable
-    public synchronized WorldObject getWorldObject(final Long id) {
+    synchronized WorldObject getWorldObject(final Long id) {
         return index.get(id);
     }
 
@@ -79,4 +91,55 @@ final class ObjectIndex {
         }
     }
 
+    // ##################################################
+    // #                                                #
+    // #  Inner state                                   #
+    // #                                                #
+    // ##################################################
+
+    static final class WorldObject {
+
+        private long id;
+        private int frame;
+        private IntPoint position;
+        private int resourceId;
+        private boolean moving;
+
+        WorldObject(final Long id) {
+            this.id = id;
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        int getFrame() {
+            return frame;
+        }
+        void setFrame(final int frame) {
+            this.frame = frame;
+        }
+
+        IntPoint getPosition() {
+            return position;
+        }
+        void setPosition(final IntPoint position) {
+            this.position = position;
+        }
+
+        int getResourceId() {
+            return resourceId;
+        }
+        void setResourceId(final int resourceId) {
+            this.resourceId = resourceId;
+        }
+
+        boolean isMoving() {
+            return moving;
+        }
+        void setMoving(final boolean moving) {
+            this.moving = moving;
+        }
+
+    }
 }

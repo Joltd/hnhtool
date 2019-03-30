@@ -4,8 +4,8 @@ import com.evgenltd.hnhtools.agent.ComplexClient;
 import com.evgenltd.hnhtools.agent.ResourceProvider;
 import com.evgenltd.hnhtools.command.Connect;
 import com.evgenltd.hnhtools.command.Move;
+import com.evgenltd.hnhtools.command.OpenInventory;
 import com.evgenltd.hnhtools.common.ApplicationException;
-import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,9 +60,22 @@ public class ApplicationPrototype {
                     break;
                 case "move":
                     final IntPoint value = client.getCharacterPosition().getValue();
-                    final Result<Void> result = Move.perform(client, value.add(1000, 1000));
-                    System.out.println("main " + result);
+                    Move.perform(client, value.add(-2000, -2000));
                     break;
+                case "open":
+                    final Long cupboardId = client.getWorldObjects()
+                            .getValue()
+                            .entrySet()
+                            .stream()
+                            .filter(entry -> Objects.equals(entry.getValue(), "gfx/terobjs/cupboard"))
+                            .findFirst()
+                            .map(Map.Entry::getKey)
+                            .get();
+                    OpenInventory.perform(client, cupboardId).getValue().getItems().forEach(item -> System.out.println(item.getId()));
+                    break;
+//                case "print":
+//                    client.printState();
+//                    break;
             }
         }
 

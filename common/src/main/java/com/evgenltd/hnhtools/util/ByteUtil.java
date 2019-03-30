@@ -118,19 +118,23 @@ public class ByteUtil {
         for(Object value : args) {
             if(value == null) {
                 writer.adduint8(Type.T_NIL.getValue());
-            } else if(value instanceof Integer) {
+            } else if (value instanceof Long) {
+                writer.adduint8(Type.T_INT.getValue());
+                final Long longValue = (Long) value;
+                writer.addint32(longValue.intValue());
+            } else if (value instanceof Integer) {
                 writer.adduint8(Type.T_INT.getValue());
                 final Integer intValue = (Integer) value;
                 writer.addint32(intValue);
-            } else if(value instanceof String) {
+            } else if (value instanceof String) {
                 writer.adduint8(Type.T_STR.getValue());
                 writer.addString((String) value);
-            } else if(value instanceof IntPoint) {
+            } else if (value instanceof IntPoint) {
                 writer.adduint8(Type.T_COORD.getValue());
                 final IntPoint point = (IntPoint) value;
                 writer.addint32(point.getX());
                 writer.addint32(point.getY());
-            } else if(value instanceof byte[]) {
+            } else if (value instanceof byte[]) {
                 byte[] byteArray = (byte[]) value;
                 writer.adduint8(Type.T_BYTES.getValue());
                 if(byteArray.length < 128) {
@@ -140,18 +144,18 @@ public class ByteUtil {
                     writer.addint32(byteArray.length);
                 }
                 writer.addbytes(byteArray);
-            } else if(value instanceof Color) {
+            } else if (value instanceof Color) {
                 writer.adduint8(Type.T_COLOR.getValue());
                 final Color color = (Color) value;
                 writer.adduint8(color.getRed());
                 writer.adduint8(color.getGreen());
                 writer.adduint8(color.getBlue());
                 writer.adduint8(color.getAlpha());
-            } else if(value instanceof Float) {
+            } else if (value instanceof Float) {
                 writer.adduint8(Type.T_FLOAT32.getValue());
                 final Float floatValue = (Float) value;
                 writer.addfloat32(floatValue);
-            } else if(value instanceof Double) {
+            } else if (value instanceof Double) {
                 writer.adduint8(Type.T_FLOAT64.getValue());
                 final Double doubleValue = (Double) value;
                 writer.addfloat64(doubleValue.floatValue());
