@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.entity;
 
+import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtools.agent.ComplexClient;
 
 /**
@@ -13,6 +14,8 @@ public class Agent {
 
     private Account account;
     private ComplexClient client;
+    private Space currentSpace;
+    private ObjectIndex index;
 
     public Account getAccount() {
         return account;
@@ -28,4 +31,17 @@ public class Agent {
         this.client = client;
     }
 
+    public Space getCurrentSpace() {
+        return currentSpace;
+    }
+    public void setCurrentSpace(final Space currentSpace) {
+        this.currentSpace = currentSpace;
+    }
+
+    public ObjectIndex getIndex() {
+        return index;
+    }
+    public void setIndex(final ObjectIndex index) {
+        this.index = index;
+    }
 }

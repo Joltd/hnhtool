@@ -9,7 +9,7 @@ import java.util.Objects;
  * <p>Author:  lebed</p>
  * <p>Created: 13-03-2019 00:02</p>
  */
-public class IntPoint {
+public final class IntPoint {
 
     private int x;
     private int y;

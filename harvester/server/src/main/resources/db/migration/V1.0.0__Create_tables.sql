@@ -13,6 +13,11 @@ create table accounts (
 	defaultCharacter varchar(255)
 );
 
+create table resources (
+	id numeric(19,0) primary key,
+	name varchar(255)
+);
+
 create table spaces (
 	id numeric(19,0) identity(1,1) primary key
 	name varchar(255),
@@ -22,6 +27,7 @@ create table spaces (
 create table known_objects (
 	id numeric(19,0) identity(1,1) primary key,
 	owner_id numeric(19,0) foreign key references spaces(id),
+	resource_id numeric(19,0) foreign key references resources(id),
 	x int,
 	y int,
 	doorway tinyint,

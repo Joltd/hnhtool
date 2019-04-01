@@ -1,6 +1,9 @@
 package com.evgenltd.hnhtool.harvester.common.entity;
 
+import com.evgenltd.hnhtools.entity.IntPoint;
+
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * <p></p>
@@ -23,9 +26,16 @@ public class KnownObject implements Identified {
     @JoinColumn(name = "owner_id")
     private Space owner;
 
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
+
     private Integer x;
 
     private Integer y;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime actual;
 
     private Boolean doorway;
 
@@ -53,6 +63,13 @@ public class KnownObject implements Identified {
         this.owner = owner;
     }
 
+    public Resource getResource() {
+        return resource;
+    }
+    public void setResource(final Resource resource) {
+        this.resource = resource;
+    }
+
     public Integer getX() {
         return x;
     }
@@ -65,6 +82,17 @@ public class KnownObject implements Identified {
     }
     public void setY(final Integer y) {
         this.y = y;
+    }
+
+    public IntPoint getPosition() {
+        return new IntPoint(x, y);
+    }
+
+    public LocalDateTime getActual() {
+        return actual;
+    }
+    public void setActual(final LocalDateTime actual) {
+        this.actual = actual;
     }
 
     public Boolean getDoorway() {
