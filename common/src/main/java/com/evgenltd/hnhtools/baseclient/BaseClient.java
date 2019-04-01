@@ -36,7 +36,7 @@ public final class BaseClient {
     private static final int LIFE_TIMEOUT = 100;
 
     private State state = State.INIT;
-    private ConnectionErrorCode connectionErrorCode;
+    private String connectionErrorCode;
 
     // dependencies
     private final ObjectMapper objectMapper;
@@ -122,7 +122,7 @@ public final class BaseClient {
         return state.equals(State.CLOSED);
     }
 
-    public ConnectionErrorCode getConnectionErrorCode() {
+    public String getConnectionErrorCode() {
         return connectionErrorCode;
     }
 

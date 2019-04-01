@@ -17,8 +17,9 @@ import java.util.function.Supplier;
  */
 public class Result<T> {
 
+    private String code;
+    private boolean success;
     private T value;
-    private ResultCode code;
 
     private Result() {}
 
@@ -26,6 +27,7 @@ public class Result<T> {
         final Result<T> result = new Result<>();
         result.value = value;
         result.code = ResultCode.OK;
+        result.success = true;
         return result;
     }
 
@@ -33,21 +35,22 @@ public class Result<T> {
         return Result.of(null);
     }
 
-    public static <T> Result<T> fail(final ResultCode code) {
+    public static <T> Result<T> fail(final String code) {
         final Result<T> result = new Result<>();
         result.code = code;
+        result.success = false;
         return result;
     }
 
     public boolean isFailed() {
-        return !code.isSuccess();
+        return !success;
     }
 
     public boolean isSuccess() {
-        return code.isSuccess();
+        return success;
     }
 
-    public ResultCode getCode() {
+    public String getCode() {
         return code;
     }
 

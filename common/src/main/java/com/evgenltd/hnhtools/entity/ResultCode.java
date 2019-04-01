@@ -7,41 +7,24 @@ package com.evgenltd.hnhtools.entity;
  * <p>Author:  lebed</p>
  * <p>Created: 30-03-2019 16:59</p>
  */
-public enum ResultCode {
+public class ResultCode {
 
-    OK(true),
+    public static final String OK = "OK";
+    public static final String INVALID_AUTH_TOKEN = "INVALID_AUTH_TOKEN";
+    public static final String ALREADY_LOGGED_IN = "ALREADY_LOGGED_IN";
+    public static final String COULD_NOT_CONNECT = "COULD_NOT_CONNECT";
+    public static final String CLIENT_TOO_OLD = "CLIENT_TOO_OLD";
+    public static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
+    public static final String UNKNOWN = "UNKNOWN";
+    public static final String INTERRUPTED = "INTERRUPTED";
+    public static final String NOT_REACHED = "NOT_REACHED";
+    public static final String NO_INVENTORY = "NO_INVENTORY";
+    public static final String NO_POSITION = "NO_POSITION";
+    public static final String NO_MAP_VIEW = "NO_MAP_VIEW";
+    public static final String NO_WORLD_OBJECT = "NO_WORLD_OBJECT";
+    public static final String NO_ITEM = "NO_ITEM";
+    public static final String NO_CHARACTER = "NO_CHARACTER";
+    public static final String NO_CONTEXT_MENU = "NO_CONTEXT_MENU";
+    public static final String NO_CONTEXT_MENU_COMMAND = "NO_CONTEXT_MENU_COMMAND";
 
-    INVALID_AUTH_TOKEN,
-    ALREADY_LOGGED_IN,
-    COULD_NOT_CONNECT,
-    CLIENT_TOO_OLD,
-    AUTH_TOKEN_EXPIRED,
-    UNKNOWN,
-
-    INTERRUPTED,
-
-    NOT_REACHED,
-
-    NO_INVENTORY,
-    NO_POSITION,
-    NO_MAP_VIEW,
-    NO_WORLD_OBJECT,
-    NO_ITEM,
-    NO_CHARACTER,
-    NO_CONTEXT_MENU,
-    NO_CONTEXT_MENU_COMMAND;
-
-
-
-    private boolean success;
-
-    ResultCode() {}
-
-    ResultCode(final boolean success) {
-        this.success = success;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
 }

@@ -1,7 +1,5 @@
 package com.evgenltd.hnhtools.baseclient;
 
-import java.util.Objects;
-
 /**
  * <p></p>
  * <br/>
@@ -9,34 +7,33 @@ import java.util.Objects;
  * <p>Author:  lebed</p>
  * <p>Created: 11-03-2019 00:32</p>
  */
-public enum ConnectionErrorCode {
+public class ConnectionErrorCode {
 
-    OK(0),
-    INVALID_AUTH_TOKEN(1),
-    ALREADY_LOGGED_IN(2),
-    COULD_NOT_CONNECT(3),
-    CLIENT_TOO_OLD(4),
-    AUTH_TOKEN_EXPIRED(5),
-    UNKNOWN(null);
+    public static final String OK = "OK";
+    public static final String INVALID_AUTH_TOKEN = "INVALID_AUTH_TOKEN";
+    public static final String ALREADY_LOGGED_IN = "ALREADY_LOGGED_IN";
+    public static final String COULD_NOT_CONNECT = "COULD_NOT_CONNECT";
+    public static final String CLIENT_TOO_OLD = "CLIENT_TOO_OLD";
+    public static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
+    public static final String UNKNOWN = "UNKNOWN";
 
-    private Integer code;
-
-    ConnectionErrorCode(final Integer code) {
-        this.code = code;
-    }
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public static ConnectionErrorCode of(final int code) {
-        for (final ConnectionErrorCode value : values()) {
-            if (Objects.equals(value.getCode(), code)) {
-                return value;
-            }
+    public static String of(final int code) {
+        switch (code) {
+            case 0:
+                return OK;
+            case 1:
+                return INVALID_AUTH_TOKEN;
+            case 2:
+                return ALREADY_LOGGED_IN;
+            case 3:
+                return COULD_NOT_CONNECT;
+            case 4:
+                return CLIENT_TOO_OLD;
+            case 5:
+                return AUTH_TOKEN_EXPIRED;
+            default:
+                return UNKNOWN;
         }
-
-        return UNKNOWN;
     }
 
 }

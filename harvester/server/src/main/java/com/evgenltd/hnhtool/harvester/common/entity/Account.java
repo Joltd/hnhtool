@@ -24,6 +24,10 @@ public class Account {
 
     private String defaultCharacter;
 
+    @ManyToOne
+    @JoinColumn(name = "current_space_id")
+    private Space currentSpace;
+
     public Long getId() {
         return id;
     }
@@ -51,4 +55,12 @@ public class Account {
     public void setDefaultCharacter(final String defaultCharacter) {
         this.defaultCharacter = defaultCharacter;
     }
+
+    public Space getCurrentSpace() {
+        return currentSpace;
+    }
+    public void setCurrentSpace(final Space currentSpace) {
+        this.currentSpace = currentSpace;
+    }
+
 }

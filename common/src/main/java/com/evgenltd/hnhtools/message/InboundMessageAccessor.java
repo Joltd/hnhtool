@@ -43,7 +43,7 @@ public class InboundMessageAccessor {
     // #                                                #
     // ##################################################
 
-    public ConnectionErrorCode getConnectionErrorCode() {
+    public String getConnectionErrorCode() {
         final JsonNode errorCodeNode = data.get(MessageFields.ERROR_CODE);
         if (errorCodeNode == null || errorCodeNode.isNull()) {
             return ConnectionErrorCode.UNKNOWN;

@@ -1,23 +1,19 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.entity.Account;
-import com.evgenltd.hnhtool.harvester.common.entity.Agent;
+import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
+import com.evgenltd.hnhtool.harvester.common.entity.Work;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
-import com.evgenltd.hnhtools.agent.ComplexClient;
-import com.evgenltd.hnhtools.agent.ResourceProvider;
-import com.evgenltd.hnhtools.command.Connect;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hnh.auth.Authentication;
-import com.hnh.auth.AuthenticationResult;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.evgenltd.hnhtools.common.Result;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -29,89 +25,62 @@ import java.util.List;
 @Service
 public class AgentService {
 
-    private static final Logger log = LogManager.getLogger(AgentService.class);
-
-    private ObjectMapper objectMapper;
     private AccountRepository accountRepository;
-    private ResourceProvider resourceProvider;
+    private ObjectFactory<Agent> agentFactory;
 
-    @Value("${hafen.server}")
-    private String server;
-    @Value("${hafen.port}")
-    private Integer port;
-
-    private List<Agent> agents = Collections.synchronizedList(new ArrayList<>());
+    private final List<Agent> agents = new ArrayList<>();
 
     public AgentService(
-            final ObjectMapper objectMapper,
             final AccountRepository accountRepository,
-            final ResourceProvider resourceProvider
+            final ObjectFactory<Agent> agentFactory
     ) {
-        this.objectMapper = objectMapper;
         this.accountRepository = accountRepository;
-        this.resourceProvider = resourceProvider;
+        this.agentFactory = agentFactory;
     }
 
     @PostConstruct
     public void postConstruct() {
-        for (final Account account : accountRepository.findAll()) {
-            final byte[] cookie = authenticateAccount(account);
-            if (cookie == null) {
-                account.setToken(null);
-                accountRepository.save(account);
-                continue;
-            }
+        accountRepository.findAll()
+                .stream()
+                .map(this::buildAgent)
+                .forEach(agents::add);
+    }
 
-            final Agent agent = new Agent();
-            agent.setAccount(account);
-            agents.add(agent);
+    @PreDestroy
+    public void preDestroy() {
+        for (final Agent agent : agents) {
+            agent.deactivate();
         }
     }
 
-    public void begin() {
+    public Result<Void> offerWork(final Work work) {
 
-        if (agents.isEmpty()) {
-            return;
+        final List<Agent> passedByRequirements = agents.stream()
+                .filter(agent -> agent.checkRequirements(work))
+                .collect(Collectors.toList());
+
+        if (passedByRequirements.isEmpty()) {
+            return Result.fail(ServerResultCode.AGENT_NO_MATCH_REQUIREMENTS);
         }
 
-        final Agent agent = agents.stream()
-                .findFirst()
-                .orElse(null);
+        final Optional<Agent> firsReadyAgent = passedByRequirements.stream()
+                .filter(Agent::isReady)
+                .findFirst();
 
-        final ComplexClient client = new ComplexClient(
-                objectMapper,
-                resourceProvider,
-                server,
-                port,
-                agent.getAccount().getUsername(),
-                agent.getAccount().getToken(),
-                agent.getAccount().getDefaultCharacter()
-        );
+        if (!firsReadyAgent.isPresent()) {
+            return Result.fail(ServerResultCode.AGENT_ALL_BUSY);
+        }
 
-        Connect.perform(client);
-        client.play();
+        firsReadyAgent.get().assignWork(work.getRunnable());
 
+        return Result.ok();
 
     }
 
-    private byte[] authenticateAccount(final Account account) {
-        try (final Authentication init = buildAuthentication()) {
-            final AuthenticationResult result = init.loginByToken(
-                    account.getUsername(),
-                    account.getToken()
-            );
-            return result.getCookie();
-        } catch (final Exception e) {
-            log.error(String.format("Unable to authenticate account [%s]", account.getUsername()), e);
-            return null;
-        }
-    }
-
-    private Authentication buildAuthentication() {
-        return Authentication.of()
-                .setHost(server)
-                .setPort(port)
-                .init();
+    private Agent buildAgent(final Account account) {
+        final Agent agent = agentFactory.getObject();
+        agent.setAccount(account);
+        return agent;
     }
 
 }

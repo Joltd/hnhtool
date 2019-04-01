@@ -108,8 +108,8 @@ public final class ComplexClient {
         return baseClient.isClosed();
     }
 
-    public ResultCode getConnectionErrorCode() {
-        return ResultCode.valueOf(baseClient.getConnectionErrorCode().name());
+    public String getConnectionErrorCode() {
+        return baseClient.getConnectionErrorCode();
     }
 
     public void connect() {
@@ -244,7 +244,7 @@ public final class ComplexClient {
         return Result.ok();
     }
 
-    public ResultCode takeItem(final Integer itemId) {
+    public String takeItem(final Integer itemId) {
         final WidgetIndex.Item item = widgetIndex.getItem(itemId);
         if (item == null) {
             return ResultCode.NO_ITEM;
@@ -262,7 +262,7 @@ public final class ComplexClient {
     /**
      * <p>Put item from hand in inventory by particular position</p>
      */
-    public ResultCode putItem(final Integer inventoryId, final IntPoint position) {
+    public String putItem(final Integer inventoryId, final IntPoint position) {
         baseClient.pushOutboundRel(
                 inventoryId,
                 DROP_COMMAND,
@@ -271,7 +271,7 @@ public final class ComplexClient {
         return ResultCode.OK;
     }
 
-    public ResultCode dropItem() {
+    public String dropItem() {
         final Integer mapViewId = widgetIndex.getMapViewId();
         if (mapViewId == null) {
             return ResultCode.NO_MAP_VIEW;
@@ -292,12 +292,12 @@ public final class ComplexClient {
         return ResultCode.OK;
     }
 
-    public ResultCode closeWidget(final Integer widgetId) {
+    public String closeWidget(final Integer widgetId) {
         baseClient.pushOutboundRel(widgetId, CLOSE_COMMAND);
         return ResultCode.OK;
     }
 
-    public ResultCode contextMenuCommand(final String command) {
+    public String contextMenuCommand(final String command) {
         final Integer contextMenuId = widgetIndex.getContextMenuId();
         if (contextMenuId == null) {
             return ResultCode.NO_CONTEXT_MENU;
