@@ -13,4 +13,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface SpaceRepository extends JpaRepository<Space, Long> {
+
+    Space findByType(final Space.Type type);
+
 }

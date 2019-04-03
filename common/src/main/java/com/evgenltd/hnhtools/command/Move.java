@@ -45,7 +45,7 @@ public class Move extends AbstractCommand {
 
         final Result<Boolean> isMoving = client.isCharacterMoving();
         if (isMoving.isFailed() || isMoving.getValue()) {
-            return Result.of(false);
+            return Result.ok(false);
         }
 
         return Result.fail(ResultCode.NOT_REACHED);

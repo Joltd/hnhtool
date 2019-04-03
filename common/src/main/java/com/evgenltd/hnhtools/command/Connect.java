@@ -36,7 +36,7 @@ public class Connect extends AbstractCommand {
             return Result.fail(client.getConnectionErrorCode());
         }
 
-        return Result.of(client.isLife());
+        return Result.ok(client.isLife());
     }
 
 }

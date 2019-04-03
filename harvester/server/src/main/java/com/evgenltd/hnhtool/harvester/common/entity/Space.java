@@ -43,7 +43,7 @@ public class Space implements Identified {
         this.type = type;
     }
 
-    enum Type {
+    public enum Type {
         SURFACE,
         MINE,
         HOLE,

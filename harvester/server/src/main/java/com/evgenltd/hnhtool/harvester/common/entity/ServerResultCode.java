@@ -9,6 +9,8 @@ package com.evgenltd.hnhtool.harvester.common.entity;
  */
 public class ServerResultCode {
 
+    public static final String AGENT_NOT_AUTHENTICATED = "AGENT_NOT_AUTHENTICATED";
+
     public static final String AGENT_ACTIVATED = "AGENT_ALREADY_ACTIVATED";
     public static final String AGENT_DEACTIVATED = "AGENT_ALREADY_DEACTIVATED";
 

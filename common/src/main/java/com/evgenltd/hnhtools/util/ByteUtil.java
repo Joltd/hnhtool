@@ -28,7 +28,7 @@ public class ByteUtil {
     public static final int DWORD = 0xFF_FF_FF_FF; // 32
 
     /**
-     * <p>Passed value will be adjusted to a range of 0..0xFF_FF.
+     * <p>Passed value will be adjusted to a range ok 0..0xFF_FF.
      * Negative values will be adjusted by a 0xFF_FF offset</p>
      * @param value target value
      * @return 0..0xFF_FF representation

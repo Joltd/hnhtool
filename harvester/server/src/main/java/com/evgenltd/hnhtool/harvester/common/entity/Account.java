@@ -19,7 +19,6 @@ public class Account {
 
     private String username;
 
-    @Lob
     private byte[] token;
 
     private String defaultCharacter;

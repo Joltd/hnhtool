@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "known_objects")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "type")
 public class KnownObject implements Identified {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,7 +32,6 @@ public class KnownObject implements Identified {
 
     private Integer y;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime actual;
 
     private Boolean doorway;

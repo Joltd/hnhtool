@@ -9,7 +9,7 @@ import com.evgenltd.hnhtools.message.RelType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -146,7 +146,7 @@ public final class ComplexClient {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
 
-        return Result.of(prepareInventory(characterInventoryId));
+        return Result.ok(prepareInventory(characterInventoryId));
     }
 
     public Result<Inventory> getCharacterEquip() {
@@ -155,7 +155,7 @@ public final class ComplexClient {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
 
-        return Result.of(prepareInventory(characterEquipId));
+        return Result.ok(prepareInventory(characterEquipId));
     }
 
     public Result<Inventory> getLastOpenedInventory() {
@@ -164,7 +164,7 @@ public final class ComplexClient {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
 
-        return Result.of(prepareInventory(astOpenedInventory));
+        return Result.ok(prepareInventory(astOpenedInventory));
     }
 
     private Inventory prepareInventory(final Integer inventoryId) {
@@ -182,14 +182,17 @@ public final class ComplexClient {
     // #                                                #
     // ##################################################
 
-    public Result<Map<Long,String>> getWorldObjects() {
-        return Result.of(objectIndex.getObjectList()
-                .entrySet()
+    public Result<List<WorldObject>> getWorldObjects() {
+        final List<WorldObject> objects = objectIndex.getObjectList()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                    final String resourceName = resourceProvider.getResourceName(entry.getValue());
-                    return Assert.isEmpty(resourceName) ? "" : resourceName;
-                })));
+                .map(wo -> {
+                    final WorldObject worldObject = new WorldObject(wo.getId());
+                    worldObject.setPosition(wo.getPosition());
+                    worldObject.setResourceId(wo.getResourceId());
+                    return worldObject;
+                })
+                .collect(Collectors.toList());
+        return Result.ok(objects);
     }
 
     // ##################################################
@@ -253,7 +256,7 @@ public final class ComplexClient {
         baseClient.pushOutboundRel(
                 item.getParentId(),
                 TAKE_COMMAND,
-                new IntPoint() // position of cursor over item in inventory
+                new IntPoint() // position ok cursor over item in inventory
         );
 
         return ResultCode.OK;

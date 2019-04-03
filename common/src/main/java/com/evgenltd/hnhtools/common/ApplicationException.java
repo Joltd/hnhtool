@@ -28,7 +28,7 @@ public class ApplicationException extends RuntimeException {
     }
 
     public static <T extends Enum<?>> ApplicationException unsupportedEnumValue(final T value) {
-        return new ApplicationException("Unsupported value [%s] of enum [%s]", value, value.getClass().getSimpleName());
+        return new ApplicationException("Unsupported value [%s] ok enum [%s]", value, value.getClass().getSimpleName());
     }
 
 }

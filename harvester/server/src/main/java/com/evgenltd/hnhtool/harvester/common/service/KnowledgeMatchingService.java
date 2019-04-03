@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Resource;
@@ -12,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -47,7 +48,7 @@ public class KnowledgeMatchingService {
         Assert.valueRequireNonEmpty(space, "Space");
         Assert.valueRequireNonEmpty(characterPosition, "CharacterPosition");
 
-        final List<WorldObject> objectsForMatching = new ArrayList<>(objects);
+        final List<WorldObject> objectsForMatching = filterWasteObjects(objects);
 
         final IntPoint upperLeft = characterPosition.add(-10000, -10000);
         final IntPoint lowerRight = characterPosition.add(10000, 10000);
@@ -83,6 +84,12 @@ public class KnowledgeMatchingService {
         }
 
         return objectIndex;
+    }
+
+    private List<WorldObject> filterWasteObjects(final List<WorldObject> objects) {
+        return objects.stream()
+                .filter(wo -> !ResourceConstants.isWaste(wo.getResourceId()))
+                .collect(Collectors.toList());
     }
 
     private WorldObject lookupMatchedObject(final List<WorldObject> worldObjects, final KnownObject knownObject) {
@@ -122,10 +129,21 @@ public class KnowledgeMatchingService {
         knownObject.setX(worldObject.getPosition().getX());
         knownObject.setY(worldObject.getPosition().getY());
         knownObject.setActual(LocalDateTime.now());
-
-        // determine object type and other attributes
-
+        objectClassification(knownObject, space);
         return knownObjectRepository.save(knownObject);
+    }
+
+    private void objectClassification(
+            final KnownObject knownObject,
+            final Space space
+    ) {
+        final Long resourceId = knownObject.getResource().getId();
+        if (ResourceConstants.isDoorway(resourceId)) {
+            knownObject.setDoorway(true);
+            knownObject.setSpaceFrom(space);
+        } else if (ResourceConstants.isContainer(resourceId)) {
+            knownObject.setContainer(true);
+        }
     }
 
 }

@@ -25,7 +25,7 @@ final class InboundRelHolder {
      *     <li>is a number from the future (but no more than half-WORD</li>
      * </ul></p>
      * <p>In first case REL is an actual which should be handled (pushed to a queue) immediately</p>
-     * <p>In second case REL is an portion of data which received too early, so we should to store it
+     * <p>In second case REL is an portion ok data which received too early, so we should to store it
      * and handle when expected sequence number will matches with it</p>
      * @param data target REL
      * @return passed REL if its sequence number matches with expected sequence number, <code>null</code> otherwise

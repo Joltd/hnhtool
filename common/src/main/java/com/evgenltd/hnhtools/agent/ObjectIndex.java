@@ -7,10 +7,11 @@ import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -29,15 +30,8 @@ final class ObjectIndex {
         this.getCharacterObjectId = getCharacterObjectId;
     }
 
-    synchronized void printState() {
-        System.out.println("Object index");
-        index.forEach((id,object) -> System.out.println(String.format("id=[%s], resourceId=[%s], position=[%s]", id, object.getResourceId(), object.getPosition())));
-    }
-
-    synchronized Map<Long, Integer> getObjectList() {
-        return index.entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getResourceId()));
+    synchronized List<WorldObject> getObjectList() {
+        return new ArrayList<>(index.values());
     }
 
     @NotNull
@@ -47,7 +41,7 @@ final class ObjectIndex {
         }
 
         return character != null
-                ? Result.of(character)
+                ? Result.ok(character)
                 : Result.fail(ResultCode.NO_CHARACTER);
     }
 

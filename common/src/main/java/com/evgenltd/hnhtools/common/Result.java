@@ -23,7 +23,7 @@ public class Result<T> {
 
     private Result() {}
 
-    public static <T> Result<T> of(final T value) {
+    public static <T> Result<T> ok(final T value) {
         final Result<T> result = new Result<>();
         result.value = value;
         result.code = ResultCode.OK;
@@ -32,7 +32,7 @@ public class Result<T> {
     }
 
     public static Result<Void> ok() {
-        return Result.of(null);
+        return Result.ok(null);
     }
 
     public static <T> Result<T> fail(final String code) {
@@ -73,7 +73,7 @@ public class Result<T> {
         if (isFailed()) {
             return Result.fail(code);
         } else {
-            return Result.of(mapper.apply(value));
+            return Result.ok(mapper.apply(value));
         }
     }
 
@@ -92,6 +92,9 @@ public class Result<T> {
 
     @Override
     public String toString() {
+        if (value == null) {
+            return String.format("code=[%s]", code);
+        }
         return String.format("code=[%s], value=[%s]", code, value);
     }
 }

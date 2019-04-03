@@ -3,7 +3,6 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.Account;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
-import com.evgenltd.hnhtool.harvester.common.entity.Work;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
 import com.evgenltd.hnhtools.agent.ComplexClient;
 import com.evgenltd.hnhtools.agent.ResourceProvider;
@@ -11,6 +10,7 @@ import com.evgenltd.hnhtools.command.Connect;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.entity.WorldObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
 import com.hnh.auth.AuthenticationResult;
@@ -19,11 +19,12 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -54,8 +55,8 @@ public class Agent {
     @Value("${hafen.port}")
     private Integer port;
 
-    private State state;
-    private BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
+    private volatile State state;
+    private BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(1);
 
     private ComplexClient client;
     private ObjectIndex index;
@@ -82,19 +83,26 @@ public class Agent {
         doDeactivation();
     }
 
-//    @Scheduled
+    @Scheduled(cron = "*/5 * * * * *")
     public void matchKnowledge() {
+        if (client == null || !client.isLife()) {
+            return;
+        }
+
         final Result<IntPoint> characterPosition = client.getCharacterPosition();
         if (characterPosition.isFailed()) {
             return;
         }
 
-        // need current space
+        final Result<List<WorldObject>> worldObjects = client.getWorldObjects();
+        if (worldObjects.isFailed()) {
+            return;
+        }
 
         index = knowledgeMatchingService.match(
                 account.getCurrentSpace(),
                 characterPosition.getValue(),
-                Collections.emptyList()
+                worldObjects.getValue()
         );
     }
 
@@ -138,10 +146,6 @@ public class Agent {
         state = State.DEACTIVATED;
     }
 
-    public boolean checkRequirements(final Work work) {
-        return false;
-    }
-
     public Result<Void> assignWork(final Runnable runnable) {
         if (state.equals(State.DEACTIVATED)) {
             return Result.fail(ServerResultCode.AGENT_DEACTIVATED);
@@ -158,8 +162,6 @@ public class Agent {
     private void worker() {
         while (true) {
 
-            connectIfNecessary();
-
             try {
 
                 final Runnable runnable = queue.poll(TIMEOUT, TimeUnit.MILLISECONDS);
@@ -170,6 +172,8 @@ public class Agent {
                 if (runnable == null) {
                     continue;
                 }
+
+                connectIfNecessary();
 
                 state = State.BUSY;
                 runnable.run();
@@ -222,7 +226,6 @@ public class Agent {
     private Authentication buildAuthentication() {
         return Authentication.of()
                 .setHost(server)
-                .setPort(port)
                 .init();
     }
 
