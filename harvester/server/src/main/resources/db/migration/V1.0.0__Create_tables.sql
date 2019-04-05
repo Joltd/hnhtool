@@ -34,8 +34,14 @@ create table known_objects (
 	actual datetime,
 	doorway tinyint,
 	container tinyint,
-	space_from_id numeric(19,0) foreign key references spaces(id),
-	space_to_id numeric(19,0) foreign key references spaces(id)
+	connected_space_id numeric(19,0) foreign key references spaces(id)
+);
+
+create table paths (
+	id numeric(19,0) identity(1,1) primary key,
+	from_id numeric(19,0) foreign key references known_objects(id),
+	to_id numeric(19,0) foreign key references known_objects(id),
+	distance float
 );
 
 create table known_items (

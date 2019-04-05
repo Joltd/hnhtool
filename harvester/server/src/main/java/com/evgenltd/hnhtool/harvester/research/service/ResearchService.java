@@ -44,7 +44,9 @@ public class ResearchService implements Module {
         for (final KnownObject unknownDoorway : unknownDoorways) {
             final Resource resource = unknownDoorway.getResource();
             final Space spaceTo = buildNewSpace(resource.getId());
-            unknownDoorway.setSpaceTo(spaceTo);
+            unknownDoorway.setConnectedSpace(spaceTo);
+
+
         }
         // schedule tasks for researching
     }
@@ -62,7 +64,8 @@ public class ResearchService implements Module {
         }
         space.setName(space.getType().name());
         return spaceRepository.save(space);
-
     }
+
+
 
 }

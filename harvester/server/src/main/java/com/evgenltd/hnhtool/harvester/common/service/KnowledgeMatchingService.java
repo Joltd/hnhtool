@@ -129,18 +129,14 @@ public class KnowledgeMatchingService {
         knownObject.setX(worldObject.getPosition().getX());
         knownObject.setY(worldObject.getPosition().getY());
         knownObject.setActual(LocalDateTime.now());
-        objectClassification(knownObject, space);
+        objectClassification(knownObject);
         return knownObjectRepository.save(knownObject);
     }
 
-    private void objectClassification(
-            final KnownObject knownObject,
-            final Space space
-    ) {
+    private void objectClassification(final KnownObject knownObject) {
         final Long resourceId = knownObject.getResource().getId();
         if (ResourceConstants.isDoorway(resourceId)) {
             knownObject.setDoorway(true);
-            knownObject.setSpaceFrom(space);
         } else if (ResourceConstants.isContainer(resourceId)) {
             knownObject.setContainer(true);
         }

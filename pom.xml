@@ -13,6 +13,7 @@
         <module>analyzer</module>
         <module>gate</module>
         <module>auth</module>
+        <module>waypointer</module>
     </modules>
 
     <build>

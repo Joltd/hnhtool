@@ -1,0 +1,16 @@
+rect {
+    fill: red;
+}
+
+rect:hover {
+    fill: green;
+}
+
+line {
+    stroke: blue;
+    stroke-width: 3px;
+}
+
+line:hover {
+    stroke: gray;
+}

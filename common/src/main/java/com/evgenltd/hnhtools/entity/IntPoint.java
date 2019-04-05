@@ -31,12 +31,24 @@ public final class IntPoint {
         return y;
     }
 
+    public DoublePoint asDouble() {
+        return new DoublePoint(getX(), getY());
+    }
+
+    public IntPoint add(final IntPoint point) {
+        return add(point.getX(), point.getY());
+    }
+
     public IntPoint add(final int x, final int y) {
         return new IntPoint(this.x + x, this.y + y);
     }
 
     public DoublePoint multiple(final DoublePoint point) {
-        return new DoublePoint(x * point.getX(), y * point.getY());
+        return new DoublePoint(getX() * point.getX(), getY() * point.getY());
+    }
+
+    public DoublePoint devide(final DoublePoint modifier) {
+        return new DoublePoint(getX() / modifier.getX(), getY() / modifier.getY());
     }
 
     @Override

@@ -39,12 +39,8 @@ public class KnownObject implements Identified {
     private Boolean container;
 
     @ManyToOne
-    @JoinColumn(name = "space_from_id")
-    private Space spaceFrom;
-
-    @ManyToOne
-    @JoinColumn(name = "space_to_id")
-    private Space spaceTo;
+    @JoinColumn(name = "connected_space_id")
+    private Space connectedSpace;
 
     public Long getId() {
         return id;
@@ -106,18 +102,11 @@ public class KnownObject implements Identified {
         this.container = container;
     }
 
-    public Space getSpaceFrom() {
-        return spaceFrom;
+    public Space getConnectedSpace() {
+        return connectedSpace;
     }
-    public void setSpaceFrom(final Space spaceFrom) {
-        this.spaceFrom = spaceFrom;
-    }
-
-    public Space getSpaceTo() {
-        return spaceTo;
-    }
-    public void setSpaceTo(final Space spaceTo) {
-        this.spaceTo = spaceTo;
+    public void setConnectedSpace(final Space connectedSpace) {
+        this.connectedSpace = connectedSpace;
     }
 
 }
