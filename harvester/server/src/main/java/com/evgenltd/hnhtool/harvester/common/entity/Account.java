@@ -24,8 +24,8 @@ public class Account {
     private String defaultCharacter;
 
     @ManyToOne
-    @JoinColumn(name = "current_space_id")
-    private Space currentSpace;
+    @JoinColumn(name = "character_object_id")
+    private KnownObject characterObject;
 
     public Long getId() {
         return id;
@@ -55,11 +55,10 @@ public class Account {
         this.defaultCharacter = defaultCharacter;
     }
 
-    public Space getCurrentSpace() {
-        return currentSpace;
+    public KnownObject getCharacterObject() {
+        return characterObject;
     }
-    public void setCurrentSpace(final Space currentSpace) {
-        this.currentSpace = currentSpace;
+    public void setCharacterObject(final KnownObject characterObject) {
+        this.characterObject = characterObject;
     }
-
 }

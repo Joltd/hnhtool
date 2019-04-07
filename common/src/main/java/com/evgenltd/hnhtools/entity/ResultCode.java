@@ -10,12 +10,8 @@ package com.evgenltd.hnhtools.entity;
 public class ResultCode {
 
     public static final String OK = "OK";
-    public static final String INVALID_AUTH_TOKEN = "INVALID_AUTH_TOKEN";
-    public static final String ALREADY_LOGGED_IN = "ALREADY_LOGGED_IN";
-    public static final String COULD_NOT_CONNECT = "COULD_NOT_CONNECT";
-    public static final String CLIENT_TOO_OLD = "CLIENT_TOO_OLD";
-    public static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
-    public static final String UNKNOWN = "UNKNOWN";
+    public static final String RESULT_IS_EMPTY = "RESULT_IS_EMPTY";
+
     public static final String INTERRUPTED = "INTERRUPTED";
     public static final String NOT_REACHED = "NOT_REACHED";
     public static final String NO_INVENTORY = "NO_INVENTORY";

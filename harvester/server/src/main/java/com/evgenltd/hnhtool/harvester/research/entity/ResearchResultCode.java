@@ -5,9 +5,12 @@ package com.evgenltd.hnhtool.harvester.research.entity;
  * <br/>
  * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 05-04-2019 01:30</p>
+ * <p>Created: 07-04-2019 19:15</p>
  */
-public class RoutingResultCode {
+public class ResearchResultCode {
+
+    public static final String NEAREST_DOORWAY_IN_SPACE_NOT_FOUND = "NEAREST_DOORWAY_IN_SPACE_NOT_FOUND";
+    public static final String SPACE_NOT_REACHED = "SPACE_NOT_REACHED";
 
     public static final String NETWORK_NOT_EXISTS = "NETWORK_NOT_EXISTS";
 

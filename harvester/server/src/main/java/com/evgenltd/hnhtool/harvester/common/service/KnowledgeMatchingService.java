@@ -3,13 +3,16 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
+import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.entity.WorldObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,33 +30,42 @@ import java.util.stream.Collectors;
 @Service
 public class KnowledgeMatchingService {
 
+    private static final Logger log = LogManager.getLogger(KnowledgeMatchingService.class);
+
+    private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
-    private ResourceProviderImpl resourceProvider;
 
     public KnowledgeMatchingService(
-            final KnownObjectRepository knownObjectRepository,
-            final ResourceProviderImpl resourceProvider
+            final SpaceRepository spaceRepository,
+            final KnownObjectRepository knownObjectRepository
     ) {
+        this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
-        this.resourceProvider = resourceProvider;
     }
 
-    public ObjectIndex match(@NotNull final Space space, @NotNull final IntPoint characterPosition, final List<WorldObject> objects) {
+    public ObjectIndex match(
+            @Nullable final ObjectIndex oldIndex,
+            @NotNull final WorldObject woCharacter,
+            @NotNull KnownObject koCharacter,
+            final List<WorldObject> objects
+    ) {
 
         final ObjectIndex objectIndex = new ObjectIndex();
         if (objects == null || objects.isEmpty()) {
             return objectIndex;
         }
 
-        Assert.valueRequireNonEmpty(space, "Space");
-        Assert.valueRequireNonEmpty(characterPosition, "CharacterPosition");
+        Assert.valueRequireNonEmpty(woCharacter, "Character");
+
+        objectIndex.putMatch(koCharacter.getId(), woCharacter.getId());
 
         final List<WorldObject> objectsForMatching = filterWasteObjects(objects);
 
-        final IntPoint upperLeft = characterPosition.add(-10000, -10000);
-        final IntPoint lowerRight = characterPosition.add(10000, 10000);
+        final IntPoint upperLeft = woCharacter.getPosition().add(-50000, -50000);
+        final IntPoint lowerRight = woCharacter.getPosition().add(50000, 50000);
 
         final List<KnownObject> knownObjects = knownObjectRepository.findObjectsInArea(
+                koCharacter.getOwner(),
                 upperLeft.getX(),
                 upperLeft.getY(),
                 lowerRight.getX(),
@@ -62,7 +74,9 @@ public class KnowledgeMatchingService {
 
         for (final KnownObject knownObject : knownObjects) {
 
-            final WorldObject matchedWorldObject = lookupMatchedObject(objectsForMatching, knownObject);
+            final Long matchedWorldObjectId = getMatchedWorldObjectId(oldIndex, knownObject);
+
+            final WorldObject matchedWorldObject = lookupMatchedObject(objectsForMatching, knownObject, matchedWorldObjectId);
             if (matchedWorldObject == null) {
                 continue;
             }
@@ -79,7 +93,12 @@ public class KnowledgeMatchingService {
         // here objectsForMatching contains only unknown worldObjects
 
         for (final WorldObject worldObject : objectsForMatching) {
-            final KnownObject knownObject = rememberWorldObject(space, worldObject);
+
+            if (Objects.equals(worldObject.getResourceId(), ResourceConstants.PLAYER)) {
+                continue;
+            }
+
+            final KnownObject knownObject = rememberWorldObject(koCharacter.getOwner(), worldObject);
             objectIndex.putMatch(knownObject.getId(), worldObject.getId());
         }
 
@@ -92,13 +111,21 @@ public class KnowledgeMatchingService {
                 .collect(Collectors.toList());
     }
 
-    private WorldObject lookupMatchedObject(final List<WorldObject> worldObjects, final KnownObject knownObject) {
+    private WorldObject lookupMatchedObject(
+            final List<WorldObject> worldObjects,
+            final KnownObject knownObject,
+            final Long matchedPreviousWorldObjectId
+    ) {
         for (final WorldObject worldObject : worldObjects) {
+            if (Objects.equals(matchedPreviousWorldObjectId, worldObject.getId())) {
+                return worldObject;
+            }
+
             if (!Objects.equals(worldObject.getPosition(), knownObject.getPosition())) {
                 continue;
             }
 
-            if (compareResource(knownObject.getResource(), worldObject.getResourceId())) {
+            if (Objects.equals(knownObject.getResourceId(), worldObject.getResourceId())) {
                 return worldObject;
             }
         }
@@ -106,26 +133,23 @@ public class KnowledgeMatchingService {
         return null;
     }
 
-    private boolean compareResource(final Resource resource, final Integer resourceId) {
-        if (resource == null && resourceId == null) {
-            return true;
-        }
+    public KnownObject rememberCharacterObject(final WorldObject worldObject) {
+        final Space space = spaceRepository.findByType(Space.Type.SURFACE)
+                .orElseGet(this::rememberSurfaceSpace);
+        return rememberWorldObject(space, worldObject);
+    }
 
-        if (resource != null && resourceId == null) {
-            return false;
-        }
-
-        if (resource == null) {
-            return false;
-        }
-
-        return Objects.equals(resource.getId(), resourceId.longValue());
+    private Space rememberSurfaceSpace() {
+        final Space space = new Space();
+        space.setName("Surface");
+        space.setType(Space.Type.SURFACE);
+        return spaceRepository.save(space);
     }
 
     private KnownObject rememberWorldObject(final Space space, final WorldObject worldObject) {
         final KnownObject knownObject = new KnownObject();
         knownObject.setOwner(space);
-        knownObject.setResource(resourceProvider.findResource(worldObject.getResourceId()));
+        knownObject.setResourceId(worldObject.getResourceId());
         knownObject.setX(worldObject.getPosition().getX());
         knownObject.setY(worldObject.getPosition().getY());
         knownObject.setActual(LocalDateTime.now());
@@ -134,12 +158,22 @@ public class KnowledgeMatchingService {
     }
 
     private void objectClassification(final KnownObject knownObject) {
-        final Long resourceId = knownObject.getResource().getId();
-        if (ResourceConstants.isDoorway(resourceId)) {
+        final Long resourceId = knownObject.getResourceId();
+        if (ResourceConstants.isPlayer(resourceId)) {
+            knownObject.setPlayer(true);
+        } else if (ResourceConstants.isDoorway(resourceId)) {
             knownObject.setDoorway(true);
         } else if (ResourceConstants.isContainer(resourceId)) {
             knownObject.setContainer(true);
         }
+    }
+
+    private Long getMatchedWorldObjectId(final ObjectIndex oldIndex, final KnownObject knownObject) {
+        if (oldIndex == null) {
+            return null;
+        }
+        return oldIndex.getMatchedWorldObjectId(knownObject.getId())
+                .getValue();
     }
 
 }

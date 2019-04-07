@@ -2,9 +2,8 @@ package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.entity.Account;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
-import com.evgenltd.hnhtool.harvester.common.entity.Space;
+import com.evgenltd.hnhtool.harvester.common.entity.Work;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
-import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtools.common.Result;
 import com.hnh.auth.Authentication;
 import com.hnh.auth.AuthenticationResult;
@@ -34,7 +33,6 @@ public class AgentService {
     private static final Logger log = LogManager.getLogger(AgentService.class);
 
     private AccountRepository accountRepository;
-    private SpaceRepository spaceRepository;
     private ObjectFactory<Agent> agentFactory;
 
     @Value("${hafen.server}")
@@ -46,11 +44,9 @@ public class AgentService {
 
     public AgentService(
             final AccountRepository accountRepository,
-            final SpaceRepository spaceRepository,
             final ObjectFactory<Agent> agentFactory
     ) {
         this.accountRepository = accountRepository;
-        this.spaceRepository = spaceRepository;
         this.agentFactory = agentFactory;
     }
 
@@ -73,7 +69,7 @@ public class AgentService {
         return agents.stream().anyMatch(requirements);
     }
 
-    public Result<Void> offerWork(final Runnable work) {
+    public Result<Void> offerWork(final Work work) {
 
         for (final Agent agent : agents) {
             if (!agent.isReady()) {
@@ -95,12 +91,9 @@ public class AgentService {
             return Result.fail(ServerResultCode.AGENT_NOT_AUTHENTICATED);
         }
 
-        final Space surfaceSpace = findSurfaceSpace();
-
         final Account account = new Account();
         account.setUsername(username);
         account.setToken(token);
-        account.setCurrentSpace(surfaceSpace);
         account.setDefaultCharacter(defaultCharacter);
         accountRepository.save(account);
         return Result.ok();
@@ -111,18 +104,6 @@ public class AgentService {
         agent.setAccount(account);
         agent.activate();
         return agent;
-    }
-
-    private Space findSurfaceSpace() {
-        final Space surface = spaceRepository.findByType(Space.Type.SURFACE);
-        if (surface != null) {
-            return surface;
-        }
-
-        final Space newSurface = new Space();
-        newSurface.setName("Surface");
-        newSurface.setType(Space.Type.SURFACE);
-        return spaceRepository.save(newSurface);
     }
 
     private byte[] authenticateAccount(final String username, final String password) {
@@ -141,7 +122,6 @@ public class AgentService {
     private Authentication buildAuthentication() {
         return Authentication.of()
                 .setHost(server)
-                .setPort(port)
                 .init();
     }
 

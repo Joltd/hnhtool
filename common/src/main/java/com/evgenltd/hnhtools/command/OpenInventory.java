@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>Author:  lebed</p>
  * <p>Created: 30-03-2019 20:41</p>
  */
-public class OpenInventory extends AbstractCommand {
+public class OpenInventory {
 
     private ComplexClient client;
     private Long objectId;
@@ -31,12 +31,11 @@ public class OpenInventory extends AbstractCommand {
 
     private Result<Inventory> performImpl() {
         return client.interact(objectId)
-                .then(this::await)
+                .then(() -> CommandUtils.awaitWithResult(this::isAwaitDone))
                 .then(p -> client.getLastOpenedInventory());
     }
 
-    @Override
-    protected Result<Boolean> isDone() {
+    private Result<Boolean> isAwaitDone() {
         return client.isCharacterMoving().map(moving -> !moving);
     }
 }

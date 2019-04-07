@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * <p></p>
@@ -12,22 +13,38 @@ import java.util.Arrays;
 public class ResourceConstants {
 
     public static final Long PLAYER = 0L;
-    public static final Long HOUSE_WALL = 3948L; // gfx/terobjs/arch/hwall
-    public static final Long CELLAR_DOOR = 3943L; // gfx/terobjs/arch/cellardoor
-    public static final Long TIMBER_HOUSE_DOOR = 3969L; // gfx/terobjs/arch/timberhouse-door
-    public static final Long CUPBOARD = 6425L; // gfx/terobjs/cupboard
+    public static final Long HOUSE_WALL = 3949L; // gfx/terobjs/arch/hwall
+    public static final Long PALISADE_SEGMENT = 3956L; // gfx/terobjs/arch/palisadeseg
+    public static final Long PALISADE_CORNER_POST = 3953L; // gfx/terobjs/arch/palisadecp
+    public static final Long POLE_SEGMENT = 3959L; // gfx/terobjs/arch/poleseg
 
-    public static boolean isWaste(final Integer resourceId) {
+    public static final Long CELLAR_DOOR = 3944L; // gfx/terobjs/arch/cellardoor
+    public static final Long CELLAR_STAIR = 3945L; //
+    public static final Long TIMBER_HOUSE_DOOR = 3970L; // gfx/terobjs/arch/timberhouse-door
+    public static final Long TIMBER_HOUSE = 3972L;
+
+    public static final Long CUPBOARD = 6426L; // gfx/terobjs/cupboard
+
+    public static boolean isWaste(final Long resourceId) {
         return Arrays.asList(
                 PLAYER,
-                HOUSE_WALL
-        ).contains(resourceId.longValue());
+                HOUSE_WALL,
+                PALISADE_SEGMENT,
+                PALISADE_CORNER_POST,
+                POLE_SEGMENT
+        ).contains(resourceId);
+    }
+
+    public static boolean isPlayer(final Long resourceId) {
+        return Objects.equals(resourceId, PLAYER);
     }
 
     public static boolean isDoorway(final Long resourceId) {
         return Arrays.asList(
                 CELLAR_DOOR,
-                TIMBER_HOUSE_DOOR
+                CELLAR_STAIR,
+                TIMBER_HOUSE_DOOR,
+                TIMBER_HOUSE
         ).contains(resourceId);
     }
 
@@ -40,7 +57,8 @@ public class ResourceConstants {
     public static boolean isDoorwayToBuilding(final Long resourceId) {
         return Arrays.asList(
                 CELLAR_DOOR,
-                TIMBER_HOUSE_DOOR
+                CELLAR_STAIR,
+                TIMBER_HOUSE
         ).contains(resourceId);
     }
 

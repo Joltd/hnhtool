@@ -4,6 +4,8 @@ import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * <p></p>
  * <br/>
@@ -14,6 +16,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SpaceRepository extends JpaRepository<Space, Long> {
 
-    Space findByType(final Space.Type type);
+    Optional<Space> findByType(final Space.Type type);
 
 }

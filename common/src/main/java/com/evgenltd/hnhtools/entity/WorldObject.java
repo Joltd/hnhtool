@@ -30,8 +30,8 @@ public class WorldObject {
         this.position = position;
     }
 
-    public Integer getResourceId() {
-        return resourceId;
+    public Long getResourceId() {
+        return resourceId != null ? resourceId.longValue() : null;
     }
 
     public void setResourceId(final Integer resourceId) {

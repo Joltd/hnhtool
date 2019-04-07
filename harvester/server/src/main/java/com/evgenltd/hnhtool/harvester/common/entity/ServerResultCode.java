@@ -19,4 +19,9 @@ public class ServerResultCode {
     public static final String AGENT_ALL_BUSY = "AGENT_ALL_BUSY";
     public static final String AGENT_NO_MATCH_REQUIREMENTS = "AGENT_NO_MATCH_REQUIREMENTS";
 
+    public static final String NO_MATCHED_WORLD_OBJECT_FOUND = "NO_MATCHED_WORLD_OBJECT_FOUND";
+    public static final String NO_MATCHED_KNOWN_OBJECT_FOUND = "NO_MATCHED_KNOWN_OBJECT_FOUND";
+
+    public static final String EXCEPTION_DURING_TASK_PERFORMING = "EXCEPTION_DURING_TASK_PERFORMING";
+
 }

@@ -3,7 +3,7 @@ package com.evgenltd.hnhtool.harvester.research.service;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.research.entity.Path;
-import com.evgenltd.hnhtool.harvester.research.entity.RoutingResultCode;
+import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
 import com.evgenltd.hnhtool.harvester.research.repository.PathRepository;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
@@ -14,11 +14,11 @@ import es.usc.citius.hipster.graph.GraphSearchProblem;
 import es.usc.citius.hipster.graph.HipsterGraph;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.SearchProblem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -31,6 +31,8 @@ import java.util.stream.Stream;
 @Service
 public class RoutingService {
 
+    private static final Logger log = LogManager.getLogger(RoutingService.class);
+
     private PathRepository pathRepository;
 
     public RoutingService(final PathRepository pathRepository) {
@@ -41,17 +43,26 @@ public class RoutingService {
 
         final List<Path> network = pathRepository.findAll();
         if (network.isEmpty()) {
-            return Result.fail(RoutingResultCode.NETWORK_NOT_EXISTS);
+
+            if (Objects.equals(from.getOwner().getId(), to.getOwner().getId())) {
+                final List<KnownObject> directRoute = new ArrayList<>();
+                directRoute.add(from);
+                directRoute.add(to);
+                return Result.ok(directRoute);
+            }
+
+            return Result.fail(ResearchResultCode.NETWORK_NOT_EXISTS);
+
         }
 
-        final Result<Path> fromPath = connectLocation(from, network).peek(network::add);
+        final Result<Path> fromPath = connectLocation(from, network).thenAnyway(network::add);
         if (fromPath.isFailed()) {
-            return Result.fail(RoutingResultCode.FROM_POINT_UNREACHABLE);
+            return Result.fail(ResearchResultCode.FROM_POINT_UNREACHABLE);
         }
 
-        final Result<Path> toPath = connectLocation(to, network).peek(network::add);
+        final Result<Path> toPath = connectLocation(to, network).thenAnyway(network::add);
         if (toPath.isFailed()) {
-            return Result.fail(RoutingResultCode.TO_POINT_UNREACHABLE);
+            return Result.fail(ResearchResultCode.TO_POINT_UNREACHABLE);
         }
 
         final HipsterGraph<KnownObject, Double> graph = prepareGraph(network);
@@ -65,15 +76,18 @@ public class RoutingService {
         final Algorithm<Double, KnownObject, WeightedNode<Double, KnownObject, Double>>.SearchResult result = Hipster.createDijkstra(problem)
                 .search(to);
 
+        log.info(String.format("Route found, %s", result));
+
         final List<List<KnownObject>> optimalPaths = result.getOptimalPaths();
         if (optimalPaths.isEmpty()) {
-            return Result.fail(RoutingResultCode.ROUTE_NOT_FOUND);
+            return Result.fail(ResearchResultCode.ROUTE_NOT_FOUND);
         }
 
         return Result.ok(optimalPaths.get(0));
 
     }
 
+    // add check if targetObject is already in network
     private Result<Path> connectLocation(final KnownObject targetObject, final List<Path> network) {
         final Space space = targetObject.getOwner();
 
@@ -83,7 +97,7 @@ public class RoutingService {
                 .map(knownObject -> dummyPath(knownObject, targetObject))
                 .min(Comparator.comparingDouble(Path::getDistance));
         if (!nearestPath.isPresent()) {
-            return Result.fail(RoutingResultCode.TARGET_UNREACHABLE);
+            return Result.fail(ResearchResultCode.TARGET_UNREACHABLE);
         }
 
         return Result.ok(nearestPath.get());

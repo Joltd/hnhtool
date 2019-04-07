@@ -24,6 +24,8 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    private String failReason;
+
     public Long getId() {
         return id;
     }
@@ -50,6 +52,13 @@ public class Task {
     }
     public void setStatus(final Status status) {
         this.status = status;
+    }
+
+    public String getFailReason() {
+        return failReason;
+    }
+    public void setFailReason(final String failReason) {
+        this.failReason = failReason;
     }
 
     public enum Status {

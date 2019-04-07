@@ -130,6 +130,16 @@ public final class ComplexClient {
     // #                                                #
     // ##################################################
 
+    public Result<WorldObject> getCharacter() {
+        return objectIndex.getCharacter()
+                .map(this::convertWorldObject);
+    }
+
+    public Result<Long> getCharacterId() {
+        return objectIndex.getCharacter()
+                .map(ObjectIndex.WorldObject::getId);
+    }
+
     public Result<IntPoint> getCharacterPosition() {
         return objectIndex.getCharacter()
                 .map(ObjectIndex.WorldObject::getPosition);
@@ -182,17 +192,11 @@ public final class ComplexClient {
     // #                                                #
     // ##################################################
 
-    public Result<List<WorldObject>> getWorldObjects() {
-        final List<WorldObject> objects = objectIndex.getObjectList()
+    public List<WorldObject> getWorldObjects() {
+        return objectIndex.getObjectList()
                 .stream()
-                .map(wo -> {
-                    final WorldObject worldObject = new WorldObject(wo.getId());
-                    worldObject.setPosition(wo.getPosition());
-                    worldObject.setResourceId(wo.getResourceId());
-                    return worldObject;
-                })
+                .map(this::convertWorldObject)
                 .collect(Collectors.toList());
-        return Result.ok(objects);
     }
 
     // ##################################################
@@ -220,6 +224,10 @@ public final class ComplexClient {
     }
 
     public Result<Void> interact(final Long objectId) {
+        return interact(objectId, SKIP_FLAG);
+    }
+
+    public Result<Void> interact(final Long objectId, final Integer objectElement) {
         final Integer mapViewId = widgetIndex.getMapViewId();
         if (mapViewId == null) {
             return Result.fail(ResultCode.NO_MAP_VIEW);
@@ -241,7 +249,7 @@ public final class ComplexClient {
                 objectId,
                 worldObject.getPosition(),
                 UNKNOWN_FLAG,
-                SKIP_FLAG
+                objectElement
         );
 
         return Result.ok();

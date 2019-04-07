@@ -3,18 +3,25 @@ package com.evgenltd.hnhtools.command;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.ResultCode;
 
+import java.util.function.Supplier;
+
 /**
- * <p>Wrapper for performing async commands in synchronous way.</p>
+ * <p></p>
  * <br/>
  * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 30-03-2019 17:06</p>
+ * <p>Created: 07-04-2019 20:28</p>
  */
-public abstract class AbstractCommand {
+public class CommandUtils {
 
     private static final long COMMAND_AWAIT_TIMEOUT = 1000L;
 
-    Result<Void> await() {
+    public static Result<Void> await(final Supplier<Boolean> isAwaitDone) {
+        return awaitWithResult(() -> Result.ok(isAwaitDone.get()));
+    }
+
+    public static Result<Void> awaitWithResult(final Supplier<Result<Boolean>> isAwaitDone) {
+
         while (true) {
 
             try {
@@ -23,7 +30,7 @@ public abstract class AbstractCommand {
                 return Result.fail(ResultCode.INTERRUPTED);
             }
 
-            final Result<Boolean> result = isDone();
+            final Result<Boolean> result = isAwaitDone.get();
             if (result.isFailed()) {
                 return result.map();
             }
@@ -33,8 +40,7 @@ public abstract class AbstractCommand {
             }
 
         }
-    }
 
-    protected abstract Result<Boolean> isDone();
+    }
 
 }

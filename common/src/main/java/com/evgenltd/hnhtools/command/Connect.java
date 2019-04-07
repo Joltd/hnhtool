@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>Author:  lebed</p>
  * <p>Created: 30-03-2019 18:11</p>
  */
-public class Connect extends AbstractCommand {
+public class Connect {
 
     private ComplexClient client;
 
@@ -27,11 +27,10 @@ public class Connect extends AbstractCommand {
 
     private Result<Void> performImpl() {
         client.connect();
-        return await();
+        return CommandUtils.awaitWithResult(this::isAwaitDone);
     }
 
-    @Override
-    protected Result<Boolean> isDone() {
+    private Result<Boolean> isAwaitDone() {
         if (client.isClosed()) {
             return Result.fail(client.getConnectionErrorCode());
         }

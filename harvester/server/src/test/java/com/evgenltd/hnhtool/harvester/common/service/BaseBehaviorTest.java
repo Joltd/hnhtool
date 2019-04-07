@@ -31,8 +31,17 @@ public class BaseBehaviorTest {
 
     @Test
     public void commonTest() throws InterruptedException {
-        agentService.offerWork(() -> System.out.println("Hello, world!"));
-
+        agentService.offerWork(agent -> {
+//            agent.getClient().getWorldObjects()
+//                    .stream()
+//                    .filter(wo -> wo.getResourceId().equals(ResourceConstants.TIMBER_HOUSE_DOOR))
+//                    .findFirst()
+//                    .ifPresent(house -> {
+//                        final Result<Void> result = agent.getClient().interact(house.getId(), -1);
+//                        System.out.println(result);
+//                    });
+            return Result.ok();
+        });
         Thread.sleep(60 * 60 * 1000L);
     }
 

@@ -24,9 +24,7 @@ public class KnownObject implements Identified {
     @JoinColumn(name = "owner_id")
     private Space owner;
 
-    @ManyToOne
-    @JoinColumn(name = "resource_id")
-    private Resource resource;
+    private Long resourceId;
 
     private Integer x;
 
@@ -34,13 +32,11 @@ public class KnownObject implements Identified {
 
     private LocalDateTime actual;
 
+    private Boolean player;
+
     private Boolean doorway;
 
     private Boolean container;
-
-    @ManyToOne
-    @JoinColumn(name = "connected_space_id")
-    private Space connectedSpace;
 
     public Long getId() {
         return id;
@@ -56,11 +52,11 @@ public class KnownObject implements Identified {
         this.owner = owner;
     }
 
-    public Resource getResource() {
-        return resource;
+    public Long getResourceId() {
+        return resourceId;
     }
-    public void setResource(final Resource resource) {
-        this.resource = resource;
+    public void setResourceId(final Long resourceId) {
+        this.resourceId = resourceId;
     }
 
     public Integer getX() {
@@ -88,6 +84,13 @@ public class KnownObject implements Identified {
         this.actual = actual;
     }
 
+    public Boolean getPlayer() {
+        return player;
+    }
+    public void setPlayer(final Boolean player) {
+        this.player = player;
+    }
+
     public Boolean getDoorway() {
         return doorway;
     }
@@ -102,11 +105,8 @@ public class KnownObject implements Identified {
         this.container = container;
     }
 
-    public Space getConnectedSpace() {
-        return connectedSpace;
+    @Override
+    public String toString() {
+        return String.valueOf(id);
     }
-    public void setConnectedSpace(final Space connectedSpace) {
-        this.connectedSpace = connectedSpace;
-    }
-
 }

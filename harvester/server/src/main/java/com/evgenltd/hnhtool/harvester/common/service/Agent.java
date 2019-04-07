@@ -1,15 +1,15 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
-import com.evgenltd.hnhtool.harvester.common.entity.Account;
-import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
+import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
+import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.agent.ComplexClient;
 import com.evgenltd.hnhtools.agent.ResourceProvider;
+import com.evgenltd.hnhtools.command.CommandUtils;
 import com.evgenltd.hnhtools.command.Connect;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.entity.WorldObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <p></p>
@@ -47,6 +48,7 @@ public class Agent {
     private ResourceProvider resourceProvider;
     private AccountRepository accountRepository;
     private KnowledgeMatchingService knowledgeMatchingService;
+    private KnownObjectRepository knownObjectRepository;
     private Account account;
     private Logger log;
 
@@ -56,21 +58,24 @@ public class Agent {
     private Integer port;
 
     private volatile State state;
-    private BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>(1);
+    private BlockingQueue<Work> queue = new LinkedBlockingQueue<>(1);
 
     private ComplexClient client;
+    private AtomicBoolean doKnowledgeMatching = new AtomicBoolean(true);
     private ObjectIndex index;
 
     public Agent(
             final ObjectMapper objectMapper,
             final ResourceProvider resourceProvider,
             final AccountRepository accountRepository,
-            final KnowledgeMatchingService knowledgeMatchingService
-    ) {
+            final KnowledgeMatchingService knowledgeMatchingService,
+            final KnownObjectRepository knownObjectRepository
+            ) {
         this.objectMapper = objectMapper;
         this.resourceProvider = resourceProvider;
         this.accountRepository = accountRepository;
         this.knowledgeMatchingService = knowledgeMatchingService;
+        this.knownObjectRepository = knownObjectRepository;
     }
 
     @PostConstruct
@@ -83,32 +88,51 @@ public class Agent {
         doDeactivation();
     }
 
-    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(fixedDelay = 5_000L)
     public void matchKnowledge() {
-        if (client == null || !client.isLife()) {
+        if (!doKnowledgeMatching.get() || client == null || !client.isLife()) {
             return;
         }
 
-        final Result<IntPoint> characterPosition = client.getCharacterPosition();
-        if (characterPosition.isFailed()) {
+        final Result<WorldObject> character = client.getCharacter();
+        if (character.isFailed()) {
             return;
         }
 
-        final Result<List<WorldObject>> worldObjects = client.getWorldObjects();
-        if (worldObjects.isFailed()) {
-            return;
+        log.info("Start matching index with KDB, oldIndex=[{}]", index);
+
+        if (account.getCharacterObject() == null) {
+            final KnownObject koCharacter = knowledgeMatchingService.rememberCharacterObject(character.getValue());
+            account.setCharacterObject(koCharacter);
+            accountRepository.save(account);
         }
+
+        final List<WorldObject> worldObjects = client.getWorldObjects();
 
         index = knowledgeMatchingService.match(
-                account.getCurrentSpace(),
-                characterPosition.getValue(),
-                worldObjects.getValue()
+                index,
+                character.getValue(),
+                account.getCharacterObject(),
+                worldObjects
         );
+
+        log.info("End matching index with KDB, newIndex=[{}]", index);
+
     }
+
+    // ##################################################
+    // #                                                #
+    // #  Public API                                    #
+    // #                                                #
+    // ##################################################
 
     public void setAccount(final Account account) {
         this.account = account;
         this.log = LogManager.getLogger("Agent-" + account.getUsername());
+    }
+
+    public ComplexClient getClient() {
+        return client;
     }
 
     public boolean isReady() {
@@ -140,18 +164,12 @@ public class Agent {
         return Result.ok();
     }
 
-    private void doDeactivation() {
-        client.disconnect();
-        client = null;
-        state = State.DEACTIVATED;
-    }
-
-    public Result<Void> assignWork(final Runnable runnable) {
+    public Result<Void> assignWork(final Work work) {
         if (state.equals(State.DEACTIVATED)) {
             return Result.fail(ServerResultCode.AGENT_DEACTIVATED);
         }
 
-        final boolean result = queue.offer(runnable);
+        final boolean result = queue.offer(work);
         if (!result) {
             return Result.fail(ServerResultCode.AGENT_REJECT_WORK_OFFER);
         }
@@ -159,24 +177,65 @@ public class Agent {
         return Result.ok();
     }
 
+    public void disableKnowledgeMatching() {
+        doKnowledgeMatching.set(false);
+    }
+
+    public void enableKnowledgeMatching() {
+        doKnowledgeMatching.set(true);
+    }
+
+    public void changeSpace(final Space space) {
+        log.info(String.format("Update space, id=[%s]", space.getId()));
+        account.getCharacterObject()
+                .setOwner(space);
+        knownObjectRepository.save(account.getCharacterObject());
+    }
+
+    public Result<Long> getMatchedWorldObjectId(final Long knownObjectId) {
+        return index.getMatchedWorldObjectId(knownObjectId);
+    }
+
+    public Result<Long> getMatchedKnownObjectId(final Long worldObjectId) {
+        return index.getMatchedKnownObjectId(worldObjectId);
+    }
+
+    public KnownObject getCharacter() {
+        return account.getCharacterObject();
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Private                                       #
+    // #                                                #
+    // ##################################################
+
+    private void doDeactivation() {
+        if (client != null) {
+            client.disconnect();
+            client = null;
+        }
+        state = State.DEACTIVATED;
+    }
+
     private void worker() {
         while (true) {
 
             try {
 
-                final Runnable runnable = queue.poll(TIMEOUT, TimeUnit.MILLISECONDS);
+                final Work work = queue.poll(TIMEOUT, TimeUnit.MILLISECONDS);
                 if (state.equals(State.DEACTIVATED)) {
                     return;
                 }
 
-                if (runnable == null) {
+                if (work == null) {
                     continue;
                 }
 
                 connectIfNecessary();
 
                 state = State.BUSY;
-                runnable.run();
+                work.apply(this);
                 state = State.READY;
 
             } catch (InterruptedException e) {
@@ -208,6 +267,11 @@ public class Agent {
         );
         Connect.perform(client);
         client.play();
+
+        final Result<Void> result = CommandUtils.await(() -> index != null);
+        if (result.isFailed()) {
+            doDeactivation();
+        }
     }
 
     private byte[] authenticateAccount(final Account account) {

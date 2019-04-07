@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>Author:  lebed</p>
  * <p>Created: 29-03-2019 00:54</p>
  */
-public class Move extends AbstractCommand {
+public class Move {
 
     private ComplexClient client;
     private IntPoint target;
@@ -32,11 +32,10 @@ public class Move extends AbstractCommand {
 
     private Result<Void> performImpl() {
         return client.move(target)
-                .then(this::await);
+                .then(() -> CommandUtils.awaitWithResult(Move.this::isAwaitDone));
     }
 
-    @Override
-    protected Result<Boolean> isDone() {
+    private Result<Boolean> isAwaitDone() {
         final Result<Boolean> isReached = client.getCharacterPosition()
                 .map(characterPosition -> characterPosition.equals(target));
         if (isReached.isFailed() || isReached.getValue()) {
@@ -44,7 +43,11 @@ public class Move extends AbstractCommand {
         }
 
         final Result<Boolean> isMoving = client.isCharacterMoving();
-        if (isMoving.isFailed() || isMoving.getValue()) {
+        if (isMoving.isFailed()) {
+            return isMoving;
+        }
+
+        if (isMoving.getValue()) {
             return Result.ok(false);
         }
 

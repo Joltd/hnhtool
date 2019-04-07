@@ -17,24 +17,24 @@ create table spaces (
 	type varchar(255)
 );
 
+create table known_objects (
+	id numeric(19,0) identity(1,1) primary key,
+	owner_id numeric(19,0) foreign key references spaces(id),
+	resource_id numeric(19,0),
+	x int,
+	y int,
+	actual datetime,
+	player tinyint,
+	doorway tinyint,
+	container tinyint
+);
+
 create table accounts (
 	id numeric(19,0) identity(1,1) primary key,
 	username varchar(255),
 	token varbinary(64),
 	default_character varchar(255),
-	current_space_id numeric(19,0) foreign key references spaces(id)
-);
-
-create table known_objects (
-	id numeric(19,0) identity(1,1) primary key,
-	owner_id numeric(19,0) foreign key references spaces(id),
-	resource_id numeric(19,0) foreign key references resources(id),
-	x int,
-	y int,
-	actual datetime,
-	doorway tinyint,
-	container tinyint,
-	connected_space_id numeric(19,0) foreign key references spaces(id)
+	character_object_id numeric(19,0) foreign key references known_objects(id)
 );
 
 create table paths (
@@ -57,5 +57,7 @@ create table known_items (
 create table tasks (
 	id numeric(19,0) identity(1,1) primary key,
 	module varchar(255),
-	step varchar(255)
+	step varchar(255),
+	status varchar(255),
+	fail_reason varchar(255)
 );

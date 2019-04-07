@@ -39,21 +39,4 @@ public class ResourceProviderImpl implements ResourceProvider {
         resourceRepository.save(resource);
     }
 
-    @Nullable
-    public Resource findResource(@Nullable final Integer id) {
-        if (id == null) {
-            return null;
-        }
-
-        return resourceRepository.findById(id.longValue())
-                .orElse(buildEmptyResource(id));
-    }
-
-    private Resource buildEmptyResource(final Integer id) {
-        final Resource resource = new Resource();
-        resource.setId(id.longValue());
-        resourceRepository.save(resource);
-        return resource;
-    }
-
 }

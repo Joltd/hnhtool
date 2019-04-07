@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.entity.Work;
+import com.evgenltd.hnhtools.common.Result;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -19,8 +21,8 @@ public interface Module {
     }
 
     @NotNull
-    default Runnable getTaskWork(String step) {
-        return () -> {};
+    default Work getTaskWork(String step) {
+        return agent -> Result.ok();
     }
 
 }
