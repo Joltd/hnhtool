@@ -21,10 +21,18 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     @Query("select ko from KnownObject ko where ko.owner = ?1 and ko.x >= ?2 and ko.y >= ?3 and ko.x <= ?4 and ko.y <= ?5 and ko.player is null")
     List<KnownObject> findObjectsInArea(final Space space, final Integer x1, final Integer y1, final Integer x2, final Integer y2);
 
-    @Query("select ko from KnownObject ko where ko.doorway = true and not exists (select p from Path p where p.from.id = ko.id or p.to.id = ko.id)")
+    @Query("select ko from KnownObject ko where ko.doorway = true and ko.researched is null")
     List<KnownObject> findUnknownDoorways();
 
     @Query("select ko from KnownObject ko where ko.owner = ?1 and ko.doorway = true order by sqrt(power(convert(decimal(38,0),ko.x) - ?2, 2) + power(convert(decimal(38,0), ko.y) - ?3, 2))")
     List<KnownObject> findNearestDoorway(final Space owner, final Integer x, final Integer y);
+
+    @Query("select ko from KnownObject ko where ko.container = true and ko.researched is null")
+    List<KnownObject> findUnknownContainers();
+
+    default void markAsResearched(final KnownObject knownObject) {
+        knownObject.setResearched(true);
+        save(knownObject);
+    }
 
 }

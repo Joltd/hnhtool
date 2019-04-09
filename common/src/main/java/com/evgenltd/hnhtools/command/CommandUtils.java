@@ -32,7 +32,7 @@ public class CommandUtils {
 
             final Result<Boolean> result = isAwaitDone.get();
             if (result.isFailed()) {
-                return result.map();
+                return result.cast();
             }
 
             if (result.getValue()) {

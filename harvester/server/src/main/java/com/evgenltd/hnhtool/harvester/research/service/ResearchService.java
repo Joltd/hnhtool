@@ -38,6 +38,9 @@ public class ResearchService implements Module {
 
     private static final Logger log = LogManager.getLogger(ResearchService.class);
 
+    private static final String RESEARCH_DOORWAY = "RESEARCH_DOORWAY";
+    private static final String RESEARCH_CONTAINER = "RESEARCH_CONTAINER";
+    
     private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
     private TaskRepository taskRepository;
@@ -48,6 +51,9 @@ public class ResearchService implements Module {
     private KnownObject targetDoorway;
     private Space targetSpace;
 
+    private Task researchContainerTask;
+    private KnownObject targetContainer;
+    
     public ResearchService(
             final SpaceRepository spaceRepository,
             final KnownObjectRepository knownObjectRepository,
@@ -64,7 +70,24 @@ public class ResearchService implements Module {
 
     @Scheduled(fixedDelay = 10_000L)
     public void main() {
-        if (isResearchDoorwayExists()) {
+        scheduleDoorwayResearch();
+//        scheduleContainerResearch();
+    }
+
+    @Override
+    @NotNull
+    public Work getTaskWork(final String step) {
+        return this::researchDoorway;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Doorway Research                              #
+    // #                                                #
+    // ##################################################
+
+    private void scheduleDoorwayResearch() {
+        if (isResearchDoorwayTaskExists()) {
             return;
         }
 
@@ -80,61 +103,21 @@ public class ResearchService implements Module {
         targetSpace = buildNewSpace(resourceId);
         log.info("Created space for other side, id=[{}], type=[{}]", targetSpace.getId(), targetSpace.getType());
 
-        researchDoorwayTask = taskRepository.openTask(getClass(), "DUMMY");
+        researchDoorwayTask = taskRepository.openTask(getClass(), RESEARCH_DOORWAY);
         log.info("Created research task, id=[{}]", researchDoorwayTask.getId());
     }
 
-    @Override
-    @NotNull
-    public Work getTaskWork(final String step) {
-        return this::researchDoorway;
-    }
 
-    private Result<Void> researchDoorway(final Agent agent) {
-        return routingService.route(agent.getCharacter(), targetDoorway)
-                .then(route -> moveByRoute(agent, route))
-                .then(moveResult -> MoveToSpace.perform(agent, targetDoorway, targetSpace))
-                .then(agent::matchKnowledge)
-                .then(p -> agent.getClient().getCharacterPosition())
-                .then(this::storeDoorwayResearchResult)
-                .whenFailed(this::cleanupOnFailed);
-    }
-
-    private Result<Void> moveByRoute(final Agent agent, final List<KnownObject> route) {
-        route.remove(agent.getCharacter());
-        route.remove(targetDoorway);
-        return MoveByRoute.perform(agent, route);
-    }
-
-    private Result<Void> storeDoorwayResearchResult(final IntPoint characterPosition) {
-        final List<KnownObject> nearestDoorway = knownObjectRepository.findNearestDoorway(
-                targetSpace,
-                characterPosition.getX(),
-                characterPosition.getY()
-        );
-        if (nearestDoorway.isEmpty()) {
-            return Result.fail(ResearchResultCode.NEAREST_DOORWAY_IN_SPACE_NOT_FOUND);
+    private boolean isResearchDoorwayTaskExists() {
+        if (researchDoorwayTask == null) {
+            return false;
         }
-
-        log.info("Nearest door after move to space id=[{}]", nearestDoorway.get(0).getId());
-
-        final Path path = new Path();
-        path.setFrom(targetDoorway);
-        path.setTo(nearestDoorway.get(0));
-        path.setDistance(0D);
-        pathRepository.save(path);
-
-        researchDoorwayTask = null;
-
-        return Result.ok();
-    }
-
-    private void cleanupOnFailed() {
-        spaceRepository.delete(targetSpace);
-    }
-
-    private void researchContainer() {
-
+        return taskRepository.findById(researchDoorwayTask.getId())
+                .map(task -> {
+                    researchDoorwayTask = task;
+                    return true;
+                })
+                .orElse(false);
     }
 
     private Space buildNewSpace(final Long resourceId) {
@@ -152,16 +135,97 @@ public class ResearchService implements Module {
         return spaceRepository.save(space);
     }
 
-    private boolean isResearchDoorwayExists() {
-        if (researchDoorwayTask == null) {
+    private Result<Void> researchDoorway(final Agent agent) {
+        return routingService.route(agent.getCharacter(), targetDoorway)
+                .thenCombine(route -> moveToDoorwayByRoute(agent, route))
+                .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway, targetSpace))
+                .then(agent::matchKnowledge)
+                .thenCombine(p -> agent.getClient().getCharacterPosition())
+                .thenCombine(this::storeDoorwayResearchResult)
+                .whenFail(this::cleanupOnFailed);
+    }
+
+    private Result<Void> moveToDoorwayByRoute(final Agent agent, final List<KnownObject> route) {
+        route.remove(agent.getCharacter());
+        route.remove(targetDoorway);
+        return MoveByRoute.perform(agent, route);
+    }
+
+    private Result<Void> storeDoorwayResearchResult(final IntPoint characterPosition) {
+        final List<KnownObject> nearestDoorways = knownObjectRepository.findNearestDoorway(
+                targetSpace,
+                characterPosition.getX(),
+                characterPosition.getY()
+        );
+        if (nearestDoorways.isEmpty()) {
+            return Result.fail(ResearchResultCode.NEAREST_DOORWAY_IN_SPACE_NOT_FOUND);
+        }
+
+        final KnownObject nearestDoorway = nearestDoorways.get(0);
+        log.info("Nearest door after move to space id=[{}]", nearestDoorway.getId());
+        
+        knownObjectRepository.markAsResearched(targetDoorway);
+        knownObjectRepository.markAsResearched(nearestDoorway);
+
+        final Path path = new Path();
+        path.setFrom(targetDoorway);
+        path.setTo(nearestDoorway);
+        path.setDistance(0D);
+        pathRepository.save(path);
+
+        researchDoorwayTask = null;
+
+        return Result.ok();
+    }
+
+    private void cleanupOnFailed() {
+        spaceRepository.delete(targetSpace);
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Container Research                            #
+    // #                                                #
+    // ##################################################
+
+    private void scheduleContainerResearch() {
+        if (isResearchContainerTaskExists()) {
+            return;
+        }
+        
+        final List<KnownObject> unknownContainer = knownObjectRepository.findUnknownContainers();
+        if (unknownContainer.isEmpty()) {
+            return;
+        }
+        
+        targetContainer = unknownContainer.get(0);
+        log.info("Found unknown container, id=[{}], owner=[{}]", targetContainer.getId(), targetContainer.getOwner().getId());
+        
+        researchContainerTask = taskRepository.openTask(getClass(), RESEARCH_CONTAINER);
+        log.info("Created research task, id=[{}]", researchContainerTask.getId());
+    }
+
+    private boolean isResearchContainerTaskExists() {
+        if (researchContainerTask == null) {
             return false;
         }
-        return taskRepository.findById(researchDoorwayTask.getId())
+        return taskRepository.findById(researchContainerTask.getId())
                 .map(task -> {
-                    researchDoorwayTask = task;
+                    researchContainerTask = task;
                     return true;
                 })
                 .orElse(false);
     }
+    
+    private void researchContainer(final Agent agent) {
+
+    }
+
+    private Result<Void> moveToContainerByRoute(final Agent agent, final List<KnownObject> route) {
+        route.remove(agent.getCharacter());
+        route.remove(targetContainer);
+        return MoveByRoute.perform(agent, route);
+    }
+
 
 }

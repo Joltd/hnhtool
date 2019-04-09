@@ -55,14 +55,14 @@ public class MoveToSpace {
         final Result<Long> matchedDoorwayId = agent.getMatchedWorldObjectId(doorway.getId());
         if (matchedDoorwayId.isFailed()) {
             log.info("Not found target doorwayId=[{}]", doorway);
-            return matchedDoorwayId.map();
+            return matchedDoorwayId.cast();
         }
 
         return agent.getClient()
                 .interact(matchedDoorwayId.getValue(), decideObjectPartition())
-                .then(() -> CommandUtils.awaitWithResult(this::isAwaitDone))
+                .thenCombine(() -> CommandUtils.awaitWithResult(this::isAwaitDone))
                 .then(() -> agent.changeSpace(targetSpace))
-                .thenAnyway(p -> agent.enableKnowledgeMatching());
+                .anyway(() -> agent.enableKnowledgeMatching());
     }
 
     private Result<Boolean> isAwaitDone() {

@@ -3,9 +3,7 @@ package com.evgenltd.hnhtools.common;
 import com.evgenltd.hnhtools.entity.ResultCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -62,53 +60,146 @@ public class Result<T> {
         return value;
     }
 
-    public Result<T> thenAnyway(@NotNull final Consumer<? super T> action) {
-        Objects.requireNonNull(action, "[Action] should not be empty");
-        action.accept(value);
-        return this;
+    public <U> Result<U> cast() {
+        return Result.fail(code);
     }
 
-    public <U> Result<U> map() {
-        return map(value -> null);
-    }
-
-    public <U> Result<U> map(@NotNull final Function<? super T, ? extends U> mapper) {
-        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
-        if (isFailed()) {
-            return Result.fail(code);
-        } else {
-            return Result.ok(mapper.apply(value));
-        }
-    }
-
-    public Result<T> then(@NotNull final Runnable runnable) {
-        return then(t -> {
-            runnable.run();
-            return Result.ok(t);
-        });
-    }
-
-    public Result<T> then(@NotNull final Supplier<Result<T>> supplier) {
-        return then(t -> supplier.get());
-    }
-
-    public <U> Result<U> then(@NotNull final Function<? super T, Result<U>> mapper) {
-        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
-        if (isFailed()) {
-            return Result.fail(code);
-        } else {
-            return mapper.apply(value);
-        }
-    }
-
-    public Result<T> whenFailed(@NotNull final Runnable runnable) {
-        Objects.requireNonNull(runnable, "[Runnable] should not be empty");
-        if (isFailed()) {
-            log.info("Fail result, " + code);
+    public Result<T> then(Runnable runnable) {
+        if (isSuccess()) {
             runnable.run();
         }
         return this;
     }
+
+    public Result<T> then(Consumer<T> consumer) {
+        if (isSuccess()) {
+            consumer.accept(value);
+        }
+        return this;
+    }
+
+    public <U> Result<U> then(Supplier<U> supplier) {
+        if (isSuccess()) {
+            return Result.ok(supplier.get());
+        } else {
+            return Result.fail(code);
+        }
+    }
+
+    public <U> Result<U> thenCombine(Supplier<Result<U>> supplier) {
+        if (isSuccess()) {
+            return supplier.get();
+        } else {
+            return Result.fail(code);
+        }
+    }
+
+    public <U> Result<U> then(Function<T,U> function) {
+        if (isSuccess()) {
+            return Result.ok(function.apply(value));
+        } else {
+            return Result.fail(code);
+        }
+    }
+
+    public <U> Result<U> thenCombine(Function<T,Result<U>> function) {
+        if (isSuccess()) {
+            return function.apply(value);
+        } else {
+            return Result.fail(code);
+        }
+    }
+
+    public Result<T> anyway(Runnable runnable) {
+        runnable.run();
+        return this;
+    }
+
+    public Result<T> anyway(Consumer<? super T> consumer) {
+        consumer.accept(value);
+        return this;
+    }
+
+//    public <U> Result<U> anyway(Supplier<U> supplier) {}
+//    public <U> Result<U> anywayCombine(Supplier<Result<U>> supplier) {}
+//    public <U> Result<U> anyway(Function<T,U> function) {}
+//    public <U> Result<U> anywayCombine(Function<T,Result<U>> function) {}
+
+    public Result<T> whenFail(Runnable runnable) {
+        if (isFailed()) {
+            runnable.run();
+        }
+        return this;
+    }
+
+//    public Result<T> whenFail(Consumer<T> consumer) {}
+    public Result<T> whenFail(Supplier<T> supplier) {
+        if (isFailed()) {
+            return Result.ok(supplier.get());
+        }
+        return this;
+    }
+    public Result<T> whenFailCombine(Supplier<Result<T>> supplier) {
+        if (isFailed()) {
+            return supplier.get();
+        }
+        return this;
+    }
+//    public Result<T> whenFail(Function<T,T> function) {}
+//    public Result<T> whenFailCombine(Function<T,Result<T>> function) {}
+
+
+
+
+//
+//
+//    public Result<T> thenAnyway(@NotNull final Consumer<? super T> action) {
+//        Objects.requireNonNull(action, "[Action] should not be empty");
+//        action.accept(value);
+//        return this;
+//    }
+//
+//    public <U> Result<U> map() {
+//        return map(value -> null);
+//    }
+//
+//    public <U> Result<U> map(@NotNull final Function<? super T, ? extends U> mapper) {
+//        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
+//        if (isFailed()) {
+//            return Result.fail(code);
+//        } else {
+//            return Result.ok(mapper.apply(value));
+//        }
+//    }
+//
+//    public Result<T> then(@NotNull final Runnable runnable) {
+//        return then(t -> {
+//            runnable.run();
+//            return Result.ok(t);
+//        });
+//    }
+//
+//    public Result<T> then(@NotNull final Supplier<Result<T>> supplier) {
+//        return then(t -> supplier.get());
+//    }
+//
+//    public <U> Result<U> then(@NotNull final Function<? super T, Result<U>> mapper) {
+//        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
+//        if (isFailed()) {
+//            return Result.fail(code);
+//        } else {
+//            return mapper.apply(value);
+//        }
+//    }
+//
+//    public Result<T> whenFailed(@NotNull final Runnable runnable) {
+//        Objects.requireNonNull(runnable, "[Runnable] should not be empty");
+//        if (isFailed()) {
+//            log.info("Fail result, " + code);
+//            runnable.run();
+//        }
+//        return this;
+//    }
 
     @Override
     public String toString() {

@@ -132,22 +132,22 @@ public final class ComplexClient {
 
     public Result<WorldObject> getCharacter() {
         return objectIndex.getCharacter()
-                .map(this::convertWorldObject);
+                .then(this::convertWorldObject);
     }
 
     public Result<Long> getCharacterId() {
         return objectIndex.getCharacter()
-                .map(ObjectIndex.WorldObject::getId);
+                .then(ObjectIndex.WorldObject::getId);
     }
 
     public Result<IntPoint> getCharacterPosition() {
         return objectIndex.getCharacter()
-                .map(ObjectIndex.WorldObject::getPosition);
+                .then(ObjectIndex.WorldObject::getPosition);
     }
 
     public Result<Boolean> isCharacterMoving() {
         return objectIndex.getCharacter()
-                .map(ObjectIndex.WorldObject::isMoving);
+                .then(ObjectIndex.WorldObject::isMoving);
     }
 
     public Result<Inventory> getCharacterInvetory() {
@@ -168,13 +168,17 @@ public final class ComplexClient {
         return Result.ok(prepareInventory(characterEquipId));
     }
 
+    public boolean hasLastOpenedInventory() {
+        return widgetIndex.getLastOpenedInventory() != null;
+    }
+
     public Result<Inventory> getLastOpenedInventory() {
-        final Integer astOpenedInventory = widgetIndex.getLastOpenedInventory();
-        if (astOpenedInventory == null) {
+        final Integer lastOpenedInventory = widgetIndex.getLastOpenedInventory();
+        if (lastOpenedInventory == null) {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
 
-        return Result.ok(prepareInventory(astOpenedInventory));
+        return Result.ok(prepareInventory(lastOpenedInventory));
     }
 
     private Inventory prepareInventory(final Integer inventoryId) {

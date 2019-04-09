@@ -55,12 +55,12 @@ public class RoutingService {
 
         }
 
-        final Result<Path> fromPath = connectLocation(from, network).thenAnyway(network::add);
+        final Result<Path> fromPath = connectLocation(from, network).anyway(network::add);
         if (fromPath.isFailed()) {
             return Result.fail(ResearchResultCode.FROM_POINT_UNREACHABLE);
         }
 
-        final Result<Path> toPath = connectLocation(to, network).thenAnyway(network::add);
+        final Result<Path> toPath = connectLocation(to, network).anyway(network::add);
         if (toPath.isFailed()) {
             return Result.fail(ResearchResultCode.TO_POINT_UNREACHABLE);
         }

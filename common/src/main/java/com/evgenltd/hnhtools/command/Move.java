@@ -32,12 +32,14 @@ public class Move {
 
     private Result<Void> performImpl() {
         return client.move(target)
-                .then(() -> CommandUtils.awaitWithResult(Move.this::isAwaitDone));
+                .thenCombine(() -> CommandUtils.awaitWithResult(Move.this::isAwaitDone));
     }
 
     private Result<Boolean> isAwaitDone() {
         final Result<Boolean> isReached = client.getCharacterPosition()
-                .map(characterPosition -> characterPosition.equals(target));
+                .then(characterPosition -> {
+                    return characterPosition.equals(target);
+                });
         if (isReached.isFailed() || isReached.getValue()) {
             return isReached;
         }

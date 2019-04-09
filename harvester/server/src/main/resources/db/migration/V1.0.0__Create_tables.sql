@@ -24,6 +24,7 @@ create table known_objects (
 	x int,
 	y int,
 	actual datetime,
+	researched tinyint,
 	player tinyint,
 	doorway tinyint,
 	container tinyint

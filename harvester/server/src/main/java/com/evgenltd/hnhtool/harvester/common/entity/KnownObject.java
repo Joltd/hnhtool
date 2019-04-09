@@ -32,6 +32,8 @@ public class KnownObject implements Identified {
 
     private LocalDateTime actual;
 
+    private Boolean researched;
+
     private Boolean player;
 
     private Boolean doorway;
@@ -82,6 +84,13 @@ public class KnownObject implements Identified {
     }
     public void setActual(final LocalDateTime actual) {
         this.actual = actual;
+    }
+
+    public Boolean getResearched() {
+        return researched;
+    }
+    public void setResearched(final Boolean researched) {
+        this.researched = researched;
     }
 
     public Boolean getPlayer() {
