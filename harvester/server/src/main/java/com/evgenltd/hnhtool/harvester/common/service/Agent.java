@@ -61,7 +61,7 @@ public class Agent {
     private BlockingQueue<Work> queue = new LinkedBlockingQueue<>(1);
 
     private ComplexClient client;
-    private AtomicBoolean doKnowledgeMatching = new AtomicBoolean(true);
+    private AtomicBoolean withResearch = new AtomicBoolean(true);
     private ObjectIndex index;
 
     public Agent(
@@ -90,7 +90,7 @@ public class Agent {
 
     @Scheduled(fixedDelay = 5_000L)
     public void matchKnowledge() {
-        if (!doKnowledgeMatching.get() || client == null || !client.isLife()) {
+        if (client == null || !client.isLife()) {
             return;
         }
 
@@ -113,7 +113,8 @@ public class Agent {
                 index,
                 character.getValue(),
                 account.getCharacterObject(),
-                worldObjects
+                worldObjects,
+                withResearch.get()
         );
         if (matchResult.isSuccess()) {
             index = matchResult.getValue();
@@ -182,12 +183,8 @@ public class Agent {
         return Result.ok();
     }
 
-    public void disableKnowledgeMatching() {
-        doKnowledgeMatching.set(false);
-    }
-
-    public void enableKnowledgeMatching() {
-        doKnowledgeMatching.set(true);
+    public void knowledgeMatchingWithResearch(final boolean value) {
+        withResearch.set(value);
     }
 
     public void changeSpace(final Space space) {

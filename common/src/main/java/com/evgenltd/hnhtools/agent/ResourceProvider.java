@@ -15,6 +15,6 @@ public interface ResourceProvider {
     @Nullable
     String getResourceName(@NotNull Long id);
 
-    void saveResource(@NotNull Long id, @NotNull String name);
+    void saveResource(@NotNull Long id, @Nullable String name);
 
 }

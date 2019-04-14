@@ -30,8 +30,9 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     @Query("select ko from KnownObject ko where ko.container = true and ko.researched is null")
     List<KnownObject> findUnknownContainers();
 
-    @Query(value = "", nativeQuery = true)
-    List<SpaceInfo> findSpaceByPattern(
+    @Query(value = "select f from KnownObject f, KnownObject s where f.resource.id = ?1 and s.resource.id = ?4 " +
+            "and (s.x - f.x) = (?5 - ?2) and (s.y - f.y) = (?6 - ?3)")
+    List<KnownObject> findSpaceByPattern(
             final Long firstResource,
             final Integer firstX,
             final Integer firstY,

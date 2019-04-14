@@ -48,7 +48,7 @@ public class MoveToSpace {
 
     private Result<Void> performImpl() {
         agent.matchKnowledge();
-        agent.disableKnowledgeMatching();
+        agent.knowledgeMatchingWithResearch(true);
 
         worldObjectsSnapshot = takeWorldObjectSnapshot();
         log.info("Matching state {}", worldObjectsSnapshot);
@@ -63,7 +63,7 @@ public class MoveToSpace {
                 .interact(matchedDoorwayId.getValue(), decideObjectPartition())
                 .thenCombine(() -> CommandUtils.awaitWithResult(this::isAwaitDone))
                 .then(() -> agent.changeSpace(targetSpace))
-                .anyway(() -> agent.enableKnowledgeMatching());
+                .anyway(() -> agent.knowledgeMatchingWithResearch(false));
     }
 
     private Result<Boolean> isAwaitDone() {

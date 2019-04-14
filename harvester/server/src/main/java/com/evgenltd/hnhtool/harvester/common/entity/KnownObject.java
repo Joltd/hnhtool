@@ -24,8 +24,6 @@ public class KnownObject implements Identified {
     @JoinColumn(name = "owner_id")
     private Space owner;
 
-    private Long resourceId;
-
     @ManyToOne
     @JoinColumn(name = "resource_id")
     private Resource resource;
@@ -56,13 +54,6 @@ public class KnownObject implements Identified {
     }
     public void setOwner(final Space owner) {
         this.owner = owner;
-    }
-
-    public Long getResourceId() {
-        return resourceId;
-    }
-    public void setResourceId(final Long resourceId) {
-        this.resourceId = resourceId;
     }
 
     public Resource getResource() {

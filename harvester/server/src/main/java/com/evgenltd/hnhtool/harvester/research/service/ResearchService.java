@@ -16,7 +16,6 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,7 +64,7 @@ public class ResearchService implements Module {
         this.routingService = routingService;
     }
 
-    @Scheduled(fixedDelay = 10_000L)
+//    @Scheduled(fixedDelay = 10_000L)
     public void main() {
         scheduleDoorwayResearch();
 //        scheduleContainerResearch();

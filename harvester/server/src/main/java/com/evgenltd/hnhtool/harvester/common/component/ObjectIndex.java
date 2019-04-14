@@ -37,7 +37,7 @@ public class ObjectIndex {
 
     public Result<Long> getMatchedKnownObjectId(final Long worldObjectId) {
         final Long knownObjectId = index.inverse().get(worldObjectId);
-        if (worldObjectId == null) {
+        if (knownObjectId == null) {
             return Result.fail(ServerResultCode.NO_MATCHED_KNOWN_OBJECT_FOUND);
         }
 
