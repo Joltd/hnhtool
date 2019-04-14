@@ -129,7 +129,7 @@ public class KnowledgeMatchingService {
                 knownObjectRepository.save(matchedKnownObject);
             }
 
-            objectIndex.putMatch(matchedKnownObject.getId(), matchedKnownObject.getId());
+            objectIndex.putMatch(matchedKnownObject.getId(), worldObject.getId());
 
             knownObjects.remove(matchedKnownObject);
 

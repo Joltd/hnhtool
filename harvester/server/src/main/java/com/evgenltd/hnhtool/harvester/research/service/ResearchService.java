@@ -3,7 +3,6 @@ package com.evgenltd.hnhtool.harvester.research.service;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
-import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.common.service.Module;
 import com.evgenltd.hnhtool.harvester.common.service.TaskService;
@@ -16,6 +15,7 @@ import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,7 +32,6 @@ public class ResearchService implements Module {
 
     private static final Logger log = LogManager.getLogger(ResearchService.class);
 
-    private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
     private TaskService taskService;
     private PathRepository pathRepository;
@@ -43,20 +42,18 @@ public class ResearchService implements Module {
     private Task researchContainerTask;
 
     public ResearchService(
-            final SpaceRepository spaceRepository,
             final KnownObjectRepository knownObjectRepository,
             final TaskService taskService,
             final PathRepository pathRepository,
             final RoutingService routingService
     ) {
-        this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
         this.taskService = taskService;
         this.pathRepository = pathRepository;
         this.routingService = routingService;
     }
 
-//    @Scheduled(fixedDelay = 10_000L)
+    @Scheduled(fixedDelay = 10_000L)
     public void main() {
         scheduleDoorwayResearch();
 //        scheduleContainerResearch();
@@ -89,8 +86,7 @@ public class ResearchService implements Module {
         return routingService.route(agent.getCharacter(), targetDoorway)
                 .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route, targetDoorway))
                 .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway))
-                .thenApplyCombine(p -> agent.getClient().getCharacterPosition())
-                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(characterPosition, agent, targetDoorway));
+                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(agent, targetDoorway));
     }
 
     private Result<Void> moveToDoorwayByRoute(
@@ -104,10 +100,10 @@ public class ResearchService implements Module {
     }
 
     private Result<Void> storeDoorwayResearchResult(
-            final IntPoint characterPosition,
             final Agent agent,
             final KnownObject targetDoorway
     ) {
+        final IntPoint characterPosition = agent.getCharacter().getPosition();
         final List<KnownObject> nearestDoorways = knownObjectRepository.findNearestDoorway(
                 agent.getCurrentSpace(),
                 characterPosition.getX(),

@@ -13,17 +13,17 @@ import java.util.Objects;
 public class ResourceConstants {
 
     public static final String PLAYER = "";
-    public static final String HOUSE_WALL = "gfx/terobjs/arch/hwall"; // 3949L
-    public static final String PALISADE_SEGMENT = "gfx/terobjs/arch/palisadeseg"; // 3956L
-    public static final String PALISADE_CORNER_POST = "gfx/terobjs/arch/palisadecp"; // 3953L
-    public static final String POLE_SEGMENT = "gfx/terobjs/arch/poleseg"; // 3959L
+    public static final String HOUSE_WALL = "gfx/terobjs/arch/hwall";
+    public static final String PALISADE_SEGMENT = "gfx/terobjs/arch/palisadeseg";
+    public static final String PALISADE_CORNER_POST = "gfx/terobjs/arch/palisadecp";
+    public static final String POLE_SEGMENT = "gfx/terobjs/arch/poleseg";
 
-    public static final String CELLAR_DOOR = "gfx/terobjs/arch/cellardoor"; // 3944L
-    public static final String CELLAR_STAIR = ""; // 3945L
-    public static final String TIMBER_HOUSE_DOOR = "gfx/terobjs/arch/timberhouse-door"; // 3970L
-    public static final String TIMBER_HOUSE = ""; // 3972L
+    public static final String CELLAR_DOOR = "gfx/terobjs/arch/cellardoor";
+    public static final String CELLAR_STAIR = "gfx/terobjs/arch/cellarstairs";
+    public static final String TIMBER_HOUSE_DOOR = "gfx/terobjs/arch/timberhouse-door";
+    public static final String TIMBER_HOUSE = "gfx/terobjs/arch/timberhouse";
 
-    public static final String CUPBOARD = "gfx/terobjs/cupboard"; // 6426L
+    public static final String CUPBOARD = "gfx/terobjs/cupboard";
 
     public static boolean isWaste(final String resourceName) {
         return Arrays.asList(
