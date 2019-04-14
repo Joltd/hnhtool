@@ -11,6 +11,7 @@
     <packaging>jar</packaging>
 
     <artifactId>auth</artifactId>
+    <version>1.0.0</version>
 
     <build>
         <finalName>${artifactId}</finalName>

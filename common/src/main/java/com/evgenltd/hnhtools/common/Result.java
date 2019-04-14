@@ -94,7 +94,7 @@ public class Result<T> {
         }
     }
 
-    public <U> Result<U> then(Function<T,U> function) {
+    public <U> Result<U> thenApply(Function<T,U> function) {
         if (isSuccess()) {
             return Result.ok(function.apply(value));
         } else {
@@ -102,7 +102,7 @@ public class Result<T> {
         }
     }
 
-    public <U> Result<U> thenCombine(Function<T,Result<U>> function) {
+    public <U> Result<U> thenApplyCombine(Function<T,Result<U>> function) {
         if (isSuccess()) {
             return function.apply(value);
         } else {
@@ -147,59 +147,6 @@ public class Result<T> {
     }
 //    public Result<T> whenFail(Function<T,T> function) {}
 //    public Result<T> whenFailCombine(Function<T,Result<T>> function) {}
-
-
-
-
-//
-//
-//    public Result<T> thenAnyway(@NotNull final Consumer<? super T> action) {
-//        Objects.requireNonNull(action, "[Action] should not be empty");
-//        action.accept(value);
-//        return this;
-//    }
-//
-//    public <U> Result<U> map() {
-//        return map(value -> null);
-//    }
-//
-//    public <U> Result<U> map(@NotNull final Function<? super T, ? extends U> mapper) {
-//        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
-//        if (isFailed()) {
-//            return Result.fail(code);
-//        } else {
-//            return Result.ok(mapper.apply(value));
-//        }
-//    }
-//
-//    public Result<T> then(@NotNull final Runnable runnable) {
-//        return then(t -> {
-//            runnable.run();
-//            return Result.ok(t);
-//        });
-//    }
-//
-//    public Result<T> then(@NotNull final Supplier<Result<T>> supplier) {
-//        return then(t -> supplier.get());
-//    }
-//
-//    public <U> Result<U> then(@NotNull final Function<? super T, Result<U>> mapper) {
-//        Objects.requireNonNull(mapper, "[Mapper] should not be empty");
-//        if (isFailed()) {
-//            return Result.fail(code);
-//        } else {
-//            return mapper.apply(value);
-//        }
-//    }
-//
-//    public Result<T> whenFailed(@NotNull final Runnable runnable) {
-//        Objects.requireNonNull(runnable, "[Runnable] should not be empty");
-//        if (isFailed()) {
-//            log.info("Fail result, " + code);
-//            runnable.run();
-//        }
-//        return this;
-//    }
 
     @Override
     public String toString() {

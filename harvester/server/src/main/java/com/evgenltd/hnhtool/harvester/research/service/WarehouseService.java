@@ -53,13 +53,13 @@ public class WarehouseService implements Module {
 
         final KnownObject character = agent.getCharacter();
         return routingService.route(character, targetContainer)
-                .then(route -> {
+                .thenApply(route -> {
                     route.remove(character);
                     route.remove(targetContainer);
                     return MoveByRoute.perform(agent, route);
                 })
-                .thenCombine(p -> OpenInventory.perform(agent, targetContainer))
-                .then(this::storeItemInfo);
+                .thenApplyCombine(p -> OpenInventory.perform(agent, targetContainer))
+                .thenApply(this::storeItemInfo);
 
     }
 

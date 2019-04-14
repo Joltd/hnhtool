@@ -109,14 +109,19 @@ public class Agent {
 
         final List<WorldObject> worldObjects = client.getWorldObjects();
 
-        index = knowledgeMatchingService.match(
+        final Result<ObjectIndex> matchResult = knowledgeMatchingService.match(
                 index,
                 character.getValue(),
                 account.getCharacterObject(),
                 worldObjects
         );
-
-        log.info("End matching index with KDB, newIndex=[{}]", index);
+        if (matchResult.isSuccess()) {
+            index = matchResult.getValue();
+            log.info("End matching index with KDB, newIndex=[{}]", index);
+        } else {
+            index = new ObjectIndex();
+            log.info("Failed matching index with KDB, {}", matchResult);
+        }
 
     }
 

@@ -37,7 +37,7 @@ public class Move {
 
     private Result<Boolean> isAwaitDone() {
         final Result<Boolean> isReached = client.getCharacterPosition()
-                .then(characterPosition -> {
+                .thenApply(characterPosition -> {
                     return characterPosition.equals(target);
                 });
         if (isReached.isFailed() || isReached.getValue()) {

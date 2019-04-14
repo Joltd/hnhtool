@@ -3,10 +3,12 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtools.common.Assert;
+import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.entity.WorldObject;
 import org.apache.logging.log4j.LogManager;
@@ -16,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -32,6 +36,10 @@ public class KnowledgeMatchingService {
 
     private static final Logger log = LogManager.getLogger(KnowledgeMatchingService.class);
 
+    private static final List<Long> RESTRICTED_OBJECT_RESOURCES = Arrays.asList(
+            0L
+    );
+
     private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
 
@@ -43,7 +51,7 @@ public class KnowledgeMatchingService {
         this.knownObjectRepository = knownObjectRepository;
     }
 
-    public ObjectIndex match(
+    public Result<ObjectIndex> match(
             @Nullable final ObjectIndex oldIndex,
             @NotNull final WorldObject woCharacter,
             @NotNull KnownObject koCharacter,
@@ -52,7 +60,7 @@ public class KnowledgeMatchingService {
 
         final ObjectIndex objectIndex = new ObjectIndex();
         if (objects == null || objects.isEmpty()) {
-            return objectIndex;
+            return Result.fail(ServerResultCode.KMS_WORLD_OBJECTS_NOT_PRESENTED);
         }
 
         Assert.valueRequireNonEmpty(woCharacter, "Character");
@@ -60,9 +68,28 @@ public class KnowledgeMatchingService {
         objectIndex.putMatch(koCharacter.getId(), woCharacter.getId());
 
         final List<WorldObject> objectsForMatching = filterWasteObjects(objects);
+        if (objectsForMatching.isEmpty()) {
+            return Result.fail(ServerResultCode.KMS_WORLD_OBJECTS_ALL_FILTERED);
+        }
 
-        final IntPoint upperLeft = woCharacter.getPosition().add(-50000, -50000);
-        final IntPoint lowerRight = woCharacter.getPosition().add(50000, 50000);
+        final Result<KnownObjectRepository.SpaceInfo> referencePoint = findReferencePoint(objectsForMatching);
+        if (referencePoint.isFailed()) {
+            return referencePoint.cast();
+        }
+
+        objectIndex.putOffset(
+                referencePoint.getValue().getX(),
+                referencePoint.getValue().getY()
+        );
+
+        koCharacter.setX(woCharacter.getPosition().getX() + referencePoint.getValue().getX());
+        koCharacter.setY(woCharacter.getPosition().getY() + referencePoint.getValue().getY());
+        spaceRepository.findById(referencePoint.getValue().getSpaceId())
+                .ifPresent(koCharacter::setOwner); // todo repo should operate with particular Space instead of Id
+        knownObjectRepository.save(koCharacter);
+
+        final IntPoint upperLeft = koCharacter.getPosition().add(-50000, -50000);
+        final IntPoint lowerRight = koCharacter.getPosition().add(50000, 50000);
 
         final List<KnownObject> knownObjects = knownObjectRepository.findObjectsInArea(
                 koCharacter.getOwner(),
@@ -72,37 +99,35 @@ public class KnowledgeMatchingService {
                 lowerRight.getY()
         );
 
-        for (final KnownObject knownObject : knownObjects) {
-
-            final Long matchedWorldObjectId = getMatchedWorldObjectId(oldIndex, knownObject);
-
-            final WorldObject matchedWorldObject = lookupMatchedObject(objectsForMatching, knownObject, matchedWorldObjectId);
-            if (matchedWorldObject == null) {
-                continue;
-            }
-
-            knownObject.setActual(LocalDateTime.now());
-            knownObjectRepository.save(knownObject);
-
-            objectIndex.putMatch(knownObject.getId(), matchedWorldObject.getId());
-
-            objectsForMatching.remove(matchedWorldObject);
-
-        }
-
-        // here objectsForMatching contains only unknown worldObjects
-
         for (final WorldObject worldObject : objectsForMatching) {
 
             if (Objects.equals(worldObject.getResourceId(), ResourceConstants.PLAYER)) {
                 continue;
             }
 
-            final KnownObject knownObject = rememberWorldObject(koCharacter.getOwner(), worldObject);
-            objectIndex.putMatch(knownObject.getId(), worldObject.getId());
+            if (oldIndex != null) {
+                final Result<Long> matchedKnownObjectId = oldIndex.getMatchedKnownObjectId(worldObject.getId());
+                if (matchedKnownObjectId.isSuccess()) {
+                    objectIndex.putMatch(matchedKnownObjectId.getValue(), worldObject.getId());
+                    continue;
+                }
+            }
+
+            KnownObject matchedKnownObject = lookupMatchedObject(knownObjects, worldObject, objectIndex.getOffset());
+            if (matchedKnownObject == null) {
+                matchedKnownObject = rememberWorldObject(koCharacter.getOwner(), worldObject);
+            } else {
+                matchedKnownObject.setActual(LocalDateTime.now());
+                knownObjectRepository.save(matchedKnownObject);
+            }
+
+            objectIndex.putMatch(matchedKnownObject.getId(), matchedKnownObject.getId());
+
+            knownObjects.remove(matchedKnownObject);
+
         }
 
-        return objectIndex;
+        return Result.ok(objectIndex);
     }
 
     private List<WorldObject> filterWasteObjects(final List<WorldObject> objects) {
@@ -111,22 +136,19 @@ public class KnowledgeMatchingService {
                 .collect(Collectors.toList());
     }
 
-    private WorldObject lookupMatchedObject(
-            final List<WorldObject> worldObjects,
-            final KnownObject knownObject,
-            final Long matchedPreviousWorldObjectId
+    private KnownObject lookupMatchedObject(
+            final List<KnownObject> knownObjects,
+            final WorldObject worldObject,
+            final IntPoint offset
     ) {
-        for (final WorldObject worldObject : worldObjects) {
-            if (Objects.equals(matchedPreviousWorldObjectId, worldObject.getId())) {
-                return worldObject;
-            }
-
-            if (!Objects.equals(worldObject.getPosition(), knownObject.getPosition())) {
+        for (final KnownObject knownObject : knownObjects) {
+            final IntPoint worldObjectPosition = worldObject.getPosition();
+            if (!Objects.equals(worldObjectPosition.add(offset), knownObject.getPosition())) {
                 continue;
             }
 
-            if (Objects.equals(knownObject.getResourceId(), worldObject.getResourceId())) {
-                return worldObject;
+            if (Objects.equals(worldObject.getResourceId(), knownObject.getResourceId())) {
+                return knownObject;
             }
         }
 
@@ -168,12 +190,71 @@ public class KnowledgeMatchingService {
         }
     }
 
-    private Long getMatchedWorldObjectId(final ObjectIndex oldIndex, final KnownObject knownObject) {
-        if (oldIndex == null) {
-            return null;
+    private Result<KnownObjectRepository.SpaceInfo> findReferencePoint(final List<WorldObject> worldObjects) {
+
+        if (worldObjects.isEmpty()) {
+            return Result.fail(ServerResultCode.KMS_WORLD_OBJECTS_LOW_COUNT);
         }
-        return oldIndex.getMatchedWorldObjectId(knownObject.getId())
-                .getValue();
+
+        final List<WorldObject> woExclusions = new ArrayList<>();
+
+        for (int trying = 0; trying < 5; trying++) {
+
+            final Result<KnownObjectRepository.SpaceInfo> result = findReferencePoint(worldObjects, woExclusions);
+            if (result.isSuccess()) {
+                return result;
+            } else {
+                log.info("Fail to find reference point, {}", result);
+            }
+
+        }
+
+        return Result.fail(ServerResultCode.KMS_REFERENCE_POINT_TRYING_LIMIT_EXCEEDED);
+    }
+
+    private Result<KnownObjectRepository.SpaceInfo> findReferencePoint(final List<WorldObject> worldObjects, final List<WorldObject> woExclusion) {
+        final List<Long> resourceExclusions = new ArrayList<>(RESTRICTED_OBJECT_RESOURCES);
+        return selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
+                .thenApplyCombine(firstWo -> selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
+                                    .thenApplyCombine(secondWo -> findReferencePoint(firstWo, secondWo))
+                );
+    }
+
+    private Result<WorldObject> selectReferenceObject(
+            final List<WorldObject> worldObjects,
+            final List<WorldObject> woExclusions,
+            final List<Long> resourceExclusions
+    ) {
+        return worldObjects.stream()
+                .filter(wo -> !woExclusions.contains(wo) && !resourceExclusions.contains(wo.getResourceId()))
+                .findFirst()
+                .map(wo -> {
+                    woExclusions.add(wo);
+                    resourceExclusions.add(wo.getResourceId());
+                    return Result.ok(wo);
+                })
+                .orElse(Result.fail(ServerResultCode.KMS_REFERENCE_POINT_NO_SUITABLE_OBJECT));
+    }
+
+    private Result<KnownObjectRepository.SpaceInfo> findReferencePoint(final WorldObject firstObject, final WorldObject secondObject) {
+        final List<KnownObjectRepository.SpaceInfo> spaceCandidates = knownObjectRepository.findSpaceByPattern(
+                firstObject.getResourceId(),
+                firstObject.getPosition().getX(),
+                firstObject.getPosition().getY(),
+                secondObject.getResourceId(),
+                secondObject.getPosition().getX(),
+                secondObject.getPosition().getY()
+        );
+
+        if (spaceCandidates.isEmpty()) {
+            return Result.fail(ServerResultCode.KMS_NO_SPACE_CANDIDATES);
+        }
+
+        if (spaceCandidates.size() > 1) {
+            return Result.fail(ServerResultCode.KMS_TOO_MANY_SPACE_CANDIDATES);
+        }
+
+        return Result.ok(spaceCandidates.get(0));
     }
 
 }

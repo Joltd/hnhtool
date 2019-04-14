@@ -137,11 +137,11 @@ public class ResearchService implements Module {
 
     private Result<Void> researchDoorway(final Agent agent) {
         return routingService.route(agent.getCharacter(), targetDoorway)
-                .thenCombine(route -> moveToDoorwayByRoute(agent, route))
+                .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route))
                 .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway, targetSpace))
                 .then(agent::matchKnowledge)
-                .thenCombine(p -> agent.getClient().getCharacterPosition())
-                .thenCombine(this::storeDoorwayResearchResult)
+                .thenApplyCombine(p -> agent.getClient().getCharacterPosition())
+                .thenApplyCombine(this::storeDoorwayResearchResult)
                 .whenFail(this::cleanupOnFailed);
     }
 

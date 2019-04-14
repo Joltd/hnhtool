@@ -33,9 +33,9 @@ public class OpenInventory {
 
     private Result<Inventory> performImpl() {
         return agent.getMatchedWorldObjectId(container.getId())
-                .thenCombine(woId -> agent.getClient().interact(woId))
+                .thenApplyCombine(woId -> agent.getClient().interact(woId))
                 .then(() -> CommandUtils.await(this::isAwaitDone))
-                .thenCombine(p -> agent.getClient().getLastOpenedInventory());
+                .thenApplyCombine(p -> agent.getClient().getLastOpenedInventory());
     }
 
     private boolean isAwaitDone() {

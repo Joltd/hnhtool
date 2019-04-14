@@ -43,6 +43,10 @@ public final class IntPoint {
         return new IntPoint(this.x + x, this.y + y);
     }
 
+    public IntPoint sub(final IntPoint point) {
+        return add(-point.x, -point.y);
+    }
+
     public DoublePoint multiple(final DoublePoint point) {
         return new DoublePoint(getX() * point.getX(), getY() * point.getY());
     }

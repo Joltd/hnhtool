@@ -2,31 +2,36 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>hnhtool-root</artifactId>
+        <groupId>com.evgenltd.hnhtool</groupId>
+        <version>1.0.0</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.evgenltd.hnhtool.harvester</groupId>
-    <artifactId>harvester-root</artifactId>
-    <version>1.0</version>
     <packaging>pom</packaging>
+
+    <artifactId>harvester-root</artifactId>
+    <version>1.0.0</version>
+
     <modules>
         <module>server</module>
     </modules>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.0</version>
-                    <configuration>
-                        <target>1.8</target>
-                        <source>1.8</source>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
+<!--    <build>-->
+<!--        <pluginManagement>-->
+<!--            <plugins>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-compiler-plugin</artifactId>-->
+<!--                    <version>3.8.0</version>-->
+<!--                    <configuration>-->
+<!--                        <target>1.8</target>-->
+<!--                        <source>1.8</source>-->
+<!--                    </configuration>-->
+<!--                </plugin>-->
+<!--            </plugins>-->
+<!--        </pluginManagement>-->
+<!--    </build>-->
 
     <dependencyManagement>
         <dependencies>

@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.common.component;
 
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
@@ -15,9 +16,14 @@ import com.google.common.collect.HashBiMap;
 public class ObjectIndex {
 
     private final BiMap<Long, Long> index = HashBiMap.create();
+    private IntPoint offset = new IntPoint();
 
     public void putMatch(final Long knownObjectId, final Long worldObjectId) {
         index.put(knownObjectId, worldObjectId);
+    }
+
+    public void putOffset(final Integer x, final Integer y) {
+        offset = new IntPoint(x, y);
     }
 
     public Result<Long> getMatchedWorldObjectId(final Long knownObjectId) {
@@ -36,6 +42,10 @@ public class ObjectIndex {
         }
 
         return Result.ok(knownObjectId);
+    }
+
+    public IntPoint getOffset() {
+        return offset;
     }
 
     @Override

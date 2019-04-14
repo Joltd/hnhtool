@@ -132,22 +132,22 @@ public final class ComplexClient {
 
     public Result<WorldObject> getCharacter() {
         return objectIndex.getCharacter()
-                .then(this::convertWorldObject);
+                .thenApply(this::convertWorldObject);
     }
 
     public Result<Long> getCharacterId() {
         return objectIndex.getCharacter()
-                .then(ObjectIndex.WorldObject::getId);
+                .thenApply(ObjectIndex.WorldObject::getId);
     }
 
     public Result<IntPoint> getCharacterPosition() {
         return objectIndex.getCharacter()
-                .then(ObjectIndex.WorldObject::getPosition);
+                .thenApply(ObjectIndex.WorldObject::getPosition);
     }
 
     public Result<Boolean> isCharacterMoving() {
         return objectIndex.getCharacter()
-                .then(ObjectIndex.WorldObject::isMoving);
+                .thenApply(ObjectIndex.WorldObject::isMoving);
     }
 
     public Result<Inventory> getCharacterInvetory() {

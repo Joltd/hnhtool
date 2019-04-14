@@ -24,4 +24,13 @@ public class ServerResultCode {
 
     public static final String EXCEPTION_DURING_TASK_PERFORMING = "EXCEPTION_DURING_TASK_PERFORMING";
 
+    // knowledge matching service
+
+    public static final String KMS_WORLD_OBJECTS_NOT_PRESENTED = "KMS_WORLD_OBJECTS_NOT_PRESENTED";
+    public static final String KMS_WORLD_OBJECTS_ALL_FILTERED = "KMS_WORLD_OBJECTS_ALL_FILTERED";
+    public static final String KMS_WORLD_OBJECTS_LOW_COUNT = "KMS_WORLD_OBJECTS_LOW_COUNT";
+    public static final String KMS_REFERENCE_POINT_TRYING_LIMIT_EXCEEDED = "KMS_REFERENCE_POINT_TRYING_LIMIT_EXCEEDED";
+    public static final String KMS_REFERENCE_POINT_NO_SUITABLE_OBJECT = "KMS_REFERENCE_POINT_NO_SUITABLE";
+    public static final String KMS_NO_SPACE_CANDIDATES = "KMS_NO_SPACE_CANDIDATES";
+    public static final String KMS_TOO_MANY_SPACE_CANDIDATES = "KMS_TOO_MANY_SPACE_CANDIDATES";
 }
