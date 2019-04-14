@@ -57,7 +57,7 @@ public class MoveByRoute {
                 return Result.ok();
             }
 
-            return MoveToSpace.perform(agent, doorway, knownObject.getOwner())
+            return MoveToSpace.perform(agent, doorway)
                     .anyway(() -> doorway = null);
         }
 

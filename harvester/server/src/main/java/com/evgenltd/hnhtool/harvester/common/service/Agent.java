@@ -187,11 +187,8 @@ public class Agent {
         withResearch.set(value);
     }
 
-    public void changeSpace(final Space space) {
-        log.info(String.format("Update space, id=[%s]", space.getId()));
-        account.getCharacterObject()
-                .setOwner(space);
-        knownObjectRepository.save(account.getCharacterObject());
+    public Space getCurrentSpace() {
+        return getCharacter().getOwner();
     }
 
     public Result<Long> getMatchedWorldObjectId(final Long knownObjectId) {

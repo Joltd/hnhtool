@@ -1,8 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Resource;
-import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
@@ -21,8 +19,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static com.evgenltd.hnhtool.harvester.common.ResourceConstants.*;
 
 /**
  * <p></p>
@@ -85,37 +81,16 @@ public class ResearchService implements Module {
         final KnownObject targetDoorway = unknownDoorway.get(0);
         log.info("Found unknown door, id=[{}], owner=[{}]", targetDoorway.getId(), targetDoorway.getOwner().getId());
 
-        final Resource resource = targetDoorway.getResource();
-        final Space targetSpace = buildNewSpace(resource.getName());
-        log.info("Created space for other side, id=[{}], type=[{}]", targetSpace.getId(), targetSpace.getType());
-
-        researchDoorwayTask = taskService.openTask(agent -> researchDoorway(agent, targetDoorway, targetSpace));
+        researchDoorwayTask = taskService.openTask(agent -> researchDoorway(agent, targetDoorway));
         log.info("Created research task, id=[{}]", researchDoorwayTask.getId());
     }
 
-    private Space buildNewSpace(final String resourceName) {
-        final Space space = new Space();
-        if (isDoorwayToBuilding(resourceName)) {
-            space.setType(Space.Type.BUILDING);
-        } else if (isDoorwayToHole(resourceName)) {
-            space.setType(Space.Type.HOLE);
-        } else if (isDoorwayToMine(resourceName)) {
-            space.setType(Space.Type.MINE);
-        } else {
-            space.setType(Space.Type.SURFACE);
-        }
-        space.setName(space.getType().name());
-        return spaceRepository.save(space);
-    }
-
-    private Result<Void> researchDoorway(final Agent agent, final KnownObject targetDoorway, final Space targetSpace) {
+    private Result<Void> researchDoorway(final Agent agent, final KnownObject targetDoorway) {
         return routingService.route(agent.getCharacter(), targetDoorway)
                 .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route, targetDoorway))
-                .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway, targetSpace))
-                .then(agent::matchKnowledge)
+                .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway))
                 .thenApplyCombine(p -> agent.getClient().getCharacterPosition())
-                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(characterPosition, targetDoorway, targetSpace))
-                .whenFail(() -> cleanupOnFailed(targetSpace));
+                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(characterPosition, agent, targetDoorway));
     }
 
     private Result<Void> moveToDoorwayByRoute(
@@ -130,11 +105,11 @@ public class ResearchService implements Module {
 
     private Result<Void> storeDoorwayResearchResult(
             final IntPoint characterPosition,
-            final KnownObject targetDoorway,
-            final Space targetSpace
+            final Agent agent,
+            final KnownObject targetDoorway
     ) {
         final List<KnownObject> nearestDoorways = knownObjectRepository.findNearestDoorway(
-                targetSpace,
+                agent.getCurrentSpace(),
                 characterPosition.getX(),
                 characterPosition.getY()
         );
@@ -157,10 +132,6 @@ public class ResearchService implements Module {
         researchDoorwayTask = null;
 
         return Result.ok();
-    }
-
-    private void cleanupOnFailed(final Space targetSpace) {
-        spaceRepository.delete(targetSpace);
     }
 
     // ##################################################
