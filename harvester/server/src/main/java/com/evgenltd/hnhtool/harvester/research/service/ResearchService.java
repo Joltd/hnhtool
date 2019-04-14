@@ -1,11 +1,14 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
-import com.evgenltd.hnhtool.harvester.common.entity.*;
+import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.common.entity.Resource;
+import com.evgenltd.hnhtool.harvester.common.entity.Space;
+import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
-import com.evgenltd.hnhtool.harvester.common.repository.TaskRepository;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.common.service.Module;
+import com.evgenltd.hnhtool.harvester.common.service.TaskService;
 import com.evgenltd.hnhtool.harvester.research.command.MoveByRoute;
 import com.evgenltd.hnhtool.harvester.research.command.MoveToSpace;
 import com.evgenltd.hnhtool.harvester.research.entity.Path;
@@ -15,7 +18,6 @@ import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,32 +36,26 @@ public class ResearchService implements Module {
 
     private static final Logger log = LogManager.getLogger(ResearchService.class);
 
-    private static final String RESEARCH_DOORWAY = "RESEARCH_DOORWAY";
-    private static final String RESEARCH_CONTAINER = "RESEARCH_CONTAINER";
-    
     private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
-    private TaskRepository taskRepository;
+    private TaskService taskService;
     private PathRepository pathRepository;
     private RoutingService routingService;
 
     private Task researchDoorwayTask;
-    private KnownObject targetDoorway;
-    private Space targetSpace;
 
     private Task researchContainerTask;
-    private KnownObject targetContainer;
-    
+
     public ResearchService(
             final SpaceRepository spaceRepository,
             final KnownObjectRepository knownObjectRepository,
-            final TaskRepository taskRepository,
+            final TaskService taskService,
             final PathRepository pathRepository,
             final RoutingService routingService
     ) {
         this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
-        this.taskRepository = taskRepository;
+        this.taskService = taskService;
         this.pathRepository = pathRepository;
         this.routingService = routingService;
     }
@@ -70,12 +66,6 @@ public class ResearchService implements Module {
 //        scheduleContainerResearch();
     }
 
-    @Override
-    @NotNull
-    public Work getTaskWork(final String step) {
-        return this::researchDoorway;
-    }
-
     // ##################################################
     // #                                                #
     // #  Doorway Research                              #
@@ -83,7 +73,7 @@ public class ResearchService implements Module {
     // ##################################################
 
     private void scheduleDoorwayResearch() {
-        if (isResearchDoorwayTaskExists()) {
+        if (researchDoorwayTask != null && !researchDoorwayTask.getStatus().isFinished()) {
             return;
         }
 
@@ -92,28 +82,15 @@ public class ResearchService implements Module {
             return;
         }
 
-        targetDoorway = unknownDoorway.get(0);
+        final KnownObject targetDoorway = unknownDoorway.get(0);
         log.info("Found unknown door, id=[{}], owner=[{}]", targetDoorway.getId(), targetDoorway.getOwner().getId());
 
         final Resource resource = targetDoorway.getResource();
-        targetSpace = buildNewSpace(resource.getName());
+        final Space targetSpace = buildNewSpace(resource.getName());
         log.info("Created space for other side, id=[{}], type=[{}]", targetSpace.getId(), targetSpace.getType());
 
-        researchDoorwayTask = taskRepository.openTask(getClass(), RESEARCH_DOORWAY);
+        researchDoorwayTask = taskService.openTask(agent -> researchDoorway(agent, targetDoorway, targetSpace));
         log.info("Created research task, id=[{}]", researchDoorwayTask.getId());
-    }
-
-
-    private boolean isResearchDoorwayTaskExists() {
-        if (researchDoorwayTask == null) {
-            return false;
-        }
-        return taskRepository.findById(researchDoorwayTask.getId())
-                .map(task -> {
-                    researchDoorwayTask = task;
-                    return true;
-                })
-                .orElse(false);
     }
 
     private Space buildNewSpace(final String resourceName) {
@@ -131,23 +108,31 @@ public class ResearchService implements Module {
         return spaceRepository.save(space);
     }
 
-    private Result<Void> researchDoorway(final Agent agent) {
+    private Result<Void> researchDoorway(final Agent agent, final KnownObject targetDoorway, final Space targetSpace) {
         return routingService.route(agent.getCharacter(), targetDoorway)
-                .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route))
+                .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route, targetDoorway))
                 .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway, targetSpace))
                 .then(agent::matchKnowledge)
                 .thenApplyCombine(p -> agent.getClient().getCharacterPosition())
-                .thenApplyCombine(this::storeDoorwayResearchResult)
-                .whenFail(this::cleanupOnFailed);
+                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(characterPosition, targetDoorway, targetSpace))
+                .whenFail(() -> cleanupOnFailed(targetSpace));
     }
 
-    private Result<Void> moveToDoorwayByRoute(final Agent agent, final List<KnownObject> route) {
+    private Result<Void> moveToDoorwayByRoute(
+            final Agent agent,
+            final List<KnownObject> route,
+            final KnownObject targetDoorway
+    ) {
         route.remove(agent.getCharacter());
         route.remove(targetDoorway);
         return MoveByRoute.perform(agent, route);
     }
 
-    private Result<Void> storeDoorwayResearchResult(final IntPoint characterPosition) {
+    private Result<Void> storeDoorwayResearchResult(
+            final IntPoint characterPosition,
+            final KnownObject targetDoorway,
+            final Space targetSpace
+    ) {
         final List<KnownObject> nearestDoorways = knownObjectRepository.findNearestDoorway(
                 targetSpace,
                 characterPosition.getX(),
@@ -174,7 +159,7 @@ public class ResearchService implements Module {
         return Result.ok();
     }
 
-    private void cleanupOnFailed() {
+    private void cleanupOnFailed(final Space targetSpace) {
         spaceRepository.delete(targetSpace);
     }
 
@@ -185,7 +170,7 @@ public class ResearchService implements Module {
     // ##################################################
 
     private void scheduleContainerResearch() {
-        if (isResearchContainerTaskExists()) {
+        if (researchContainerTask != null && !researchContainerTask.getStatus().isFinished()) {
             return;
         }
         
@@ -194,30 +179,18 @@ public class ResearchService implements Module {
             return;
         }
         
-        targetContainer = unknownContainer.get(0);
+        final KnownObject targetContainer = unknownContainer.get(0);
         log.info("Found unknown container, id=[{}], owner=[{}]", targetContainer.getId(), targetContainer.getOwner().getId());
         
-        researchContainerTask = taskRepository.openTask(getClass(), RESEARCH_CONTAINER);
+        researchContainerTask = taskService.openTask(this::researchContainer);
         log.info("Created research task, id=[{}]", researchContainerTask.getId());
     }
 
-    private boolean isResearchContainerTaskExists() {
-        if (researchContainerTask == null) {
-            return false;
-        }
-        return taskRepository.findById(researchContainerTask.getId())
-                .map(task -> {
-                    researchContainerTask = task;
-                    return true;
-                })
-                .orElse(false);
-    }
-    
-    private void researchContainer(final Agent agent) {
-
+    private Result<Void> researchContainer(final Agent agent) {
+        return Result.ok();
     }
 
-    private Result<Void> moveToContainerByRoute(final Agent agent, final List<KnownObject> route) {
+    private Result<Void> moveToContainerByRoute(final Agent agent, final KnownObject targetContainer, final List<KnownObject> route) {
         route.remove(agent.getCharacter());
         route.remove(targetContainer);
         return MoveByRoute.perform(agent, route);

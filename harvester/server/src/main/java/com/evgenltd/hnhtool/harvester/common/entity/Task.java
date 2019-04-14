@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.common.entity;
 
-import javax.persistence.*;
+import com.evgenltd.hnhtool.harvester.common.service.Agent;
+
+import java.util.function.Predicate;
 
 /**
  * <p></p>
@@ -9,19 +11,14 @@ import javax.persistence.*;
  * <p>Author:  lebed</p>
  * <p>Created: 01-04-2019 23:11</p>
  */
-@Entity
-@Table(name = "tasks")
 public class Task {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
     private Long id;
 
-    private String module;
+    private Work work;
 
-    private String step;
+    private Predicate<Agent> requirements;
 
-    @Enumerated(EnumType.STRING)
     private Status status;
 
     private String failReason;
@@ -33,18 +30,18 @@ public class Task {
         this.id = id;
     }
 
-    public String getModule() {
-        return module;
+    public Work getWork() {
+        return work;
     }
-    public void setModule(final String module) {
-        this.module = module;
+    public void setWork(final Work work) {
+        this.work = work;
     }
 
-    public String getStep() {
-        return step;
+    public Predicate<Agent> getRequirements() {
+        return requirements;
     }
-    public void setStep(final String step) {
-        this.step = step;
+    public void setRequirements(final Predicate<Agent> requirements) {
+        this.requirements = requirements;
     }
 
     public Status getStatus() {
@@ -66,7 +63,11 @@ public class Task {
         IN_PROGRESS,
         DONE,
         REJECTED,
-        FAILED
+        FAILED;
+
+        public boolean isFinished() {
+            return this == DONE || this == REJECTED || this == FAILED;
+        }
     }
 
 }

@@ -1,15 +1,13 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Work;
-import com.evgenltd.hnhtool.harvester.common.repository.TaskRepository;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.common.service.Module;
+import com.evgenltd.hnhtool.harvester.common.service.TaskService;
 import com.evgenltd.hnhtool.harvester.research.command.MoveByRoute;
 import com.evgenltd.hnhtool.harvester.research.command.OpenInventory;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.Inventory;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,25 +20,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class WarehouseService implements Module {
 
-    private static final String CHECK_CONTAINER = "CHECK_CONTAINER";
-
+    private TaskService taskService;
     private RoutingService routingService;
-    private TaskRepository taskRepository;
 
-    private KnownObject targetContainer;
+    public WarehouseService(
+            final TaskService taskService,
+            final RoutingService routingService
+    ) {
+        this.taskService = taskService;
+        this.routingService = routingService;
+    }
 
     public void checkContainer(final KnownObject container) {
-        targetContainer = container;
-        taskRepository.openTask(getClass(), CHECK_CONTAINER);
-    }
-
-    @Override
-    @NotNull
-    public Work getTaskWork(final String step) {
-        if (step.equals(CHECK_CONTAINER)) {
-            return this::checkContainerWork;
-        }
-        return agent -> Result.ok();
+        taskService.openTask(agent -> checkContainerWork(agent, container));
     }
 
     // ##################################################
@@ -49,7 +41,7 @@ public class WarehouseService implements Module {
     // #                                                #
     // ##################################################
 
-    private Result<Void> checkContainerWork(final Agent agent) {
+    private Result<Void> checkContainerWork(final Agent agent, final KnownObject targetContainer) {
 
         final KnownObject character = agent.getCharacter();
         return routingService.route(character, targetContainer)

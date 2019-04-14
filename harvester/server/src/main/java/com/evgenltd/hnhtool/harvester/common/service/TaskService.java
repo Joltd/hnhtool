@@ -3,7 +3,6 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.entity.Work;
-import com.evgenltd.hnhtool.harvester.common.repository.TaskRepository;
 import com.evgenltd.hnhtools.common.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -28,77 +29,89 @@ public class TaskService {
     private static final Logger log = LogManager.getLogger(TaskService.class);
 
     private AgentService agentService;
-    private TaskRepository taskRepository;
-    private Map<String, Module> modules;
 
-    public TaskService(
-            final AgentService agentService,
-            final TaskRepository taskRepository,
-            final List<Module> modules
-    ) {
+    private final AtomicLong idGenerator = new AtomicLong(1);
+    private final Map<Long, Task> index = new ConcurrentHashMap<>();
+
+    public TaskService(final AgentService agentService) {
         this.agentService = agentService;
-        this.taskRepository = taskRepository;
-        this.modules = modules.stream()
-                .collect(Collectors.toMap(module -> module.getClass().getSimpleName(), module -> module));
     }
 
     @Scheduled(cron = "*/5 * * * * *")
     public void planTasks() {
 
-        final List<Task> openTasks = taskRepository.findOpenNotFailedTasks();
+        final List<Task> openTasks = index.values()
+                .stream()
+                .filter(task -> task.getStatus().equals(Task.Status.OPEN))
+                .collect(Collectors.toList());
         if (openTasks.isEmpty()) {
             return;
         }
 
         for (final Task task : openTasks) {
-            final Predicate<Agent> requirements = getTaskRequirements(task);
-            if (requirements == null) {
+            if (task.getRequirements() == null) {
                 continue;
             }
 
-            final boolean requirementsPassed = agentService.checkRequirements(requirements);
+            final boolean requirementsPassed = agentService.checkRequirements(task.getRequirements());
             if (!requirementsPassed) {
-                taskRepository.rejectTask(task);
+                rejectTask(task);
                 continue;
             }
 
-            agentService.offerWork(getTaskWork(task));
+            agentService.offerWork(task.getWork());
             // increment trying count, and do something if it too big
         }
 
     }
 
-    private Predicate<Agent> getTaskRequirements(final Task task) {
-        final Module module = modules.get(task.getModule());
-        if (module == null) {
-            return null;
-        }
-
-        return module.getTaskRequirements(task.getStep());
+    public Task openTask(final Work work) {
+        return openTask(work, agent -> true);
     }
 
-    private Work getTaskWork(final Task task) {
-        final Module module = modules.get(task.getModule());
-        if (module == null) {
-            return null;
-        }
+    public Task openTask(final Work work, final Predicate<Agent> requirements) {
+        final Task task = new Task();
+        task.setId(idGenerator.getAndIncrement());
+        task.setWork(workWrapper(task, work));
+        task.setRequirements(requirements);
+        task.setStatus(Task.Status.OPEN);
+        index.put(task.getId(), task);
+        return task;
+    }
 
+    private Work workWrapper(final Task task, final Work work) {
         return agent -> {
             try {
-                taskRepository.startTask(task);
-                final Work work = module.getTaskWork(task.getStep());
+                startTask(task);
                 final Result<Void> result = work.apply(agent);
                 if (result.isSuccess()) {
-                    taskRepository.doneTask(task);
+                    doneTask(task);
                 } else {
-                    taskRepository.failTask(task, result.getCode());
+                    failTask(task, result.getCode());
                 }
             } catch (Throwable e) {
                 log.error("Unable to perform task", e);
-                taskRepository.failTask(task, ServerResultCode.EXCEPTION_DURING_TASK_PERFORMING);
+                failTask(task, ServerResultCode.EXCEPTION_DURING_TASK_PERFORMING);
             }
             return Result.ok();
         };
+    }
+
+    private void rejectTask(final Task task) {
+        task.setStatus(Task.Status.REJECTED);
+    }
+
+    private void startTask(final Task task) {
+        task.setStatus(Task.Status.IN_PROGRESS);
+    }
+
+    private void doneTask(final Task task) {
+        task.setStatus(Task.Status.DONE);
+    }
+
+    private void failTask(final Task task, final String reason) {
+        task.setStatus(Task.Status.FAILED);
+        task.setFailReason(reason);
     }
 
 }
