@@ -98,16 +98,16 @@ public class ApplicationPrototype {
 
     private static final class ResourceProviderImpl implements ResourceProvider {
 
-        private final Map<Integer,String> index = new ConcurrentHashMap<>();
+        private final Map<Long,String> index = new ConcurrentHashMap<>();
 
         @Override
         @Nullable
-        public String getResourceName(@NotNull final Integer id) {
+        public String getResourceName(@NotNull final Long id) {
             return index.get(id);
         }
 
         @Override
-        public void saveResource(@NotNull final Integer id, @NotNull final String name) {
+        public void saveResource(@NotNull final Long id, @NotNull final String name) {
             index.put(id, name);
         }
     }

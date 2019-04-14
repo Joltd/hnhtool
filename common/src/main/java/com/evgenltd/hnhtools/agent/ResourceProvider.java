@@ -13,8 +13,8 @@ import org.jetbrains.annotations.Nullable;
 public interface ResourceProvider {
 
     @Nullable
-    String getResourceName(@NotNull Integer id);
+    String getResourceName(@NotNull Long id);
 
-    void saveResource(@NotNull Integer id, @NotNull String name);
+    void saveResource(@NotNull Long id, @NotNull String name);
 
 }

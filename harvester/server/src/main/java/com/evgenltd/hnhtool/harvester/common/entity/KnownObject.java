@@ -26,6 +26,10 @@ public class KnownObject implements Identified {
 
     private Long resourceId;
 
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
+
     private Integer x;
 
     private Integer y;
@@ -59,6 +63,13 @@ public class KnownObject implements Identified {
     }
     public void setResourceId(final Long resourceId) {
         this.resourceId = resourceId;
+    }
+
+    public Resource getResource() {
+        return resource;
+    }
+    public void setResource(final Resource resource) {
+        this.resource = resource;
     }
 
     public Integer getX() {

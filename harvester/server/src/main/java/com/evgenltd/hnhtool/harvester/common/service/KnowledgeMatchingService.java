@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
@@ -40,13 +41,16 @@ public class KnowledgeMatchingService {
             0L
     );
 
+    private ResourceProviderImpl resourceProvider;
     private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
 
     public KnowledgeMatchingService(
+            final ResourceProviderImpl resourceProvider,
             final SpaceRepository spaceRepository,
             final KnownObjectRepository knownObjectRepository
     ) {
+        this.resourceProvider = resourceProvider;
         this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
     }
@@ -101,7 +105,7 @@ public class KnowledgeMatchingService {
 
         for (final WorldObject worldObject : objectsForMatching) {
 
-            if (Objects.equals(worldObject.getResourceId(), ResourceConstants.PLAYER)) {
+            if (Assert.isEmpty(woCharacter.getResourceName())) {
                 continue;
             }
 
@@ -132,7 +136,8 @@ public class KnowledgeMatchingService {
 
     private List<WorldObject> filterWasteObjects(final List<WorldObject> objects) {
         return objects.stream()
-                .filter(wo -> !ResourceConstants.isWaste(wo.getResourceId()))
+                .peek(wo -> resourceProvider.initWorldObjectResource(wo))
+                .filter(wo -> !ResourceConstants.isWaste(wo.getResourceName()))
                 .collect(Collectors.toList());
     }
 
@@ -180,12 +185,17 @@ public class KnowledgeMatchingService {
     }
 
     private void objectClassification(final KnownObject knownObject) {
-        final Long resourceId = knownObject.getResourceId();
-        if (ResourceConstants.isPlayer(resourceId)) {
+        final Resource resource = knownObject.getResource();
+        if (resource == null) {
+            return;
+        }
+
+        final String resourceName = resource.getName();
+        if (ResourceConstants.isPlayer(resourceName)) {
             knownObject.setPlayer(true);
-        } else if (ResourceConstants.isDoorway(resourceId)) {
+        } else if (ResourceConstants.isDoorway(resourceName)) {
             knownObject.setDoorway(true);
-        } else if (ResourceConstants.isContainer(resourceId)) {
+        } else if (ResourceConstants.isContainer(resourceName)) {
             knownObject.setContainer(true);
         }
     }

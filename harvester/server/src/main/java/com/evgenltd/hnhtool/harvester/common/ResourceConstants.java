@@ -12,61 +12,61 @@ import java.util.Objects;
  */
 public class ResourceConstants {
 
-    public static final Long PLAYER = 0L;
-    public static final Long HOUSE_WALL = 3949L; // gfx/terobjs/arch/hwall
-    public static final Long PALISADE_SEGMENT = 3956L; // gfx/terobjs/arch/palisadeseg
-    public static final Long PALISADE_CORNER_POST = 3953L; // gfx/terobjs/arch/palisadecp
-    public static final Long POLE_SEGMENT = 3959L; // gfx/terobjs/arch/poleseg
+    public static final String PLAYER = "";
+    public static final String HOUSE_WALL = "gfx/terobjs/arch/hwall"; // 3949L
+    public static final String PALISADE_SEGMENT = "gfx/terobjs/arch/palisadeseg"; // 3956L
+    public static final String PALISADE_CORNER_POST = "gfx/terobjs/arch/palisadecp"; // 3953L
+    public static final String POLE_SEGMENT = "gfx/terobjs/arch/poleseg"; // 3959L
 
-    public static final Long CELLAR_DOOR = 3944L; // gfx/terobjs/arch/cellardoor
-    public static final Long CELLAR_STAIR = 3945L; //
-    public static final Long TIMBER_HOUSE_DOOR = 3970L; // gfx/terobjs/arch/timberhouse-door
-    public static final Long TIMBER_HOUSE = 3972L;
+    public static final String CELLAR_DOOR = "gfx/terobjs/arch/cellardoor"; // 3944L
+    public static final String CELLAR_STAIR = ""; // 3945L
+    public static final String TIMBER_HOUSE_DOOR = "gfx/terobjs/arch/timberhouse-door"; // 3970L
+    public static final String TIMBER_HOUSE = ""; // 3972L
 
-    public static final Long CUPBOARD = 6426L; // gfx/terobjs/cupboard
+    public static final String CUPBOARD = "gfx/terobjs/cupboard"; // 6426L
 
-    public static boolean isWaste(final Long resourceId) {
+    public static boolean isWaste(final String resourceName) {
         return Arrays.asList(
                 PLAYER,
                 HOUSE_WALL,
                 PALISADE_SEGMENT,
                 PALISADE_CORNER_POST,
                 POLE_SEGMENT
-        ).contains(resourceId);
+        ).contains(resourceName);
     }
 
-    public static boolean isPlayer(final Long resourceId) {
-        return Objects.equals(resourceId, PLAYER);
+    public static boolean isPlayer(final String resourceName) {
+        return Objects.equals(resourceName, PLAYER);
     }
 
-    public static boolean isDoorway(final Long resourceId) {
+    public static boolean isDoorway(final String resourceName) {
         return Arrays.asList(
                 CELLAR_DOOR,
                 CELLAR_STAIR,
                 TIMBER_HOUSE_DOOR,
                 TIMBER_HOUSE
-        ).contains(resourceId);
+        ).contains(resourceName);
     }
 
-    public static boolean isContainer(final Long resourceId) {
+    public static boolean isContainer(final String resourceName) {
         return Arrays.asList(
                 CUPBOARD
-        ).contains(resourceId);
+        ).contains(resourceName);
     }
 
-    public static boolean isDoorwayToBuilding(final Long resourceId) {
+    public static boolean isDoorwayToBuilding(final String resourceName) {
         return Arrays.asList(
                 CELLAR_DOOR,
                 CELLAR_STAIR,
                 TIMBER_HOUSE
-        ).contains(resourceId);
+        ).contains(resourceName);
     }
 
-    public static boolean isDoorwayToHole(final Long resourceId) {
+    public static boolean isDoorwayToHole(final String resourceName) {
         return false;
     }
 
-    public static boolean isDoorwayToMine(final Long resourceId) {
+    public static boolean isDoorwayToMine(final String resourceName) {
         return false;
     }
 }

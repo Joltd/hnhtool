@@ -349,7 +349,6 @@ public final class ComplexClient {
         final WorldObject newWorldObject = new WorldObject(worldObject.getId());
         newWorldObject.setPosition(worldObject.getPosition());
         newWorldObject.setResourceId(worldObject.getResourceId());
-        newWorldObject.setResourceName(resourceProvider.getResourceName(worldObject.getResourceId()));
         return newWorldObject;
     }
 

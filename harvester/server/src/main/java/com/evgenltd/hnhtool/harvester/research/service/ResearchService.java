@@ -1,9 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
-import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Space;
-import com.evgenltd.hnhtool.harvester.common.entity.Task;
-import com.evgenltd.hnhtool.harvester.common.entity.Work;
+import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.TaskRepository;
@@ -99,8 +96,8 @@ public class ResearchService implements Module {
         targetDoorway = unknownDoorway.get(0);
         log.info("Found unknown door, id=[{}], owner=[{}]", targetDoorway.getId(), targetDoorway.getOwner().getId());
 
-        final Long resourceId = targetDoorway.getResourceId();
-        targetSpace = buildNewSpace(resourceId);
+        final Resource resource = targetDoorway.getResource();
+        targetSpace = buildNewSpace(resource.getName());
         log.info("Created space for other side, id=[{}], type=[{}]", targetSpace.getId(), targetSpace.getType());
 
         researchDoorwayTask = taskRepository.openTask(getClass(), RESEARCH_DOORWAY);
@@ -120,13 +117,13 @@ public class ResearchService implements Module {
                 .orElse(false);
     }
 
-    private Space buildNewSpace(final Long resourceId) {
+    private Space buildNewSpace(final String resourceName) {
         final Space space = new Space();
-        if (isDoorwayToBuilding(resourceId)) {
+        if (isDoorwayToBuilding(resourceName)) {
             space.setType(Space.Type.BUILDING);
-        } else if (isDoorwayToHole(resourceId)) {
+        } else if (isDoorwayToHole(resourceName)) {
             space.setType(Space.Type.HOLE);
-        } else if (isDoorwayToMine(resourceId)) {
+        } else if (isDoorwayToMine(resourceName)) {
             space.setType(Space.Type.MINE);
         } else {
             space.setType(Space.Type.SURFACE);

@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.repository.ResourceRepository;
 import com.evgenltd.hnhtools.agent.ResourceProvider;
+import com.evgenltd.hnhtools.entity.WorldObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -25,18 +26,26 @@ public class ResourceProviderImpl implements ResourceProvider {
 
     @Override
     @Nullable
-    public String getResourceName(@NotNull final Integer id) {
-        return resourceRepository.findById(new Long(id))
+    public String getResourceName(@NotNull final Long id) {
+        return resourceRepository.findById(id)
                 .map(Resource::getName)
-                .orElse(null);
+                .orElseGet(() -> {
+                    saveResource(id, null);
+                    return null;
+                });
     }
 
     @Override
-    public void saveResource(@NotNull final Integer id, @NotNull final String name) {
+    public void saveResource(@NotNull final Long id, @Nullable final String name) {
         final Resource resource = new Resource();
-        resource.setId(new Long(id));
+        resource.setId(id);
         resource.setName(name);
         resourceRepository.save(resource);
+    }
+
+    public void initWorldObjectResource(@NotNull final WorldObject worldObject) {
+        final String resourceName = getResourceName(worldObject.getResourceId());
+        worldObject.setResourceName(resourceName);
     }
 
 }

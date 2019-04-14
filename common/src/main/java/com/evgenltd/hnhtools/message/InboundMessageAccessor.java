@@ -201,8 +201,8 @@ public class InboundMessageAccessor {
 
         //
 
-        public int getResourceId() {
-            return data.get(MessageFields.RESOURCE_ID).asInt();
+        public long getResourceId() {
+            return data.get(MessageFields.RESOURCE_ID).asLong();
         }
         public String getResourceName() {
             return data.get(MessageFields.RESOURCE_NAME).asText();
