@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 public class CommandUtils {
 
     private static final long COMMAND_AWAIT_TIMEOUT = 1000L;
+    private static final int MAX_ITERATIONS = 10;
 
     public static Result<Void> await(final Supplier<Boolean> isAwaitDone) {
         return awaitWithResult(() -> Result.ok(isAwaitDone.get()));
@@ -22,7 +23,7 @@ public class CommandUtils {
 
     public static Result<Void> awaitWithResult(final Supplier<Result<Boolean>> isAwaitDone) {
 
-        while (true) {
+        for (int iterations = 0; iterations < MAX_ITERATIONS; iterations++) {
 
             try {
                 Thread.sleep(COMMAND_AWAIT_TIMEOUT);
@@ -40,6 +41,8 @@ public class CommandUtils {
             }
 
         }
+
+        return Result.fail(ResultCode.AWAIT_MAX_ITERATION_EXCEEDED);
 
     }
 

@@ -13,6 +13,7 @@ public class ResultCode {
     public static final String RESULT_IS_EMPTY = "RESULT_IS_EMPTY";
 
     public static final String INTERRUPTED = "INTERRUPTED";
+    public static final String AWAIT_MAX_ITERATION_EXCEEDED = "AWAIT_MAX_ITERATION_EXCEEDED";
     public static final String NOT_REACHED = "NOT_REACHED";
     public static final String NO_INVENTORY = "NO_INVENTORY";
     public static final String NO_POSITION = "NO_POSITION";
