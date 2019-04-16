@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.agent;
+package com.evgenltd.hnhtools.complexclient;
 
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
@@ -40,8 +40,8 @@ public final class ComplexClient {
 
     private String character;
 
-    private final ObjectIndex objectIndex = new ObjectIndex();
-    private final WidgetIndex widgetIndex = new WidgetIndex();
+    private final ObjectIndex objectIndex;
+    private final WidgetIndex widgetIndex;
 
     public ComplexClient(
             @NotNull final ObjectMapper objectMapper,
@@ -59,6 +59,9 @@ public final class ComplexClient {
         Assert.valueRequireNonEmpty(username, "Username");
         Assert.valueRequireNonEmpty(cookie, "Cookie");
         Assert.valueRequireNonEmpty(character, "Character");
+
+        objectIndex = new ObjectIndex();
+        widgetIndex = new WidgetIndex(objectMapper);
 
         this.resourceProvider = resourceProvider;
         baseClient = new BaseClient(objectMapper);
@@ -133,11 +136,6 @@ public final class ComplexClient {
     public Result<WorldObject> getCharacter() {
         return objectIndex.getCharacter()
                 .thenApply(this::convertWorldObject);
-    }
-
-    public Result<Long> getCharacterId() {
-        return objectIndex.getCharacter()
-                .thenApply(ObjectIndex.WorldObject::getId);
     }
 
     public Result<IntPoint> getCharacterPosition() {
@@ -258,7 +256,7 @@ public final class ComplexClient {
 
         return Result.ok();
     }
-
+/*
     public String takeItem(final Integer itemId) {
         final WidgetIndex.Item item = widgetIndex.getItem(itemId);
         if (item == null) {
@@ -276,7 +274,7 @@ public final class ComplexClient {
 
     /**
      * <p>Put item from hand in inventory by particular position</p>
-     */
+
     public String putItem(final Integer inventoryId, final IntPoint position) {
         baseClient.pushOutboundRel(
                 inventoryId,
@@ -331,7 +329,7 @@ public final class ComplexClient {
         );
         return ResultCode.OK;
     }
-
+*/
     // ##################################################
     // #                                                #
     // #  Util                                          #

@@ -2,6 +2,7 @@ package com.evgenltd.hnhtools.message;
 
 import com.evgenltd.hnhtools.baseclient.ConnectionErrorCode;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jetbrains.annotations.Nullable;
@@ -226,12 +227,19 @@ public class InboundMessageAccessor {
         private RelArgsAccessor getArgs(final String field) {
             return new RelArgsAccessor(data.get(field));
         }
-
-        public RelArgsAccessor getArgs() {
-            return getArgs(MessageFields.WIDGET_C_ARGS);
+        private String getArgsAsString(final String field) {
+            final JsonNode jsonNode = data.get(field);
+            return jsonNode.toString();
         }
 
-        private RelArgsAccessor getPArgs() {
+        public RelArgsAccessor getArgs() {
+            return getArgs(MessageFields.WIDGET_ARGS);
+        }
+        public String getArgsAsString() {
+            return getArgsAsString(MessageFields.WIDGET_ARGS);
+        }
+
+        public RelArgsAccessor getPArgs() {
             return getArgs(MessageFields.WIDGET_P_ARGS);
         }
 
@@ -264,6 +272,14 @@ public class InboundMessageAccessor {
 
         public String nextString() {
             return iterator.next().asText();
+        }
+
+        public IntPoint nextPoint() {
+            final JsonNode nodePoint = iterator.next();
+            return new IntPoint(
+                    nodePoint.get("x").asInt(),
+                    nodePoint.get("y").asInt()
+            );
         }
 
         public JsonNode nextNode() {

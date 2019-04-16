@@ -1,5 +1,8 @@
 package com.evgenltd.hnhtools.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * <p></p>
  * <br/>
@@ -10,6 +13,9 @@ package com.evgenltd.hnhtools.entity;
 public class Item {
 
     private Integer id;
+    private Long resourceId;
+    private IntPoint position;
+    private List arguments = new ArrayList();
 
     public Item(final Integer id) {
         this.id = id;
@@ -20,4 +26,18 @@ public class Item {
     }
 
 
+
+    public IntPoint getPosition() {
+        return position;
+    }
+    public void setPosition(final IntPoint position) {
+        this.position = position;
+    }
+
+    public List getArguments() {
+        return arguments;
+    }
+    public void setArguments(final List arguments) {
+        this.arguments = arguments;
+    }
 }

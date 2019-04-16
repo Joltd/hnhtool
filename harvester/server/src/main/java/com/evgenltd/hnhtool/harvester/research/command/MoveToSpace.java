@@ -46,7 +46,7 @@ public class MoveToSpace {
 
     private Result<Void> performImpl() {
         originSpace = agent.getCurrentSpace();
-        log.info("Current agent space {}", originSpace.getId());
+        log.info("Current complexclient space {}", originSpace.getId());
 
         agent.knowledgeMatchingWithResearch(true);
 

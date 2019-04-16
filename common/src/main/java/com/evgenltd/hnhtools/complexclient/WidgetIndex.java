@@ -1,10 +1,15 @@
-package com.evgenltd.hnhtools.agent;
+package com.evgenltd.hnhtools.complexclient;
 
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,8 +25,10 @@ import java.util.stream.Collectors;
  */
 final class WidgetIndex {
 
+    private static final Logger log = LogManager.getLogger(WidgetIndex.class);
+
     private static final String MAP_VIEW_WIDGET = "mapview";
-    private static final String EQUIP_WIDGET = "qpry";
+    private static final String EQUIP_WIDGET = "epry";
     private static final String INVENTORY_WIDGET = "inv";
     private static final String ITEM_WIDGET = "item";
     private static final String ISBOX_WIDGET = "isbox";
@@ -29,6 +36,8 @@ final class WidgetIndex {
 
     private static final String LABEL_MESSAGE_NAME = "tt";
     private static final String CHANGE_NUM_MESSAGE_NAME = "chnum";
+
+    private final ObjectMapper objectMapper;
 
     private final Map<Integer, Widget> index = new HashMap<>();
     private final Map<Integer, Item> itemIndex = new HashMap<>();
@@ -41,22 +50,15 @@ final class WidgetIndex {
     private Widget lastOpenedInventory;
     private ContextMenu contextMenu;
 
+    WidgetIndex(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     // ##################################################
     // #                                                #
     // #  API                                           #
     // #                                                #
     // ##################################################
-
-    synchronized void printState() {
-        System.out.println("Common index");
-        index.forEach((id,widget) -> System.out.println(String.format("id=[%s], type=[%s]", id, widget.getType())));
-
-        System.out.println("Item index");
-        itemIndex.forEach((id,item) -> System.out.println(String.format("id=[%s], parentId=[%s]", id, item.getParentId())));
-
-        System.out.println("Stack index");
-        stackIndex.forEach((id,stack) -> System.out.println(String.format("id=[%s], count=[%s/%s]", id, stack.getCount(), stack.getMax())));
-    }
 
     @Nullable
     synchronized Long getCharacterObjectId() {
@@ -184,6 +186,15 @@ final class WidgetIndex {
                 final int parentId = accessor.getWidgetParentId();
                 if (index.containsKey(parentId)) {
                     final Item item = new Item(widget.getId(), parentId);
+                    item.setResourceId(accessor.getCArgs().nextLong());
+
+                    final Widget inventory = index.get(parentId);
+                    if (inventory == equip) {
+
+                    } else {
+                        item.setPosition(accessor.getPArgs().nextPoint());
+                    }
+
                     itemIndex.put(widget.getId(), item);
                 }
                 break;
@@ -203,9 +214,14 @@ final class WidgetIndex {
         switch (messageName) {
             case LABEL_MESSAGE_NAME:
                 final Item item = itemIndex.get(widget.getId());
-//                if (item != null) {
-//                    // todo fill item attributes
-//                }
+                if (item != null) {
+                    try {
+                        final List arguments = objectMapper.readValue(accessor.getArgsAsString(), List.class);
+                        item.setArguments(arguments);
+                    } catch (final IOException e) {
+                        log.error(e);
+                    }
+                }
                 break;
             case CHANGE_NUM_MESSAGE_NAME:
                 final Stack stack = stackIndex.get(widget.getId());
@@ -228,8 +244,9 @@ final class WidgetIndex {
 
         private Integer id;
         private Integer parentId;
-        private String name;
-        private float quality;
+        private Long resourceId;
+        private IntPoint position;
+        private List arguments = new ArrayList();
 
         Item(final Integer id, final Integer parentId) {
             this.id = id;
@@ -242,6 +259,27 @@ final class WidgetIndex {
 
         Integer getParentId() {
             return parentId;
+        }
+
+        public Long getResourceId() {
+            return resourceId;
+        }
+        public void setResourceId(final Long resourceId) {
+            this.resourceId = resourceId;
+        }
+
+        public IntPoint getPosition() {
+            return position;
+        }
+        public void setPosition(final IntPoint position) {
+            this.position = position;
+        }
+
+        public List getArguments() {
+            return arguments;
+        }
+        public void setArguments(final List arguments) {
+            this.arguments = arguments;
         }
     }
 

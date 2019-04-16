@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.repository;
 
 import com.evgenltd.hnhtool.harvester.common.entity.Resource;
-import com.evgenltd.hnhtools.agent.ResourceProvider;
+import com.evgenltd.hnhtools.complexclient.ResourceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.jpa.repository.JpaRepository;

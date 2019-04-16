@@ -1,8 +1,8 @@
 package com.evgenltd.hnhtools.command;
 
-import com.evgenltd.hnhtools.agent.ComplexClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.ComplexClient;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.entity.ResultCode;
 import org.jetbrains.annotations.NotNull;

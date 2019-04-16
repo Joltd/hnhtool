@@ -1,10 +1,10 @@
 package com.evgenltd.hnhtools;
 
-import com.evgenltd.hnhtools.agent.ComplexClient;
-import com.evgenltd.hnhtools.agent.ResourceProvider;
 import com.evgenltd.hnhtools.command.Connect;
 import com.evgenltd.hnhtools.command.Move;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.complexclient.ComplexClient;
+import com.evgenltd.hnhtools.complexclient.ResourceProvider;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;

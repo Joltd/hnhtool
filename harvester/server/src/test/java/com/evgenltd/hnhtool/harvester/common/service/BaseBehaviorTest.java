@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
+import com.evgenltd.hnhtool.harvester.research.command.OpenInventory;
 import com.evgenltd.hnhtools.common.Result;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,15 +37,9 @@ public class BaseBehaviorTest {
     @Test
     public void commonTest() throws InterruptedException {
         agentService.offerWork(agent -> {
-            System.out.println("Hello, world!");
+            knownObjectRepository.findById(613L)
+                    .ifPresent(cupboard -> OpenInventory.perform(agent, cupboard));
             return Result.ok();
-//            final List<KnownObject> containers = knownObjectRepository.findUnknownContainers();
-//            if (containers.isEmpty()) {
-//                return Result.ok();
-//            }
-//            final KnownObject knownObject = containers.get(0);
-//            final Result<Inventory> inventory = OpenInventory.perform(agent, knownObject);
-//            return Result.ok();
         });
         Thread.sleep(60 * 60 * 1000L);
     }
