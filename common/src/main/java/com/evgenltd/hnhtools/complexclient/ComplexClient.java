@@ -4,13 +4,13 @@ import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.Character;
-import com.evgenltd.hnhtools.entity.IntPoint;
-import com.evgenltd.hnhtools.entity.ResultCode;
-import com.evgenltd.hnhtools.entity.WorldObject;
+import com.evgenltd.hnhtools.entity.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,14 +42,18 @@ public final class ComplexClient {
     private static final int UNKNOWN_FLAG = 0;
 
     private BaseClient baseClient;
-    final ResourceProvider resourceProvider;
+    private final ResourceProvider resourceProvider;
 
     private final ObjectDataHandler objectDataHandler;
     private final RelMessageHandler relMessageHandler;
-    final ObjectIndex objectIndex;
-    final WidgetIndex widgetIndex;
-    final Character character;
+    private final ObjectIndex objectIndex;
+    private final WidgetIndex widgetIndex;
 
+    private Integer gameUiId;
+    private Integer mapViewId;
+    private Integer craftMenuId;
+    private final Character character;
+    private final Map<Integer, Inventory> inventories = new HashMap<>();
 
     public ComplexClient(
             @NotNull final ObjectMapper objectMapper,
@@ -83,7 +87,55 @@ public final class ComplexClient {
         baseClient.setRelQueue(relMessageHandler::handleRelMessage);
         baseClient.withMonitor();
 
-        objectIndex.setGetCharacterObjectId(widgetIndexOld::getCharacterObjectId);
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Private Accessors                             #
+    // #                                                #
+    // ##################################################
+
+    ResourceProvider getResourceProvider() {
+        return resourceProvider;
+    }
+
+    ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    WidgetIndex getWidgetIndex() {
+        return widgetIndex;
+    }
+
+    Integer getGameUiId() {
+        return gameUiId;
+    }
+    void setGameUiId(final Integer gameUiId) {
+        this.gameUiId = gameUiId;
+    }
+
+    private Result<Integer> getMapViewId() {
+        return mapViewId != null
+                ? Result.ok(mapViewId)
+                : Result.fail(ResultCode.NO_MAP_VIEW);
+    }
+    void setMapViewId(final Integer mapViewId) {
+        this.mapViewId = mapViewId;
+    }
+
+    Integer getCraftMenuId() {
+        return craftMenuId;
+    }
+    void setCraftMenuId(final Integer craftMenuId) {
+        this.craftMenuId = craftMenuId;
+    }
+
+    Character getCharacter_() {
+        return character;
+    }
+
+    Map<Integer, Inventory> getInventories() {
+        return inventories;
     }
 
     // ##################################################
@@ -157,21 +209,17 @@ public final class ComplexClient {
     // ##################################################
 
     public Result<Void> move(final IntPoint position) {
-        final Integer mapViewId = widgetIndexOld.getMapViewId();
-        if (mapViewId == null) {
-            return Result.fail(ResultCode.NO_MAP_VIEW);
-        }
-
-        baseClient.pushOutboundRel(
-                mapViewId,
-                CLICK_COMMAND,
-                new IntPoint(), // cursor position on screen, server ignore it
-                position,
-                LEFT_MOUSE_BUTTON,
-                NO_KEYBOARD_MODIFIER
-        );
-
-        return Result.ok();
+        return getMapViewId().thenApplyCombine(mapViewId -> {
+            baseClient.pushOutboundRel(
+                    mapViewId,
+                    CLICK_COMMAND,
+                    new IntPoint(), // cursor position on screen, server ignore it
+                    position,
+                    LEFT_MOUSE_BUTTON,
+                    NO_KEYBOARD_MODIFIER
+            );
+            return null;
+        });
     }
 
     public Result<Void> interact(final Long objectId) {
@@ -179,38 +227,30 @@ public final class ComplexClient {
     }
 
     public Result<Void> interact(final Long objectId, final Integer objectElement) {
-        final Integer mapViewId = widgetIndexOld.getMapViewId();
-        if (mapViewId == null) {
-            return Result.fail(ResultCode.NO_MAP_VIEW);
-        }
-
-        final ObjectIndex.WorldObject worldObject = objectIndex.getWorldObject(objectId);
-        if (worldObject == null) {
-            return Result.fail(ResultCode.NO_WORLD_OBJECT);
-        }
-
-        baseClient.pushOutboundRel(
-                mapViewId,
-                CLICK_COMMAND,
-                new IntPoint(), // cursor position on screen, server ignore it
-                worldObject.getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
-                RIGHT_MOUSE_BUTTON,
-                NO_KEYBOARD_MODIFIER,
-                UNKNOWN_FLAG,
-                objectId,
-                worldObject.getPosition(),
-                UNKNOWN_FLAG,
-                objectElement
-        );
-
-        return Result.ok();
+        return getMapViewId().thenApplyCombine(mapViewId -> objectIndex.getWorldObjectIfPossible(objectId))
+                .thenApplyCombine(worldObject -> {
+                    baseClient.pushOutboundRel(
+                            mapViewId, // todo provide from previous action
+                            CLICK_COMMAND,
+                            new IntPoint(), // cursor position on screen, server ignore it
+                            worldObject.getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
+                            RIGHT_MOUSE_BUTTON,
+                            NO_KEYBOARD_MODIFIER,
+                            UNKNOWN_FLAG,
+                            objectId,
+                            worldObject.getPosition(),
+                            UNKNOWN_FLAG,
+                            objectElement
+                    );
+                    return Result.ok();
+                });
     }
 
     public Result<Void> interactItemOnObject(final Long objectId) {
-        final Integer mapViewId = widgetIndexOld.getMapViewId();
-        if (mapViewId == null) {
-            return Result.fail(ResultCode.NO_MAP_VIEW);
-        }
+//        final Integer mapViewId = getMapViewId();
+//        if (mapViewId == null) {
+//            return Result.fail(ResultCode.NO_MAP_VIEW);
+//        }
 
         final ObjectIndex.WorldObject worldObject = objectIndex.getWorldObject(objectId);
         if (worldObject == null) {
@@ -278,7 +318,7 @@ public final class ComplexClient {
      * @param position position in equip, -1 and server determine it itself
      */
     public Result<Void> dropItemInEquip(final Integer position) {
-        final Integer characterEquipId = widgetIndexOld.getCharacterEquipId();
+        final Integer characterEquipId = getCharacter_().getEquip().getId();
         if (characterEquipId == null) {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
@@ -310,34 +350,30 @@ public final class ComplexClient {
     }
 
     public Result<Void> placeStack(final IntPoint position) {
-        final Integer mapViewId = widgetIndexOld.getMapViewId();
-        if (mapViewId == null) {
-            return Result.fail(ResultCode.NO_MAP_VIEW);
-        }
-
-        baseClient.pushOutboundRel(
-                mapViewId,
-                PLACE_COMMAND,
-                position,
-                0, // angel
-                LEFT_MOUSE_BUTTON,
-                NO_KEYBOARD_MODIFIER
-        );
-
-        return Result.ok();
+        return getMapViewId().thenApply(mapViewId -> {
+            baseClient.pushOutboundRel(
+                    mapViewId,
+                    PLACE_COMMAND,
+                    position,
+                    0, // angel
+                    LEFT_MOUSE_BUTTON,
+                    NO_KEYBOARD_MODIFIER
+            );
+            return null;
+        });
     }
 
     public void closeWidget(final Integer widgetId) {
         baseClient.pushOutboundRel(widgetId, CLOSE_COMMAND);
     }
-
+/*
     public Result<Void> contextMenuCommand(final String command) {
-        final Integer contextMenuId = widgetIndexOld.getContextMenuId();
+        final Integer contextMenuId = getContextMenuId();
         if (contextMenuId == null) {
             return Result.fail(ResultCode.NO_CONTEXT_MENU);
         }
 
-        final Integer contextMenuCommandId = widgetIndexOld.getContextMenuCommandId(command);
+        final Integer contextMenuCommandId = getContextMenuCommandId(command);
         if (contextMenuCommandId < 0) {
             return Result.fail(ResultCode.NO_CONTEXT_MENU_COMMAND);
         }
@@ -350,7 +386,7 @@ public final class ComplexClient {
         );
 
         return Result.ok();
-    }
+    }*/
 
     // ##################################################
     // #                                                #

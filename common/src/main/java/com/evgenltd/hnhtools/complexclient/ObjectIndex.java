@@ -43,6 +43,13 @@ final class ObjectIndex {
         return index.get(id);
     }
 
+    synchronized Result<WorldObject> getWorldObjectIfPossible(final Long id) {
+        final WorldObject worldObject = getWorldObject(id);
+        return worldObject != null
+                ? Result.ok(worldObject)
+                : Result.fail(ResultCode.NO_WORLD_OBJECT);
+    }
+
     //
 
     synchronized void setGetCharacterObjectId(final Supplier<Long> getCharacterObjectId) {

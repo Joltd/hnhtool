@@ -14,11 +14,10 @@ public class Inventory {
 
     private Integer id;
     private IntPoint size;
-    private List<Item> items = new ArrayList<>();
+    private List<WorldItem> items = new ArrayList<>();
 
-    public Inventory(final Integer id, final IntPoint size) {
+    public Inventory(final Integer id) {
         this.id = id;
-        this.size = size;
     }
 
     public Integer getId() {
@@ -29,8 +28,16 @@ public class Inventory {
         return size;
     }
 
-    public List<Item> getItems() {
+    public List<WorldItem> getItems() {
         return items;
+    }
+
+    public void addItem(final WorldItem worldItem) {
+        items.add(worldItem);
+    }
+
+    public void removeItem(final WorldItem worldItem) {
+        items.remove(worldItem);
     }
 
 }

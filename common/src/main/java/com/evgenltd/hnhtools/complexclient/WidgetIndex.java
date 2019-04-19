@@ -1,5 +1,8 @@
 package com.evgenltd.hnhtools.complexclient;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,35 +13,29 @@ import java.util.Map;
  * <p>Author:  lebed</p>
  * <p>Created: 18-04-2019 23:02</p>
  */
-public class WidgetIndex {
+class WidgetIndex {
 
     private final Map<Integer, Widget> index = new HashMap<>();
 
-    synchronized void addWidget(final Integer id, final String type) {
+    @NotNull
+    synchronized Widget addWidget(@NotNull final Integer id, @Nullable final String type) {
         final Widget widget = new Widget(id, type);
         index.put(id, widget);
+        return widget;
     }
 
-    synchronized void removeWidget(final Integer id) {
-        index.remove(id);
+    @Nullable
+    synchronized Widget getWidget(final Integer id) {
+        return index.get(id);
     }
 
-    private static final class Widget {
-        private Integer id;
-        private String type;
+    synchronized boolean hasWidget(final Integer id) {
+        return index.containsKey(id);
+    }
 
-        public Widget(final Integer id, final String type) {
-            this.id = id;
-            this.type = type;
-        }
-
-        public Integer getId() {
-            return id;
-        }
-
-        public String getType() {
-            return type;
-        }
+    @Nullable
+    synchronized Widget removeWidget(final Integer id) {
+        return index.remove(id);
     }
 
 }
