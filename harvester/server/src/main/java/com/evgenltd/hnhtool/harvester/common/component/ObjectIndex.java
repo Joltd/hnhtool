@@ -18,12 +18,20 @@ public class ObjectIndex {
     private final BiMap<Long, Long> index = HashBiMap.create();
     private IntPoint offset = new IntPoint();
 
-    public void putMatch(final Long knownObjectId, final Long worldObjectId) {
-        index.put(knownObjectId, worldObjectId);
-    }
+    //
 
     public void putOffset(final Integer x, final Integer y) {
         offset = new IntPoint(x, y);
+    }
+
+    public IntPoint getOffset() {
+        return offset;
+    }
+
+    //
+
+    public void putMatch(final Long knownObjectId, final Long worldObjectId) {
+        index.put(knownObjectId, worldObjectId);
     }
 
     public Result<Long> getMatchedWorldObjectId(final Long knownObjectId) {
@@ -42,10 +50,6 @@ public class ObjectIndex {
         }
 
         return Result.ok(knownObjectId);
-    }
-
-    public IntPoint getOffset() {
-        return offset;
     }
 
     @Override

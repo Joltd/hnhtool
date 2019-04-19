@@ -56,7 +56,13 @@ public class KnowledgeMatchingService {
         this.knownObjectRepository = knownObjectRepository;
     }
 
-    public Result<ObjectIndex> match(
+    // ##################################################
+    // #                                                #
+    // #  Object matching                               #
+    // #                                                #
+    // ##################################################
+
+    public Result<ObjectIndex> matchObjects(
             @Nullable final ObjectIndex oldIndex,
             @NotNull final WorldObject woCharacter,
             @NotNull KnownObject koCharacter,
@@ -285,6 +291,18 @@ public class KnowledgeMatchingService {
         knownObject.setY(-offset.getY());
         knownObject.setOwner(space);
         return knownObject;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Item matching                                 #
+    // #                                                #
+    // ##################################################
+
+    public void matchItems() {
+
+
+
     }
 
 }

@@ -34,6 +34,18 @@ public class MoveByRoute {
         return new MoveByRoute(agent, route).performImpl();
     }
 
+    public static Result<Void> performWithoutFromAndTo(@NotNull final Agent agent, @NotNull final List<KnownObject> route) {
+        Assert.valueRequireNonEmpty(agent, "Agent");
+        Assert.valueRequireNonEmpty(route, "Route");
+        if (route.size() > 0) {
+            route.remove(0);
+        }
+        if (route.size() > 0) {
+            route.remove(route.size() - 1);
+        }
+        return new MoveByRoute(agent, route).performImpl();
+    }
+
     private Result<Void> performImpl() {
 
         for (final KnownObject knownObject : route) {

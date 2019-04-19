@@ -13,14 +13,20 @@ import java.util.List;
 public class Inventory {
 
     private Integer id;
+    private IntPoint size;
     private List<Item> items = new ArrayList<>();
 
-    public Inventory(final Integer id) {
+    public Inventory(final Integer id, final IntPoint size) {
         this.id = id;
+        this.size = size;
     }
 
     public Integer getId() {
         return id;
+    }
+
+    public IntPoint getSize() {
+        return size;
     }
 
     public List<Item> getItems() {

@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
@@ -62,7 +63,8 @@ public class Agent {
 
     private ComplexClient client;
     private AtomicBoolean withResearch = new AtomicBoolean(true);
-    private ObjectIndex index;
+    private ObjectIndex objectIndex;
+    private ItemIndex itemIndex;
 
     public Agent(
             final ObjectMapper objectMapper,
@@ -89,7 +91,7 @@ public class Agent {
     }
 
     @Scheduled(fixedDelay = 5_000L)
-    public void matchKnowledge() {
+    public void matchObjectKnowledge() {
         if (client == null || !client.isLife()) {
             return;
         }
@@ -99,7 +101,7 @@ public class Agent {
             return;
         }
 
-        log.info("Start matching index with KDB, oldIndex=[{}]", index);
+        log.info("Start matching index with KDB, oldIndex=[{}]", objectIndex);
 
         if (account.getCharacterObject() == null) {
             final KnownObject koCharacter = knowledgeMatchingService.rememberCharacterObject(character.getValue());
@@ -109,20 +111,24 @@ public class Agent {
 
         final List<WorldObject> worldObjects = client.getWorldObjects();
 
-        final Result<ObjectIndex> matchResult = knowledgeMatchingService.match(
-                index,
+        final Result<ObjectIndex> matchResult = knowledgeMatchingService.matchObjects(
+                objectIndex,
                 character.getValue(),
                 account.getCharacterObject(),
                 worldObjects,
                 withResearch.get()
         );
         if (matchResult.isSuccess()) {
-            index = matchResult.getValue();
-            log.info("End matching index with KDB, newIndex=[{}]", index);
+            objectIndex = matchResult.getValue();
+            log.info("End matching index with KDB, newIndex=[{}]", objectIndex);
         } else {
-            index = new ObjectIndex();
+            objectIndex = new ObjectIndex();
             log.info("Failed matching index with KDB, {}", matchResult);
         }
+
+    }
+
+    public void matchItemKnowledge() {
 
     }
 
@@ -140,6 +146,8 @@ public class Agent {
     public ComplexClient getClient() {
         return client;
     }
+
+    // work api
 
     public boolean isReady() {
         return state.equals(State.READY);
@@ -183,24 +191,48 @@ public class Agent {
         return Result.ok();
     }
 
+    //
+
     public void knowledgeMatchingWithResearch(final boolean value) {
         withResearch.set(value);
     }
+
+    // common getters
 
     public Space getCurrentSpace() {
         return getCharacter().getOwner();
     }
 
+    public KnownObject getCharacter() {
+        return account.getCharacterObject();
+    }
+
+    // object matching
+
     public Result<Long> getMatchedWorldObjectId(final Long knownObjectId) {
-        return index.getMatchedWorldObjectId(knownObjectId);
+        return objectIndex.getMatchedWorldObjectId(knownObjectId);
     }
 
     public Result<Long> getMatchedKnownObjectId(final Long worldObjectId) {
-        return index.getMatchedKnownObjectId(worldObjectId);
+        return objectIndex.getMatchedKnownObjectId(worldObjectId);
     }
 
-    public KnownObject getCharacter() {
-        return account.getCharacterObject();
+    // item matching
+
+    public Result<Integer> getMatchedWorldItemId(final Long knownItemId) {
+        return itemIndex.getMatchedWorldItemId(knownItemId);
+    }
+
+    public Result<Long> getMatchedKnownItemId(final Integer worldItemId) {
+        return itemIndex.getMatchedKnownItemId(worldItemId);
+    }
+
+    public Result<Long> getKnownItemOwner(final Long knownItemId) {
+        return Result.ok(0L);
+    }
+
+    public Object getTargetInventory() {
+        return new Object();
     }
 
     // ##################################################
@@ -267,7 +299,7 @@ public class Agent {
         Connect.perform(client);
         client.play();
 
-        final Result<Void> result = CommandUtils.await(() -> index != null);
+        final Result<Void> result = CommandUtils.await(() -> objectIndex != null);
         if (result.isFailed()) {
             doDeactivation();
         }

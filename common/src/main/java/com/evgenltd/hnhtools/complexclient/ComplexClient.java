@@ -3,9 +3,10 @@ package com.evgenltd.hnhtools.complexclient;
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.*;
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
-import com.evgenltd.hnhtools.message.RelType;
+import com.evgenltd.hnhtools.entity.Character;
+import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.entity.ResultCode;
+import com.evgenltd.hnhtools.entity.WorldObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +26,11 @@ public final class ComplexClient {
     private static final String CLICK_COMMAND = "click";
     private static final String TAKE_COMMAND = "take";
     private static final String DROP_COMMAND = "drop";
+    private static final String ITEM_ACT_COMMAND = "itemact";
+    private static final String I_ACT_COMMAND = "iact";
+    private static final String TRANSFER_COMMAND = "transfer";
+    private static final String XFER_COMMAND = "xfer";
+    private static final String PLACE_COMMAND = "place";
     private static final String CLOSE_COMMAND = "close";
     private static final String CONTEXT_MEU_COMMAND = "cl";
 
@@ -36,12 +42,14 @@ public final class ComplexClient {
     private static final int UNKNOWN_FLAG = 0;
 
     private BaseClient baseClient;
-    private ResourceProvider resourceProvider;
+    final ResourceProvider resourceProvider;
 
-    private String character;
+    private final ObjectDataHandler objectDataHandler;
+    private final RelMessageHandler relMessageHandler;
+    final ObjectIndex objectIndex;
+    final WidgetIndex widgetIndex;
+    final Character character;
 
-    private final ObjectIndex objectIndex;
-    private final WidgetIndex widgetIndex;
 
     public ComplexClient(
             @NotNull final ObjectMapper objectMapper,
@@ -50,7 +58,7 @@ public final class ComplexClient {
             @NotNull final Integer port,
             @NotNull final String username,
             @NotNull final byte[] cookie,
-            @NotNull final String character
+            @NotNull final String characterName
     ) {
         Assert.valueRequireNonEmpty(objectMapper, "ObjectMapper");
         Assert.valueRequireNonEmpty(resourceProvider, "ResourceProvider");
@@ -58,43 +66,24 @@ public final class ComplexClient {
         Assert.valueRequireNonEmpty(port, "Port");
         Assert.valueRequireNonEmpty(username, "Username");
         Assert.valueRequireNonEmpty(cookie, "Cookie");
-        Assert.valueRequireNonEmpty(character, "Character");
+        Assert.valueRequireNonEmpty(characterName, "CharacterName");
 
+        objectDataHandler = new ObjectDataHandler(this);
+        relMessageHandler = new RelMessageHandler(this);
         objectIndex = new ObjectIndex();
-        widgetIndex = new WidgetIndex(objectMapper);
+        widgetIndex = new WidgetIndex();
+        character = new Character();
+        character.setName(characterName);
 
         this.resourceProvider = resourceProvider;
         baseClient = new BaseClient(objectMapper);
         baseClient.setServer(server, port);
         baseClient.setCredentials(username, cookie);
-        baseClient.setObjectDataQueue(objectIndex::registerObjectData);
-        baseClient.setRelQueue(this::registerRel);
+        baseClient.setObjectDataQueue(objectDataHandler::handleObjectData);
+        baseClient.setRelQueue(relMessageHandler::handleRelMessage);
         baseClient.withMonitor();
 
-        this.character = character;
-
-        objectIndex.setGetCharacterObjectId(widgetIndex::getCharacterObjectId);
-    }
-
-    private void registerRel(final InboundMessageAccessor.RelAccessor accessor) {
-        final RelType type = accessor.getRelType();
-        if (type == null) {
-            return;
-        }
-
-        switch (type) {
-            case REL_MESSAGE_NEW_WIDGET:
-            case REL_MESSAGE_WIDGET_MESSAGE:
-            case REL_MESSAGE_DESTROY_WIDGET:
-            case REL_MESSAGE_ADD_WIDGET:
-                widgetIndex.registerWidgetMessage(type, accessor);
-                break;
-            case REL_MESSAGE_RESOURCE_ID:
-                resourceProvider.saveResource(accessor.getResourceId(), accessor.getResourceName());
-                break;
-            case REL_MESSAGE_CHARACTER_ATTRIBUTE:
-                break;
-        }
+        objectIndex.setGetCharacterObjectId(widgetIndexOld::getCharacterObjectId);
     }
 
     // ##################################################
@@ -124,7 +113,7 @@ public final class ComplexClient {
     }
 
     public void play() {
-        baseClient.pushOutboundRel(3, PLAY_COMMAND, character); // magic number
+        baseClient.pushOutboundRel(3, PLAY_COMMAND, character.getName()); // magic number
     }
 
     // ##################################################
@@ -148,46 +137,6 @@ public final class ComplexClient {
                 .thenApply(ObjectIndex.WorldObject::isMoving);
     }
 
-    public Result<Inventory> getCharacterInvetory() {
-        final Integer characterInventoryId = widgetIndex.getCharacterInventoryId();
-        if (characterInventoryId == null) {
-            return Result.fail(ResultCode.NO_INVENTORY);
-        }
-
-        return Result.ok(prepareInventory(characterInventoryId));
-    }
-
-    public Result<Inventory> getCharacterEquip() {
-        final Integer characterEquipId = widgetIndex.getCharacterEquipId();
-        if (characterEquipId == null) {
-            return Result.fail(ResultCode.NO_INVENTORY);
-        }
-
-        return Result.ok(prepareInventory(characterEquipId));
-    }
-
-    public boolean hasLastOpenedInventory() {
-        return widgetIndex.getLastOpenedInventory() != null;
-    }
-
-    public Result<Inventory> getLastOpenedInventory() {
-        final Integer lastOpenedInventory = widgetIndex.getLastOpenedInventory();
-        if (lastOpenedInventory == null) {
-            return Result.fail(ResultCode.NO_INVENTORY);
-        }
-
-        return Result.ok(prepareInventory(lastOpenedInventory));
-    }
-
-    private Inventory prepareInventory(final Integer inventoryId) {
-        final Inventory inventory = new Inventory(inventoryId);
-        widgetIndex.getInventoryItems(inventoryId)
-                .stream()
-                .map(this::convertItem)
-                .forEach(item -> inventory.getItems().add(item));
-        return inventory;
-    }
-
     // ##################################################
     // #                                                #
     // #  Object API                                    #
@@ -208,7 +157,7 @@ public final class ComplexClient {
     // ##################################################
 
     public Result<Void> move(final IntPoint position) {
-        final Integer mapViewId = widgetIndex.getMapViewId();
+        final Integer mapViewId = widgetIndexOld.getMapViewId();
         if (mapViewId == null) {
             return Result.fail(ResultCode.NO_MAP_VIEW);
         }
@@ -230,7 +179,7 @@ public final class ComplexClient {
     }
 
     public Result<Void> interact(final Long objectId, final Integer objectElement) {
-        final Integer mapViewId = widgetIndex.getMapViewId();
+        final Integer mapViewId = widgetIndexOld.getMapViewId();
         if (mapViewId == null) {
             return Result.fail(ResultCode.NO_MAP_VIEW);
         }
@@ -256,69 +205,141 @@ public final class ComplexClient {
 
         return Result.ok();
     }
-/*
-    public String takeItem(final Integer itemId) {
-        final WidgetIndex.Item item = widgetIndex.getItem(itemId);
-        if (item == null) {
-            return ResultCode.NO_ITEM;
+
+    public Result<Void> interactItemOnObject(final Long objectId) {
+        final Integer mapViewId = widgetIndexOld.getMapViewId();
+        if (mapViewId == null) {
+            return Result.fail(ResultCode.NO_MAP_VIEW);
+        }
+
+        final ObjectIndex.WorldObject worldObject = objectIndex.getWorldObject(objectId);
+        if (worldObject == null) {
+            return Result.fail(ResultCode.NO_WORLD_OBJECT);
         }
 
         baseClient.pushOutboundRel(
-                item.getParentId(),
-                TAKE_COMMAND,
-                new IntPoint() // position ok cursor over item in inventory
+                mapViewId,
+                ITEM_ACT_COMMAND,
+                new IntPoint(), // cursor position on screen, server ignore it
+                worldObject.getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
+                UNKNOWN_FLAG,
+                UNKNOWN_FLAG,
+                objectId,
+                worldObject.getPosition(),
+                UNKNOWN_FLAG,
+                UNKNOWN_FLAG
         );
 
-        return ResultCode.OK;
+        return Result.ok();
     }
 
-    /**
-     * <p>Put item from hand in inventory by particular position</p>
+    public void interactItemOnItem(final Integer itemId) {
+        baseClient.pushOutboundRel(
+                itemId,
+                ITEM_ACT_COMMAND,
+                UNKNOWN_FLAG
+        );
+    }
 
-    public String putItem(final Integer inventoryId, final IntPoint position) {
+    public void interactWithItem(final Integer itemId) {
+        baseClient.pushOutboundRel(
+                itemId,
+                I_ACT_COMMAND,
+                new IntPoint(),
+                UNKNOWN_FLAG
+        );
+    }
+
+    public void takeItemInHand(final Integer itemId) {
+        baseClient.pushOutboundRel(
+                itemId,
+                TAKE_COMMAND,
+                new IntPoint()
+        );
+    }
+
+    public void dropItemInInventory(final Integer inventoryId, final IntPoint position) {
         baseClient.pushOutboundRel(
                 inventoryId,
                 DROP_COMMAND,
                 position
         );
-        return ResultCode.OK;
     }
 
-    public String dropItem() {
-        final Integer mapViewId = widgetIndex.getMapViewId();
-        if (mapViewId == null) {
-            return ResultCode.NO_MAP_VIEW;
+    public void dropItemInWorld(final Integer itemId) {
+        baseClient.pushOutboundRel(
+                itemId,
+                DROP_COMMAND,
+                new IntPoint()
+        );
+    }
+
+    /**
+     * @param position position in equip, -1 and server determine it itself
+     */
+    public Result<Void> dropItemInEquip(final Integer position) {
+        final Integer characterEquipId = widgetIndexOld.getCharacterEquipId();
+        if (characterEquipId == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
         }
 
-        final Result<ObjectIndex.WorldObject> character = objectIndex.getCharacter();
-        if (character.isFailed()) {
-            return character.getCode();
+        baseClient.pushOutboundRel(
+                characterEquipId,
+                DROP_COMMAND,
+                position
+        );
+        return Result.ok();
+    }
+
+    public void transferItem(final Integer itemId) {
+        baseClient.pushOutboundRel(
+                itemId,
+                TRANSFER_COMMAND,
+                new IntPoint()
+        );
+    }
+
+    /**
+     * @param stackId id of isbox widget
+     */
+    public void transferItemFromStack(final Integer stackId) {
+        baseClient.pushOutboundRel(
+                stackId,
+                XFER_COMMAND
+        );
+    }
+
+    public Result<Void> placeStack(final IntPoint position) {
+        final Integer mapViewId = widgetIndexOld.getMapViewId();
+        if (mapViewId == null) {
+            return Result.fail(ResultCode.NO_MAP_VIEW);
         }
 
         baseClient.pushOutboundRel(
                 mapViewId,
-                DROP_COMMAND,
-                new IntPoint(), // cursor position on screen, server ignore it
-                character.getValue().getPosition(),
+                PLACE_COMMAND,
+                position,
+                0, // angel
+                LEFT_MOUSE_BUTTON,
                 NO_KEYBOARD_MODIFIER
         );
-        return ResultCode.OK;
+
+        return Result.ok();
     }
 
-    public String closeWidget(final Integer widgetId) {
+    public void closeWidget(final Integer widgetId) {
         baseClient.pushOutboundRel(widgetId, CLOSE_COMMAND);
-        return ResultCode.OK;
     }
 
-    public String contextMenuCommand(final String command) {
-        final Integer contextMenuId = widgetIndex.getContextMenuId();
+    public Result<Void> contextMenuCommand(final String command) {
+        final Integer contextMenuId = widgetIndexOld.getContextMenuId();
         if (contextMenuId == null) {
-            return ResultCode.NO_CONTEXT_MENU;
+            return Result.fail(ResultCode.NO_CONTEXT_MENU);
         }
 
-        final Integer contextMenuCommandId = widgetIndex.getContextMenuCommandId(command);
+        final Integer contextMenuCommandId = widgetIndexOld.getContextMenuCommandId(command);
         if (contextMenuCommandId < 0) {
-            return ResultCode.NO_CONTEXT_MENU_COMMAND;
+            return Result.fail(ResultCode.NO_CONTEXT_MENU_COMMAND);
         }
 
         baseClient.pushOutboundRel(
@@ -327,9 +348,10 @@ public final class ComplexClient {
                 contextMenuCommandId,
                 NO_KEYBOARD_MODIFIER
         );
-        return ResultCode.OK;
+
+        return Result.ok();
     }
-*/
+
     // ##################################################
     // #                                                #
     // #  Util                                          #
@@ -337,11 +359,6 @@ public final class ComplexClient {
     // ##################################################
 
     // maybe move outside
-
-    private Item convertItem(final WidgetIndex.Item item) {
-        final Item newItem = new Item(item.getId());
-        return newItem;
-    }
 
     private WorldObject convertWorldObject(final ObjectIndex.WorldObject worldObject) {
         final WorldObject newWorldObject = new WorldObject(worldObject.getId());

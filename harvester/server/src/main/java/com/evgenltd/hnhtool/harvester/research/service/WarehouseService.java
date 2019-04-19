@@ -1,13 +1,13 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
+import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.common.service.Module;
 import com.evgenltd.hnhtool.harvester.common.service.TaskService;
 import com.evgenltd.hnhtool.harvester.research.command.MoveByRoute;
-import com.evgenltd.hnhtool.harvester.research.command.OpenInventory;
-import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.Inventory;
+import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
+import com.evgenltd.hnhtool.harvester.research.command.TransferItem;
+import com.evgenltd.hnhtools.command.CommandUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -31,32 +31,17 @@ public class WarehouseService implements Module {
         this.routingService = routingService;
     }
 
-    public void checkContainer(final KnownObject container) {
-        taskService.openTask(agent -> checkContainerWork(agent, container));
+    public void takeItemFromWarehouse(final KnownItem knownItem) {
+        final KnownObject owner = knownItem.getOwner();
+        taskService.openTask(agent -> routingService.route(agent.getCharacter(), owner)
+                .thenApplyCombine(route -> MoveByRoute.performWithoutFromAndTo(agent, route))
+                .thenCombine(() -> OpenContainer.perform(agent, owner))
+                .thenCombine(() -> CommandUtils.await(() -> true))
+                .thenCombine(() -> TransferItem.perform(agent, knownItem)));
     }
 
-    // ##################################################
-    // #                                                #
-    // #                                                #
-    // #                                                #
-    // ##################################################
+    public void putItemToWarehoue() {
 
-    private Result<Void> checkContainerWork(final Agent agent, final KnownObject targetContainer) {
-
-        final KnownObject character = agent.getCharacter();
-        return routingService.route(character, targetContainer)
-                .thenApply(route -> {
-                    route.remove(character);
-                    route.remove(targetContainer);
-                    return MoveByRoute.perform(agent, route);
-                })
-                .thenApplyCombine(p -> OpenInventory.perform(agent, targetContainer))
-                .thenApply(this::storeItemInfo);
-
-    }
-
-    private Void storeItemInfo(final Inventory inventory) {
-        return null;
     }
 
 }
