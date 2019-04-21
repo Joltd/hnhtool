@@ -49,19 +49,19 @@ final class ObjectDataHolder {
             this.id = id;
         }
 
-        public int getFrame() {
+        int getFrame() {
             return frame;
         }
 
-        public void setFrame(final int frame) {
+        void setFrame(final int frame) {
             this.frame = frame;
         }
 
-        public long getReceivedTime() {
+        long getReceivedTime() {
             return receivedTime;
         }
 
-        public void setReceivedTime(final long receivedTime) {
+        void setReceivedTime(final long receivedTime) {
             this.receivedTime = receivedTime;
         }
     }

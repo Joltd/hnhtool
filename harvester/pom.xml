@@ -10,8 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 
-    <artifactId>harvester-root</artifactId>
-    <version>1.0.0</version>
+    <artifactId>harvester</artifactId>
 
     <modules>
         <module>server</module>

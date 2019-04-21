@@ -1,11 +1,17 @@
 package com.evgenltd.hnhtools.complexclient;
 
-import com.evgenltd.hnhtools.entity.Character;
-import com.evgenltd.hnhtools.entity.Inventory;
-import com.evgenltd.hnhtools.entity.WorldItem;
+import com.evgenltd.hnhtools.complexclient.entity.impl.CharacterImpl;
+import com.evgenltd.hnhtools.complexclient.entity.impl.InventoryImpl;
+import com.evgenltd.hnhtools.complexclient.entity.impl.Widget;
+import com.evgenltd.hnhtools.complexclient.entity.impl.WorldItemImpl;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -16,7 +22,9 @@ import java.util.function.Supplier;
  * <p>Author:  lebed</p>
  * <p>Created: 18-04-2019 23:00</p>
  */
-class RelMessageHandler {
+final class RelMessageHandler {
+
+    private static final Logger log = LogManager.getLogger(RelMessageHandler.class);
 
     private static final String GAME_UI_WIDGET = "gameui";
     private static final String MAP_VIEW_WIDGET = "mapview";
@@ -44,26 +52,25 @@ class RelMessageHandler {
             return;
         }
 
-        final int widgetId = accessor.getWidgetId();
         switch (type) {
             case REL_MESSAGE_NEW_WIDGET:
-                final Widget newWidget = client.getWidgetIndex().addWidget(widgetId, accessor.getWidgetType());
+                final Widget newWidget = client.getWidgetIndex().addWidget(accessor.getWidgetId(), accessor.getWidgetType());
                 handleNewWidget(newWidget, accessor);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
-                final Widget widget = client.getWidgetIndex().getWidget(widgetId);
+                final Widget widget = client.getWidgetIndex().getWidget(accessor.getWidgetId());
                 if (widget != null) {
                     widget.handleMessage(accessor);
                 }
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
-                final Widget destroyWidget = client.getWidgetIndex().removeWidget(widgetId);
+                final Widget destroyWidget = client.getWidgetIndex().removeWidget(accessor.getWidgetId());
                 if (destroyWidget != null) {
                     destroyWidget.destroy();
                 }
                 break;
             case REL_MESSAGE_ADD_WIDGET:
-                client.getWidgetIndex().addWidget(widgetId, null);
+                client.getWidgetIndex().addWidget(accessor.getWidgetId(), null);
                 break;
             case REL_MESSAGE_RESOURCE_ID:
                 client.getResourceProvider().saveResource(accessor.getResourceId(), accessor.getResourceName());
@@ -75,7 +82,7 @@ class RelMessageHandler {
 
     private void handleNewWidget(final Widget widget, final InboundMessageAccessor.RelAccessor accessor) {
         final String type = widget.getType();
-        final Character character = client.getCharacter_();
+        final CharacterImpl character = client.getCharacter();
         switch (type) {
             case GAME_UI_WIDGET:
                 client.setGameUiId(widget.getId());
@@ -90,7 +97,7 @@ class RelMessageHandler {
                 widget.setDestroy(() -> client.setMapViewId(null));
                 break;
             case EQUIP_WIDGET:
-                final Inventory equip = new Inventory(widget.getId());
+                final InventoryImpl equip = new InventoryImpl(widget.getId());
                 character.setEquip(equip);
                 widget.setDestroy(() -> character.setEquip(null));
                 break;
@@ -108,11 +115,13 @@ class RelMessageHandler {
                 break;
             case INVENTORY_WIDGET:
                 final int inventoryParentId = accessor.getWidgetParentId();
-                if (!client.getWidgetIndex().hasWidget(inventoryParentId)) {
+                if (client.getWidgetIndex().isWidgetNotPresented(inventoryParentId)) {
                     break;
                 }
 
-                final Inventory inventory = new Inventory(widget.getId());
+                final InventoryImpl inventory = new InventoryImpl(widget.getId());
+                final IntPoint size = accessor.getCArgs().nextPoint();
+                inventory.setSize(size);
 
                 if (client.getGameUiId().equals(inventoryParentId)) {
                     character.setMain(inventory);
@@ -121,36 +130,40 @@ class RelMessageHandler {
                     character.setStudy(inventory);
                     widget.setDestroy(() -> character.setStudy(null));
                 } else {
-                    client.getInventories().put(inventory.getId(), inventory);
-                    widget.setDestroy(() -> client.getInventories().remove(inventory.getId()));
+                    final Number objectParentId = client.takeParentIdForNewInventory();
+                    if (objectParentId == null) {
+                        log.warn("Parent for Inventory [{}] is not provided, skipped", widget.getId());
+                        break;
+                    }
+                    inventory.setParentId(objectParentId);
+                    client.getInventoryIndex().addInventory(inventory);
+                    widget.setDestroy(() -> client.getInventoryIndex().removeInventory(inventory.getId()));
                 }
 
                 break;
             case ITEM_WIDGET:
                 final int itemParentId = accessor.getWidgetParentId();
-                if (!client.getWidgetIndex().hasWidget(itemParentId)) {
+                if (client.getWidgetIndex().isWidgetNotPresented(itemParentId)) {
                     break;
                 }
 
-                final WorldItem worldItem = new WorldItem(widget.getId());
+                final WorldItemImpl worldItem = new WorldItemImpl(widget.getId());
                 worldItem.setResourceId(accessor.getCArgs().nextLong());
 
-                if (Objects.equals(itemParentId, character.getEquip().getId())) {
+                if (character.getEquip() != null && Objects.equals(itemParentId, character.getEquip().getId())) {
                     worldItem.setNumber(accessor.getPArgs().nextInt());
                 } else {
                     worldItem.setPosition(accessor.getPArgs().nextPoint());
                 }
 
-//                accessor.getArgsAsString() // all info
-
                 addToInventoryIfPossible(widget, character::getEquip, itemParentId, worldItem);
                 addToInventoryIfPossible(widget, character::getStudy, itemParentId, worldItem);
                 addToInventoryIfPossible(widget, character::getMain, itemParentId, worldItem);
-                addToInventoryIfPossible(widget, () -> client.getInventories().get(itemParentId), itemParentId, worldItem);
+                addToInventoryIfPossible(widget, () -> client.getInventoryIndex().getInventory(itemParentId), itemParentId, worldItem);
 
-                if (Objects.equals(client.getGameUiId(), itemParentId)) {
-                    // in hand
-                }
+//                if (Objects.equals(client.getGameUiId(), itemParentId)) {
+//                    // in hand
+//                }
 
                 break;
             case ISBOX_WIDGET:
@@ -169,8 +182,8 @@ class RelMessageHandler {
         }
     }
 
-    private void addToInventoryIfPossible(final Widget widget, final Supplier<Inventory> getInventory, final Integer parentId, final WorldItem worldItem) {
-        final Inventory inventory = getInventory.get();
+    private void addToInventoryIfPossible(final Widget widget, final Supplier<InventoryImpl> getInventory, final Integer parentId, final WorldItemImpl worldItem) {
+        final InventoryImpl inventory = getInventory.get();
         if (inventory == null || !Objects.equals(inventory.getId(), parentId)) {
             return;
         }
@@ -178,7 +191,7 @@ class RelMessageHandler {
         inventory.getItems().add(worldItem);
         widget.setHandleMessage(rel -> handleItemMessage(rel, worldItem));
         widget.setDestroy(() -> {
-            final Inventory inv = getInventory.get();
+            final InventoryImpl inv = getInventory.get();
             if (inv != null) {
                 inv.removeItem(worldItem);
             }
@@ -186,12 +199,18 @@ class RelMessageHandler {
 
     }
 
-    private void handleItemMessage(final InboundMessageAccessor.RelAccessor accessor, final WorldItem worldItem) {
+    @SuppressWarnings("unchecked")
+    private void handleItemMessage(final InboundMessageAccessor.RelAccessor accessor, final WorldItemImpl worldItem) {
         if (!Objects.equals(accessor.getWidgetMessageName(), LABEL_MESSAGE_NAME)) {
             return;
         }
 
-        // add info
+
+        try {
+            worldItem.getArguments().addAll(client.getObjectMapper().readValue(accessor.getArgsAsString(), List.class));
+        } catch (final IOException e) {
+            log.error("", e);
+        }
     }
 
     private void handleStackMessage() {

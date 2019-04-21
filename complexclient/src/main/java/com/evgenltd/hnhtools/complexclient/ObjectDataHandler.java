@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.complexclient;
 
+import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 
@@ -10,7 +11,7 @@ import com.evgenltd.hnhtools.message.InboundMessageAccessor;
  * <p>Author:  lebed</p>
  * <p>Created: 18-04-2019 23:00</p>
  */
-class ObjectDataHandler {
+final class ObjectDataHandler {
 
     private ComplexClient client;
 
@@ -20,7 +21,7 @@ class ObjectDataHandler {
 
     void handleObjectData(final InboundMessageAccessor.ObjectDataAccessor accessor) {
         final Long objectId = accessor.getId();
-        final ObjectIndex.WorldObject object = client.objectIndex.getObject(objectId);
+        final WorldObjectImpl object = client.getObjectIndex().getObject(objectId);
 
         final int frame = accessor.getFrame();
         if (object.getFrame() >= frame) {
@@ -35,7 +36,7 @@ class ObjectDataHandler {
             }
             switch (delta.getType()) {
                 case OD_REM:
-                    client.objectIndex.removeObject(objectId);
+                    client.getObjectIndex().removeObject(objectId);
                     break;
                 case OD_MOVE:
                     object.setPosition(new IntPoint(delta.getX(), delta.getY()));

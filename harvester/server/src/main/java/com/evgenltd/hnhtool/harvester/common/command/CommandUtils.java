@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.command;
+package com.evgenltd.hnhtool.harvester.common.command;
 
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.ResultCode;
@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 public class CommandUtils {
 
     private static final long COMMAND_AWAIT_TIMEOUT = 1000L;
-    private static final int MAX_ITERATIONS = 10;
+    private static final int MAX_ITERATIONS = 30;
 
     public static Result<Void> await(final Supplier<Boolean> isAwaitDone) {
         return awaitWithResult(() -> Result.ok(isAwaitDone.get()));

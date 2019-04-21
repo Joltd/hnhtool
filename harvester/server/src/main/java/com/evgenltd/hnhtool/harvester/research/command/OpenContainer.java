@@ -1,8 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
+import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
-import com.evgenltd.hnhtools.command.CommandUtils;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import org.jetbrains.annotations.NotNull;

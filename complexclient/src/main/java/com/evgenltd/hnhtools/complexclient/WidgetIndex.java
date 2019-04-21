@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.complexclient;
 
+import com.evgenltd.hnhtools.complexclient.entity.impl.Widget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +14,7 @@ import java.util.Map;
  * <p>Author:  lebed</p>
  * <p>Created: 18-04-2019 23:02</p>
  */
-class WidgetIndex {
+final class WidgetIndex {
 
     private final Map<Integer, Widget> index = new HashMap<>();
 
@@ -29,8 +30,8 @@ class WidgetIndex {
         return index.get(id);
     }
 
-    synchronized boolean hasWidget(final Integer id) {
-        return index.containsKey(id);
+    synchronized boolean isWidgetNotPresented(final Integer id) {
+        return !index.containsKey(id);
     }
 
     @Nullable

@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
+import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Module;
@@ -7,7 +8,6 @@ import com.evgenltd.hnhtool.harvester.common.service.TaskService;
 import com.evgenltd.hnhtool.harvester.research.command.MoveByRoute;
 import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
 import com.evgenltd.hnhtool.harvester.research.command.TransferItem;
-import com.evgenltd.hnhtools.command.CommandUtils;
 import org.springframework.stereotype.Service;
 
 /**

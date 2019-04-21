@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.complexclient;
+package com.evgenltd.hnhtools.complexclient.entity.impl;
 
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 
@@ -9,7 +9,7 @@ import java.util.function.Consumer;
  * Author:  Lebedev
  * Created: 19-04-2019 16:14
  */
-class Widget {
+public class Widget {
     private Integer id;
     private String type;
 

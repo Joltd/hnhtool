@@ -7,7 +7,7 @@ package com.evgenltd.hnhtools.message;
  * <p>Author:  lebed</p>
  * <p>Created: 10-03-2019 16:16</p>
  */
-public class MessageFields {
+class MessageFields {
 
     static final String MESSAGE_TYPE = "messageType";
 

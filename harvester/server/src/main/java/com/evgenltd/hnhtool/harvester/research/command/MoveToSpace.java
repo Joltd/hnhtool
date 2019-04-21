@@ -1,11 +1,11 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
+import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
-import com.evgenltd.hnhtools.command.CommandUtils;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import org.apache.logging.log4j.LogManager;

@@ -23,5 +23,6 @@ public class ResultCode {
     public static final String NO_CHARACTER = "NO_CHARACTER";
     public static final String NO_CONTEXT_MENU = "NO_CONTEXT_MENU";
     public static final String NO_CONTEXT_MENU_COMMAND = "NO_CONTEXT_MENU_COMMAND";
+    public static final String ANOTHER_INVENTORY_ALREADY_QUEUED_WOR_OPENNING = "ANOTHER_INVENTORY_ALREADY_QUEUED_WOR_OPENNING";
 
 }

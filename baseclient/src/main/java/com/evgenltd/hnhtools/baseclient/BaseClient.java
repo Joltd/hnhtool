@@ -280,8 +280,8 @@ public final class BaseClient {
             return;
         }
 
-        connectionErrorCode = data.getConnectionErrorCode();
-        if (connectionErrorCode.equals(ConnectionErrorCode.OK)) {
+        this.connectionErrorCode = ConnectionErrorCode.of(data.getConnectionErrorCode());
+        if (this.connectionErrorCode.equals(ConnectionErrorCode.OK)) {
             state = State.LIFE;
         } else {
             state = State.CLOSED;
@@ -461,7 +461,7 @@ public final class BaseClient {
         CONNECTION,
         LIFE,
         CLOSING,
-        CLOSED;
+        CLOSED
     }
 
 }

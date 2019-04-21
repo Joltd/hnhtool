@@ -11,8 +11,8 @@ import com.evgenltd.hnhtool.harvester.common.repository.ResourceRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.evgenltd.hnhtools.entity.IntPoint;
-import com.evgenltd.hnhtools.entity.WorldObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,7 +38,7 @@ public class KnowledgeMatchingService {
 
     private static final Logger log = LogManager.getLogger(KnowledgeMatchingService.class);
 
-    private static final List<Long> RESTRICTED_OBJECT_RESOURCES = Arrays.asList(
+    private static final List<Long> RESTRICTED_OBJECT_RESOURCES = Collections.singletonList(
             0L
     );
 
@@ -62,6 +62,7 @@ public class KnowledgeMatchingService {
     // #                                                #
     // ##################################################
 
+    @SuppressWarnings("WeakerAccess")
     public Result<ObjectIndex> matchObjects(
             @Nullable final ObjectIndex oldIndex,
             @NotNull final WorldObject woCharacter,
@@ -115,7 +116,7 @@ public class KnowledgeMatchingService {
 
         for (final WorldObject worldObject : objectsForMatching) {
 
-            if (Assert.isEmpty(worldObject.getResourceName())) {
+            if (Assert.isEmpty(worldObject.getResourceId())) {
                 continue;
             }
 
@@ -146,9 +147,9 @@ public class KnowledgeMatchingService {
 
     private List<WorldObject> filterWasteObjects(final List<WorldObject> objects) {
         return objects.stream()
-                .peek(wo -> resourceRepository.findById(wo.getResourceId())
-                        .ifPresent(resource -> wo.setResourceName(resource.getName())))
-                .filter(wo -> !ResourceConstants.isWaste(wo.getResourceName()))
+                .filter(wo -> resourceRepository.findById(wo.getResourceId())
+                        .map(resource -> !ResourceConstants.isWaste(resource.getName()))
+                        .orElse(false))
                 .collect(Collectors.toList());
     }
 
@@ -171,6 +172,7 @@ public class KnowledgeMatchingService {
         return null;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public KnownObject rememberCharacterObject(final WorldObject worldObject) {
         return rememberWorldObject(null, worldObject, new IntPoint());
     }

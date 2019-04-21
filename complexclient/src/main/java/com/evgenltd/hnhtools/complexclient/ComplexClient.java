@@ -3,15 +3,16 @@ package com.evgenltd.hnhtools.complexclient;
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.Character;
-import com.evgenltd.hnhtools.entity.*;
+import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
+import com.evgenltd.hnhtools.complexclient.entity.impl.CharacterImpl;
+import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
+import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.entity.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -41,19 +42,20 @@ public final class ComplexClient {
     private static final int SKIP_FLAG = -1;
     private static final int UNKNOWN_FLAG = 0;
 
+    private ObjectMapper objectMapper;
     private BaseClient baseClient;
     private final ResourceProvider resourceProvider;
 
-    private final ObjectDataHandler objectDataHandler;
-    private final RelMessageHandler relMessageHandler;
     private final ObjectIndex objectIndex;
     private final WidgetIndex widgetIndex;
+    private final InventoryIndex inventoryIndex;
 
     private Integer gameUiId;
     private Integer mapViewId;
     private Integer craftMenuId;
-    private final Character character;
-    private final Map<Integer, Inventory> inventories = new HashMap<>();
+    private final CharacterImpl character;
+
+    private Number parentIdForNewInventory;
 
     public ComplexClient(
             @NotNull final ObjectMapper objectMapper,
@@ -72,11 +74,14 @@ public final class ComplexClient {
         Assert.valueRequireNonEmpty(cookie, "Cookie");
         Assert.valueRequireNonEmpty(characterName, "CharacterName");
 
-        objectDataHandler = new ObjectDataHandler(this);
-        relMessageHandler = new RelMessageHandler(this);
+        this.objectMapper = objectMapper;
+
+        final ObjectDataHandler objectDataHandler = new ObjectDataHandler(this);
+        final RelMessageHandler relMessageHandler = new RelMessageHandler(this);
         objectIndex = new ObjectIndex();
         widgetIndex = new WidgetIndex();
-        character = new Character();
+        inventoryIndex = new InventoryIndex();
+        character = new CharacterImpl();
         character.setName(characterName);
 
         this.resourceProvider = resourceProvider;
@@ -95,6 +100,10 @@ public final class ComplexClient {
     // #                                                #
     // ##################################################
 
+    ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
     ResourceProvider getResourceProvider() {
         return resourceProvider;
     }
@@ -107,10 +116,14 @@ public final class ComplexClient {
         return widgetIndex;
     }
 
+    InventoryIndex getInventoryIndex() {
+        return inventoryIndex;
+    }
+
     Integer getGameUiId() {
         return gameUiId;
     }
-    void setGameUiId(final Integer gameUiId) {
+    synchronized void setGameUiId(final Integer gameUiId) {
         this.gameUiId = gameUiId;
     }
 
@@ -119,24 +132,17 @@ public final class ComplexClient {
                 ? Result.ok(mapViewId)
                 : Result.fail(ResultCode.NO_MAP_VIEW);
     }
-    void setMapViewId(final Integer mapViewId) {
+    synchronized void setMapViewId(final Integer mapViewId) {
         this.mapViewId = mapViewId;
     }
 
     Integer getCraftMenuId() {
         return craftMenuId;
     }
-    void setCraftMenuId(final Integer craftMenuId) {
+    synchronized void setCraftMenuId(final Integer craftMenuId) {
         this.craftMenuId = craftMenuId;
     }
 
-    Character getCharacter_() {
-        return character;
-    }
-
-    Map<Integer, Inventory> getInventories() {
-        return inventories;
-    }
 
     // ##################################################
     // #                                                #
@@ -174,19 +180,27 @@ public final class ComplexClient {
     // #                                                #
     // ##################################################
 
-    public Result<WorldObject> getCharacter() {
-        return objectIndex.getCharacter()
-                .thenApply(this::convertWorldObject);
+    CharacterImpl getCharacter() {
+        return character;
+    }
+
+    public Result<WorldObject> getCharacterObject() {
+        final WorldObjectImpl object = objectIndex.getObject(getCharacter().getId());
+        return object != null
+                ? Result.ok(object)
+                : Result.fail(ResultCode.NO_CHARACTER);
     }
 
     public Result<IntPoint> getCharacterPosition() {
-        return objectIndex.getCharacter()
-                .thenApply(ObjectIndex.WorldObject::getPosition);
+        return getCharacterObject()
+                .thenApply(WorldObject::getPosition);
     }
 
     public Result<Boolean> isCharacterMoving() {
-        return objectIndex.getCharacter()
-                .thenApply(ObjectIndex.WorldObject::isMoving);
+        final WorldObjectImpl object = objectIndex.getObject(getCharacter().getId());
+        return object != null
+                ? Result.ok(object.isMoving())
+                : Result.fail(ResultCode.NO_CHARACTER);
     }
 
     // ##################################################
@@ -196,10 +210,27 @@ public final class ComplexClient {
     // ##################################################
 
     public List<WorldObject> getWorldObjects() {
-        return objectIndex.getObjectList()
-                .stream()
-                .map(this::convertWorldObject)
-                .collect(Collectors.toList());
+        return Collections.unmodifiableList(objectIndex.getObjectList());
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Inventory API                                 #
+    // #                                                #
+    // ##################################################
+
+    Number takeParentIdForNewInventory() {
+        final Number parentId = this.parentIdForNewInventory;
+        parentIdForNewInventory = null;
+        return parentId;
+    }
+
+    public Result<Void> setParentIdForNewInventory(final Number parentIdForNewInventory) {
+        if (this.parentIdForNewInventory != null) {
+            return Result.fail(ResultCode.ANOTHER_INVENTORY_ALREADY_QUEUED_WOR_OPENNING);
+        }
+        this.parentIdForNewInventory = parentIdForNewInventory;
+        return Result.ok();
     }
 
     // ##################################################
@@ -209,7 +240,7 @@ public final class ComplexClient {
     // ##################################################
 
     public Result<Void> move(final IntPoint position) {
-        return getMapViewId().thenApplyCombine(mapViewId -> {
+        return getMapViewId().thenApply(mapViewId -> {
             baseClient.pushOutboundRel(
                     mapViewId,
                     CLICK_COMMAND,
@@ -227,38 +258,45 @@ public final class ComplexClient {
     }
 
     public Result<Void> interact(final Long objectId, final Integer objectElement) {
-        return getMapViewId().thenApplyCombine(mapViewId -> objectIndex.getWorldObjectIfPossible(objectId))
-                .thenApplyCombine(worldObject -> {
-                    baseClient.pushOutboundRel(
-                            mapViewId, // todo provide from previous action
-                            CLICK_COMMAND,
-                            new IntPoint(), // cursor position on screen, server ignore it
-                            worldObject.getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
-                            RIGHT_MOUSE_BUTTON,
-                            NO_KEYBOARD_MODIFIER,
-                            UNKNOWN_FLAG,
-                            objectId,
-                            worldObject.getPosition(),
-                            UNKNOWN_FLAG,
-                            objectElement
-                    );
-                    return Result.ok();
-                });
+        final Result<Integer> mapViewId = getMapViewId();
+        if (mapViewId.isFailed()) {
+            return mapViewId.cast();
+        }
+
+        final Result<WorldObjectImpl> worldObject = objectIndex.getWorldObjectIfPossible(objectId);
+        if (worldObject.isFailed()) {
+            return worldObject.cast();
+        }
+
+        baseClient.pushOutboundRel(
+                mapViewId.getValue(),
+                CLICK_COMMAND,
+                new IntPoint(), // cursor position on screen, server ignore it
+                worldObject.getValue().getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
+                RIGHT_MOUSE_BUTTON,
+                NO_KEYBOARD_MODIFIER,
+                UNKNOWN_FLAG,
+                objectId,
+                worldObject.getValue().getPosition(),
+                UNKNOWN_FLAG,
+                objectElement
+        );
+        return Result.ok();
     }
 
-    public Result<Void> interactItemOnObject(final Long objectId) {
-//        final Integer mapViewId = getMapViewId();
-//        if (mapViewId == null) {
-//            return Result.fail(ResultCode.NO_MAP_VIEW);
-//        }
+    public Result<Void> interactItemInHandOnObject(final Long objectId) {
+        final Result<Integer> mapViewId = getMapViewId();
+        if (mapViewId.isFailed()) {
+            return mapViewId.cast();
+        }
 
-        final ObjectIndex.WorldObject worldObject = objectIndex.getWorldObject(objectId);
+        final WorldObjectImpl worldObject = objectIndex.getWorldObject(objectId);
         if (worldObject == null) {
             return Result.fail(ResultCode.NO_WORLD_OBJECT);
         }
 
         baseClient.pushOutboundRel(
-                mapViewId,
+                mapViewId.getValue(),
                 ITEM_ACT_COMMAND,
                 new IntPoint(), // cursor position on screen, server ignore it
                 worldObject.getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
@@ -273,7 +311,7 @@ public final class ComplexClient {
         return Result.ok();
     }
 
-    public void interactItemOnItem(final Integer itemId) {
+    public void interactItemInHandOnItem(final Integer itemId) {
         baseClient.pushOutboundRel(
                 itemId,
                 ITEM_ACT_COMMAND,
@@ -298,7 +336,7 @@ public final class ComplexClient {
         );
     }
 
-    public void dropItemInInventory(final Integer inventoryId, final IntPoint position) {
+    public void dropItemFromHandInInventory(final Integer inventoryId, final IntPoint position) {
         baseClient.pushOutboundRel(
                 inventoryId,
                 DROP_COMMAND,
@@ -317,8 +355,8 @@ public final class ComplexClient {
     /**
      * @param position position in equip, -1 and server determine it itself
      */
-    public Result<Void> dropItemInEquip(final Integer position) {
-        final Integer characterEquipId = getCharacter_().getEquip().getId();
+    public Result<Void> dropItemFromHandInEquip(final Integer position) {
+        final Integer characterEquipId = getCharacter().getEquip().getId();
         if (characterEquipId == null) {
             return Result.fail(ResultCode.NO_INVENTORY);
         }
@@ -387,20 +425,5 @@ public final class ComplexClient {
 
         return Result.ok();
     }*/
-
-    // ##################################################
-    // #                                                #
-    // #  Util                                          #
-    // #                                                #
-    // ##################################################
-
-    // maybe move outside
-
-    private WorldObject convertWorldObject(final ObjectIndex.WorldObject worldObject) {
-        final WorldObject newWorldObject = new WorldObject(worldObject.getId());
-        newWorldObject.setPosition(worldObject.getPosition());
-        newWorldObject.setResourceId(worldObject.getResourceId());
-        return newWorldObject;
-    }
 
 }

@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtools.message;
 
-import com.evgenltd.hnhtools.baseclient.ConnectionErrorCode;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,13 +43,13 @@ public class InboundMessageAccessor {
     // #                                                #
     // ##################################################
 
-    public String getConnectionErrorCode() {
+    public Integer getConnectionErrorCode() {
         final JsonNode errorCodeNode = data.get(MessageFields.ERROR_CODE);
         if (errorCodeNode == null || errorCodeNode.isNull()) {
-            return ConnectionErrorCode.UNKNOWN;
+            return null;
         }
 
-        return ConnectionErrorCode.of(errorCodeNode.asInt());
+        return errorCodeNode.asInt();
     }
 
     // ##################################################
@@ -163,8 +162,8 @@ public class InboundMessageAccessor {
             return data.get(MessageFields.W).asInt();
         }
 
-        public int getResourceId() {
-            return data.get(MessageFields.RESOURCE_ID).asInt();
+        public long getResourceId() {
+            return data.get(MessageFields.RESOURCE_ID).asLong();
         }
 
     }
@@ -180,7 +179,7 @@ public class InboundMessageAccessor {
             return data;
         }
 
-        public DataReader getFragment() {
+        DataReader getFragment() {
             try {
                 return new DataReader(data.get(MessageFields.FRAGMENT).binaryValue());
             } catch (IOException e) {

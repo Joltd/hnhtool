@@ -1,17 +1,17 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
+import com.evgenltd.hnhtool.harvester.common.command.Connect;
 import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
-import com.evgenltd.hnhtools.command.CommandUtils;
-import com.evgenltd.hnhtools.command.Connect;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.complexclient.ComplexClient;
 import com.evgenltd.hnhtools.complexclient.ResourceProvider;
-import com.evgenltd.hnhtools.entity.WorldObject;
+import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
 import com.hnh.auth.AuthenticationResult;
@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>Author:  lebed</p>
  * <p>Created: 02-04-2019 00:51</p>
  */
+@SuppressWarnings("WeakerAccess")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Agent {
@@ -96,7 +97,7 @@ public class Agent {
             return;
         }
 
-        final Result<WorldObject> character = client.getCharacter();
+        final Result<WorldObject> character = client.getCharacterObject();
         if (character.isFailed()) {
             return;
         }

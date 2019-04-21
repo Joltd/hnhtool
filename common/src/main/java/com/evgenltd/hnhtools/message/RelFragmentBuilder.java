@@ -9,12 +9,12 @@ import com.evgenltd.hnhtools.common.ApplicationException;
  * <p>Author:  lebed</p>
  * <p>Created: 26-02-2019 00:34</p>
  */
-public class RelFragmentBuilder {
+class RelFragmentBuilder {
 
     private int type;
     private byte[] composition;
 
-    public boolean build(final DataReader reader) {
+    boolean build(final DataReader reader) {
         final int head = reader.uint8();
         if ((head & 0x80) == 0) {
             if (composition != null) {
@@ -28,9 +28,7 @@ public class RelFragmentBuilder {
             System.arraycopy(composition, 0, newComposition, 0, composition.length);
             System.arraycopy(fragment, 0, newComposition, composition.length, fragment.length);
             composition = newComposition;
-            if (head == 0x81) {
-                return true;
-            }
+            return head == 0x81;
         } else {
             throw new ApplicationException("Unknown rel fragment type [%s]", head);
         }

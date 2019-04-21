@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.command;
+package com.evgenltd.hnhtool.harvester.common.command;
 
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
@@ -37,9 +37,7 @@ public class Move {
 
     private Result<Boolean> isAwaitDone() {
         final Result<Boolean> isReached = client.getCharacterPosition()
-                .thenApply(characterPosition -> {
-                    return characterPosition.equals(target);
-                });
+                .thenApply(characterPosition -> characterPosition.equals(target));
         if (isReached.isFailed() || isReached.getValue()) {
             return isReached;
         }

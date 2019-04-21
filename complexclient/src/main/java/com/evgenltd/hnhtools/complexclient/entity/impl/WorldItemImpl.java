@@ -1,4 +1,10 @@
-package com.evgenltd.hnhtools.entity;
+package com.evgenltd.hnhtools.complexclient.entity.impl;
+
+import com.evgenltd.hnhtools.complexclient.entity.WorldItem;
+import com.evgenltd.hnhtools.entity.IntPoint;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p></p>
@@ -7,7 +13,7 @@ package com.evgenltd.hnhtools.entity;
  * <p>Author:  lebed</p>
  * <p>Created: 18-04-2019 21:01</p>
  */
-public class WorldItem {
+public class WorldItemImpl implements WorldItem {
 
     private Integer id;
     private Long resourceId;
@@ -15,14 +21,18 @@ public class WorldItem {
     private IntPoint position;
     private Integer number; // for equip
 
-    public WorldItem(final Integer id) {
+    private List arguments = new ArrayList();
+
+    public WorldItemImpl(final Integer id) {
         this.id = id;
     }
 
+    @Override
     public Integer getId() {
         return id;
     }
 
+    @Override
     public Long getResourceId() {
         return resourceId;
     }
@@ -30,6 +40,7 @@ public class WorldItem {
         this.resourceId = resourceId;
     }
 
+    @Override
     public IntPoint getPosition() {
         return position;
     }
@@ -37,10 +48,16 @@ public class WorldItem {
         this.position = position;
     }
 
+    @Override
     public Integer getNumber() {
         return number;
     }
     public void setNumber(final Integer number) {
         this.number = number;
+    }
+
+    @Override
+    public List getArguments() {
+        return arguments;
     }
 }

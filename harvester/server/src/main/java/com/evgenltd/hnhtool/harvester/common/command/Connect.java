@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.command;
+package com.evgenltd.hnhtool.harvester.common.command;
 
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;

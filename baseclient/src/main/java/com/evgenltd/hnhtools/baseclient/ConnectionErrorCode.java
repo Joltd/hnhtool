@@ -17,7 +17,10 @@ public class ConnectionErrorCode {
     public static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
     public static final String UNKNOWN = "UNKNOWN";
 
-    public static String of(final int code) {
+    public static String of(final Integer code) {
+        if (code == null) {
+            return UNKNOWN;
+        }
         switch (code) {
             case 0:
                 return OK;
