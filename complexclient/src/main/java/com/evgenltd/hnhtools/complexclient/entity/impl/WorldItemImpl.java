@@ -5,6 +5,7 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * <p></p>
@@ -16,7 +17,7 @@ import java.util.List;
 public class WorldItemImpl implements WorldItem {
 
     private Integer id;
-    private Long resourceId;
+    private Supplier<String> resourceGetter = () -> null;
 
     private IntPoint position;
     private Integer number; // for equip
@@ -33,11 +34,11 @@ public class WorldItemImpl implements WorldItem {
     }
 
     @Override
-    public Long getResourceId() {
-        return resourceId;
+    public String getResource() {
+        return resourceGetter.get();
     }
-    public void setResourceId(final Long resourceId) {
-        this.resourceId = resourceId;
+    public void setResource(final Supplier<String> resourceGetter) {
+        this.resourceGetter = resourceGetter;
     }
 
     @Override

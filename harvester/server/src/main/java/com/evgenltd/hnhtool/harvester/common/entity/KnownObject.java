@@ -24,9 +24,7 @@ public class KnownObject implements Identified {
     @JoinColumn(name = "owner_id")
     private Space owner;
 
-    @ManyToOne
-    @JoinColumn(name = "resource_id")
-    private Resource resource;
+    private String resource;
 
     private Integer x;
 
@@ -56,10 +54,10 @@ public class KnownObject implements Identified {
         this.owner = owner;
     }
 
-    public Resource getResource() {
+    public String getResource() {
         return resource;
     }
-    public void setResource(final Resource resource) {
+    public void setResource(final String resource) {
         this.resource = resource;
     }
 

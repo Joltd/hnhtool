@@ -12,18 +12,26 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 21-04-2019 14:38</p>
  */
-public interface Inventory {
+public interface WorldInventory {
 
     Integer getId();
 
     Number getParentId();
 
+    default boolean isObjectParentId() {
+        return getParentId() instanceof Long;
+    }
+
     default Long getObjectParentId() {
         final Number parentId = getParentId();
-        if (parentId instanceof Long) {
+        if (isObjectParentId()) {
             return parentId.longValue();
         }
         throw new ApplicationException("Inventory parent is not an object, parentId=[%s], parentIdClass=[%s]", parentId, parentId.getClass());
+    }
+
+    default boolean isItemParentId() {
+        return getParentId() instanceof Integer;
     }
 
     default Integer getItemParentId() {

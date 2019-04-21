@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtools.complexclient;
 
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
 import com.evgenltd.hnhtools.entity.ResultCode;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,7 @@ final class ObjectIndex {
         index.remove(objectId);
     }
 
-    synchronized List<WorldObjectImpl> getObjectList() {
+    synchronized List<WorldObject> getObjectList() {
         return new ArrayList<>(index.values());
     }
 

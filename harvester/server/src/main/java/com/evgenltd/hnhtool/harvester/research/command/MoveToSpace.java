@@ -3,7 +3,6 @@ package com.evgenltd.hnhtool.harvester.research.command;
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -68,12 +67,12 @@ public class MoveToSpace {
     }
 
     private Integer decideObjectPartition() {
-        final Resource resource = doorway.getResource();
+        final String resource = doorway.getResource();
         if (resource == null) {
             return -1;
         }
 
-        if (ResourceConstants.TIMBER_HOUSE.equals(resource.getName())) {
+        if (ResourceConstants.TIMBER_HOUSE.equals(resource)) {
             return 16;
         } else {
             return -1;

@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.entity;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * <p></p>
@@ -20,6 +21,14 @@ public class KnownItem implements Identified {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private KnownObject owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private KnownItem parent;
+
+    private String resource;
+
+    private LocalDateTime actual;
 
     private String name;
 
@@ -43,6 +52,27 @@ public class KnownItem implements Identified {
     }
     public void setOwner(final KnownObject owner) {
         this.owner = owner;
+    }
+
+    public KnownItem getParent() {
+        return parent;
+    }
+    public void setParent(final KnownItem parent) {
+        this.parent = parent;
+    }
+
+    public String getResource() {
+        return resource;
+    }
+    public void setResource(final String resource) {
+        this.resource = resource;
+    }
+
+    public LocalDateTime getActual() {
+        return actual;
+    }
+    public void setActual(final LocalDateTime actual) {
+        this.actual = actual;
     }
 
     public String getName() {

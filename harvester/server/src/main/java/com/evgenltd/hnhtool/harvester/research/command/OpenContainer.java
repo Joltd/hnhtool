@@ -5,9 +5,8 @@ import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.ComplexClient;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 /**
  * <p></p>
@@ -33,10 +32,11 @@ public class OpenContainer {
     }
 
     private Result<Void> performImpl() {
-        final Object previousTargetInventory = agent.getTargetInventory();
+        final ComplexClient client = agent.getClient();
         return agent.getMatchedWorldObjectId(container.getId())
-                .thenApplyCombine(woId -> agent.getClient().interact(woId))
-                .thenCombine(() -> CommandUtils.await(() -> Objects.equals(previousTargetInventory, agent.getTargetInventory())));
+                .thenApplyCombine(woId -> client.setParentIdForNewInventory(woId).then(() -> woId))
+                .thenApplyCombine(client::interact)
+                .thenCombine(() -> CommandUtils.await(client::parentIdIsTaken));
     }
 
 }

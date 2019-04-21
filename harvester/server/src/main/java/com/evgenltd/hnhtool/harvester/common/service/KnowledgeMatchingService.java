@@ -1,16 +1,20 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
+import com.evgenltd.hnhtool.harvester.common.component.InventoryIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
+import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.common.entity.Resource;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
+import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
-import com.evgenltd.hnhtool.harvester.common.repository.ResourceRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.SpaceRepository;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
+import com.evgenltd.hnhtools.complexclient.entity.WorldItem;
 import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
@@ -21,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,22 +41,18 @@ public class KnowledgeMatchingService {
 
     private static final Logger log = LogManager.getLogger(KnowledgeMatchingService.class);
 
-    private static final List<Long> RESTRICTED_OBJECT_RESOURCES = Collections.singletonList(
-            0L
-    );
-
-    private ResourceRepository resourceRepository;
     private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
+    private KnownItemRepository knownItemRepository;
 
     public KnowledgeMatchingService(
-            final ResourceRepository resourceRepository,
             final SpaceRepository spaceRepository,
-            final KnownObjectRepository knownObjectRepository
+            final KnownObjectRepository knownObjectRepository,
+            final KnownItemRepository knownItemRepository
     ) {
-        this.resourceRepository = resourceRepository;
         this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
+        this.knownItemRepository = knownItemRepository;
     }
 
     // ##################################################
@@ -116,7 +115,7 @@ public class KnowledgeMatchingService {
 
         for (final WorldObject worldObject : objectsForMatching) {
 
-            if (Assert.isEmpty(worldObject.getResourceId())) {
+            if (Assert.isEmpty(worldObject.getResource())) {
                 continue;
             }
 
@@ -147,9 +146,7 @@ public class KnowledgeMatchingService {
 
     private List<WorldObject> filterWasteObjects(final List<WorldObject> objects) {
         return objects.stream()
-                .filter(wo -> resourceRepository.findById(wo.getResourceId())
-                        .map(resource -> !ResourceConstants.isWaste(resource.getName()))
-                        .orElse(false))
+                .filter(wo -> !Assert.isEmpty(wo.getResource()) && !ResourceConstants.isWaste(wo.getResource()))
                 .collect(Collectors.toList());
     }
 
@@ -164,7 +161,7 @@ public class KnowledgeMatchingService {
                 continue;
             }
 
-            if (Objects.equals(worldObject.getResourceId(), knownObject.getResource().getId())) {
+            if (Objects.equals(worldObject.getResource(), knownObject.getResource())) {
                 return knownObject;
             }
         }
@@ -181,13 +178,8 @@ public class KnowledgeMatchingService {
         final KnownObject knownObject = new KnownObject();
         knownObject.setOwner(space);
 
-        if (worldObject.getResourceId() != null && worldObject.getResourceId() != 0) {
-            final Resource resource = resourceRepository.findById(worldObject.getResourceId())
-                    .orElseGet(() -> {
-                        final Resource newResource = new Resource();
-                        newResource.setId(worldObject.getResourceId());
-                        return resourceRepository.save(newResource);
-                    });
+        final String resource = worldObject.getResource();
+        if (!Assert.isEmpty(resource)) {
             knownObject.setResource(resource);
         }
 
@@ -199,17 +191,12 @@ public class KnowledgeMatchingService {
     }
 
     private void objectClassification(final KnownObject knownObject) {
-        final Resource resource = knownObject.getResource();
-        if (resource == null) {
-            return;
-        }
-
-        final String resourceName = resource.getName();
-        if (ResourceConstants.isPlayer(resourceName)) {
+        final String resource = knownObject.getResource();
+        if (ResourceConstants.isPlayer(resource)) {
             knownObject.setPlayer(true);
-        } else if (ResourceConstants.isDoorway(resourceName)) {
+        } else if (ResourceConstants.isDoorway(resource)) {
             knownObject.setDoorway(true);
-        } else if (ResourceConstants.isContainer(resourceName)) {
+        } else if (ResourceConstants.isContainer(resource)) {
             knownObject.setContainer(true);
         }
     }
@@ -237,7 +224,7 @@ public class KnowledgeMatchingService {
     }
 
     private Result<KnownObject> findReferencePoint(final List<WorldObject> worldObjects, final List<WorldObject> woExclusion) {
-        final List<Long> resourceExclusions = new ArrayList<>(RESTRICTED_OBJECT_RESOURCES);
+        final List<String> resourceExclusions = new ArrayList<>();
         return selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
                 .thenApplyCombine(firstWo -> selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
                                     .thenApplyCombine(secondWo -> findReferencePoint(firstWo, secondWo))
@@ -251,14 +238,14 @@ public class KnowledgeMatchingService {
     private Result<WorldObject> selectReferenceObject(
             final List<WorldObject> worldObjects,
             final List<WorldObject> woExclusions,
-            final List<Long> resourceExclusions
+            final List<String> resourceExclusions
     ) {
         return worldObjects.stream()
-                .filter(wo -> !woExclusions.contains(wo) && !resourceExclusions.contains(wo.getResourceId()))
+                .filter(wo -> !woExclusions.contains(wo) && !resourceExclusions.contains(wo.getResource()))
                 .findFirst()
                 .map(wo -> {
                     woExclusions.add(wo);
-                    resourceExclusions.add(wo.getResourceId());
+                    resourceExclusions.add(wo.getResource());
                     return Result.ok(wo);
                 })
                 .orElse(Result.fail(ServerResultCode.KMS_REFERENCE_POINT_NO_SUITABLE_OBJECT));
@@ -266,10 +253,10 @@ public class KnowledgeMatchingService {
 
     private Result<KnownObject> findReferencePoint(final WorldObject firstObject, final WorldObject secondObject) {
         final List<KnownObject> spaceCandidates = knownObjectRepository.findSpaceByPattern(
-                firstObject.getResourceId(),
+                firstObject.getResource(),
                 firstObject.getPosition().getX(),
                 firstObject.getPosition().getY(),
-                secondObject.getResourceId(),
+                secondObject.getResource(),
                 secondObject.getPosition().getX(),
                 secondObject.getPosition().getY()
         );
@@ -301,10 +288,156 @@ public class KnowledgeMatchingService {
     // #                                                #
     // ##################################################
 
-    public void matchItems() {
+    public void matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
 
+        final InventoryIndex inventoryIndex = new InventoryIndex();
 
+        List<WorldInventory> forNextIteration = inventories;
 
+        while (true) {
+            final List<WorldInventory> notHandled = matchItemsOneIteration(
+                    objectIndex,
+                    inventoryIndex,
+                    forNextIteration
+            );
+            if (notHandled.isEmpty()) {
+                return;
+            }
+
+            if (notHandled.size() == forNextIteration.size()) {
+                log.warn("Some of inventories can not be matched with KDB");
+                return;
+            }
+
+            forNextIteration = notHandled;
+        }
+
+    }
+
+    private List<WorldInventory> matchItemsOneIteration(final ObjectIndex objectIndex, final InventoryIndex inventoryIndex, final List<WorldInventory> inventories) {
+
+        final List<WorldInventory> notHandled = new ArrayList<>();
+
+        for (final WorldInventory inventory : inventories) {
+
+            final Result<ItemOwnerHandler> itemOwnerHandler = decideOwnerHandler(
+                    inventory,
+                    objectIndex,
+                    inventoryIndex
+            );
+            if (itemOwnerHandler.isFailed()) {
+                notHandled.add(inventory);
+                continue;
+            }
+
+            final List<KnownItem> knownItems = itemOwnerHandler.getValue().loadKnownItems();
+
+            for (final WorldItem worldItem : inventory.getItems()) {
+
+                final ItemInfo itemInfo = readItemInfo(worldItem.getArguments());
+                KnownItem knownItem = lookupKnownItem(worldItem.getResource(), itemInfo, knownItems);
+
+                if (knownItem == null) {
+                    knownItem = prepareItem(worldItem.getResource(), itemInfo);
+                    itemOwnerHandler.getValue().setOwner(knownItem);
+                }
+
+                knownItem.setActual(LocalDateTime.now());
+                knownItemRepository.save(knownItem);
+
+                inventoryIndex.putMatch(knownItem.getId(), worldItem.getId());
+
+            }
+
+        }
+
+        return notHandled;
+
+    }
+
+    private Result<ItemOwnerHandler> decideOwnerHandler(final WorldInventory inventory, final ObjectIndex objectIndex, final InventoryIndex inventoryIndex) {
+        if (inventory.isObjectParentId()) {
+            return objectIndex.getMatchedKnownObjectId(inventory.getObjectParentId())
+                    .thenApply(knownObjectId -> new ItemOwnerHandler() {
+                        @Override
+                        public List<KnownItem> loadKnownItems() {
+                            return knownItemRepository.findByOwnerId(knownObjectId);
+                        }
+
+                        @Override
+                        public void setOwner(final KnownItem knownItem) {
+                            knownObjectRepository.findById(knownObjectId).ifPresent(knownItem::setOwner);
+                        }
+                    });
+        } else if (inventory.isItemParentId()) {
+            return inventoryIndex.getMatchedKnownItemId(inventory.getItemParentId())
+                    .thenApply(knownItemId -> new ItemOwnerHandler() {
+                        @Override
+                        public List<KnownItem> loadKnownItems() {
+                            return knownItemRepository.findByParentId(knownItemId);
+                        }
+
+                        @Override
+                        public void setOwner(final KnownItem knownItem) {
+                            knownItemRepository.findById(knownItemId).ifPresent(knownItem::setParent);
+                        }
+                    });
+        } else {
+            // maybe return as Result?
+            throw new ApplicationException("Unsupported parent type, type=[%s]", inventory.getParentId().getClass());
+        }
+    }
+
+    private KnownItem lookupKnownItem(
+            final String worldResource,
+            final ItemInfo itemInfo,
+            final List<KnownItem> knownItems
+    ) {
+
+        for (final KnownItem knownItem : knownItems) {
+            final boolean resourceMatches = Objects.equals(knownItem.getResource(), worldResource);
+            if (!resourceMatches) {
+                continue;
+            }
+
+            if (Objects.equals(knownItem.getQuality(), itemInfo.getQuality())) {
+                return knownItem;
+            }
+        }
+
+        return null;
+    }
+
+    private ItemInfo readItemInfo(final List arguments) {
+        return new ItemInfo();
+    }
+
+    private KnownItem prepareItem(
+            final String resource,
+            final ItemInfo itemInfo
+    ) {
+        final KnownItem knownItem = new KnownItem();
+        knownItem.setResource(resource);
+        knownItem.setQuality(itemInfo.getQuality());
+        return knownItem;
+    }
+
+    private static class ItemInfo {
+        private Double quality;
+
+        public Double getQuality() {
+            return quality;
+        }
+
+        public void setQuality(final Double quality) {
+            this.quality = quality;
+        }
+    }
+
+    private interface ItemOwnerHandler {
+        List<KnownItem> loadKnownItems();
+
+        void setOwner(final KnownItem knownItem);
     }
 
 }

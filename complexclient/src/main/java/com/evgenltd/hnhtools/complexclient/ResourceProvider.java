@@ -3,6 +3,9 @@ package com.evgenltd.hnhtools.complexclient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * <p></p>
  * <br/>
@@ -10,11 +13,17 @@ import org.jetbrains.annotations.Nullable;
  * <p>Author:  lebed</p>
  * <p>Created: 30-03-2019 11:58</p>
  */
-public interface ResourceProvider {
+final class ResourceProvider {
+
+    private final Map<Long, String> index = new ConcurrentHashMap<>();
 
     @Nullable
-    String getResourceName(@NotNull Long id);
+    String getResourceName(@NotNull final Long id) {
+        return index.get(id);
+    }
 
-    void saveResource(@NotNull Long id, @Nullable String name);
+    void saveResource(@NotNull final Long id, @Nullable final String name) {
+        index.put(id, name);
+    }
 
 }

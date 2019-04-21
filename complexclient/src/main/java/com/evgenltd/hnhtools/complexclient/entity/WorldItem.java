@@ -15,7 +15,7 @@ public interface WorldItem {
 
     Integer getId();
 
-    Long getResourceId();
+    String getResource();
 
     IntPoint getPosition();
 

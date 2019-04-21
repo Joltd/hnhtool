@@ -48,7 +48,8 @@ final class ObjectDataHandler {
                     object.setMoving(delta.getW() != -1);
                     break;
                 case OD_RES:
-                    object.setResourceId(delta.getResourceId());
+                    final long resourceId = delta.getResourceId();
+                    object.setResource(() -> client.getResourceProvider().getResourceName(resourceId));
                     break;
             }
         }

@@ -2,7 +2,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
 import com.evgenltd.hnhtool.harvester.common.command.Connect;
-import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
+import com.evgenltd.hnhtool.harvester.common.component.InventoryIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
@@ -10,7 +10,6 @@ import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.complexclient.ComplexClient;
-import com.evgenltd.hnhtools.complexclient.ResourceProvider;
 import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,7 +45,6 @@ public class Agent {
     private static final Long TIMEOUT = 1000L;
 
     private ObjectMapper objectMapper;
-    private ResourceProvider resourceProvider;
     private AccountRepository accountRepository;
     private KnowledgeMatchingService knowledgeMatchingService;
     private KnownObjectRepository knownObjectRepository;
@@ -65,17 +62,15 @@ public class Agent {
     private ComplexClient client;
     private AtomicBoolean withResearch = new AtomicBoolean(true);
     private ObjectIndex objectIndex;
-    private ItemIndex itemIndex;
+    private InventoryIndex itemIndex;
 
     public Agent(
             final ObjectMapper objectMapper,
-            final ResourceProvider resourceProvider,
             final AccountRepository accountRepository,
             final KnowledgeMatchingService knowledgeMatchingService,
             final KnownObjectRepository knownObjectRepository
             ) {
         this.objectMapper = objectMapper;
-        this.resourceProvider = resourceProvider;
         this.accountRepository = accountRepository;
         this.knowledgeMatchingService = knowledgeMatchingService;
         this.knownObjectRepository = knownObjectRepository;
@@ -110,26 +105,23 @@ public class Agent {
             accountRepository.save(account);
         }
 
-        final List<WorldObject> worldObjects = client.getWorldObjects();
-
         final Result<ObjectIndex> matchResult = knowledgeMatchingService.matchObjects(
                 objectIndex,
                 character.getValue(),
                 account.getCharacterObject(),
-                worldObjects,
+                client.getWorldObjects(),
                 withResearch.get()
         );
-        if (matchResult.isSuccess()) {
-            objectIndex = matchResult.getValue();
-            log.info("End matching index with KDB, newIndex=[{}]", objectIndex);
-        } else {
+        if (matchResult.isFailed()) {
             objectIndex = new ObjectIndex();
             log.info("Failed matching index with KDB, {}", matchResult);
+            return;
         }
 
-    }
+        objectIndex = matchResult.getValue();
+        log.info("End matching index with KDB, newIndex=[{}]", objectIndex);
 
-    public void matchItemKnowledge() {
+        knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
 
     }
 
@@ -228,14 +220,6 @@ public class Agent {
         return itemIndex.getMatchedKnownItemId(worldItemId);
     }
 
-    public Result<Long> getKnownItemOwner(final Long knownItemId) {
-        return Result.ok(0L);
-    }
-
-    public Object getTargetInventory() {
-        return new Object();
-    }
-
     // ##################################################
     // #                                                #
     // #  Private                                       #
@@ -292,7 +276,7 @@ public class Agent {
         }
 
         client = new ComplexClient(
-                objectMapper, resourceProvider,
+                objectMapper,
                 server, port,
                 account.getUsername(), cookie,
                 account.getDefaultCharacter()

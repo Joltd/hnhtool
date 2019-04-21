@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.complexclient.entity.impl;
 
-import com.evgenltd.hnhtools.complexclient.entity.Inventory;
+import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
 import com.evgenltd.hnhtools.complexclient.entity.WorldItem;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
@@ -14,14 +14,14 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 30-03-2019 20:22</p>
  */
-public class InventoryImpl implements Inventory {
+public class WorldInventoryImpl implements WorldInventory {
 
     private Integer id;
     private Number parentId;
     private IntPoint size;
     private List<WorldItem> items = new ArrayList<>();
 
-    public InventoryImpl(final Integer id) {
+    public WorldInventoryImpl(final Integer id) {
         this.id = id;
     }
 

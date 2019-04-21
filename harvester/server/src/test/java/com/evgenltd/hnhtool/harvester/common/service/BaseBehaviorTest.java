@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
+import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
+import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.common.Result;
 import org.junit.Assert;
@@ -36,8 +38,20 @@ public class BaseBehaviorTest {
     @Test
     public void commonTest() throws InterruptedException {
         agentService.offerWork(agent -> {
-//            knownObjectRepository.findById(613L)
-//                    .ifPresent(cupboard -> OpenContainer.perform(agent, cupboard));
+
+            try {
+                Thread.sleep(10000L);
+            } catch (InterruptedException ignored) {
+            }
+
+            final int currentInventories = agent.getClient().getInventories().size();
+
+            final KnownObject container = knownObjectRepository.findUnknownContainers().get(0);
+            agent.getMatchedWorldObjectId(container.getId())
+                    .then(id -> agent.getClient().setParentIdForNewInventory(id))
+                    .then(id -> agent.getClient().interact(id))
+                    .then(() -> CommandUtils.await(() -> agent.getClient().getInventories().size() > currentInventories));
+
             return Result.ok();
         });
         Thread.sleep(60 * 60 * 1000L);

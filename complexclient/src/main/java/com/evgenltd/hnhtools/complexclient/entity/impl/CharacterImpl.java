@@ -11,9 +11,9 @@ public class CharacterImpl {
 
     private Long id;
     private String name;
-    private InventoryImpl equip;
-    private InventoryImpl main;
-    private InventoryImpl study;
+    private WorldInventoryImpl equip;
+    private WorldInventoryImpl main;
+    private WorldInventoryImpl study;
     private Integer sheetId;
     private Integer speedId;
 
@@ -31,24 +31,24 @@ public class CharacterImpl {
         this.name = name;
     }
 
-    public InventoryImpl getEquip() {
+    public WorldInventoryImpl getEquip() {
         return equip;
     }
-    public synchronized void setEquip(final InventoryImpl equip) {
+    public synchronized void setEquip(final WorldInventoryImpl equip) {
         this.equip = equip;
     }
 
-    public InventoryImpl getMain() {
+    public WorldInventoryImpl getMain() {
         return main;
     }
-    public synchronized void setMain(final InventoryImpl main) {
+    public synchronized void setMain(final WorldInventoryImpl main) {
         this.main = main;
     }
 
-    public InventoryImpl getStudy() {
+    public WorldInventoryImpl getStudy() {
         return study;
     }
-    public synchronized void setStudy(final InventoryImpl study) {
+    public synchronized void setStudy(final WorldInventoryImpl study) {
         this.study = study;
     }
 

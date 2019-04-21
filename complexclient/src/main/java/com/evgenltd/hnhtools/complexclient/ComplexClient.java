@@ -3,6 +3,7 @@ package com.evgenltd.hnhtools.complexclient;
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
 import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.evgenltd.hnhtools.complexclient.entity.impl.CharacterImpl;
 import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
@@ -11,7 +12,7 @@ import com.evgenltd.hnhtools.entity.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,7 +60,6 @@ public final class ComplexClient {
 
     public ComplexClient(
             @NotNull final ObjectMapper objectMapper,
-            @NotNull final ResourceProvider resourceProvider,
             @NotNull final String server,
             @NotNull final Integer port,
             @NotNull final String username,
@@ -67,7 +67,6 @@ public final class ComplexClient {
             @NotNull final String characterName
     ) {
         Assert.valueRequireNonEmpty(objectMapper, "ObjectMapper");
-        Assert.valueRequireNonEmpty(resourceProvider, "ResourceProvider");
         Assert.valueRequireNonEmpty(server, "Server");
         Assert.valueRequireNonEmpty(port, "Port");
         Assert.valueRequireNonEmpty(username, "Username");
@@ -84,7 +83,7 @@ public final class ComplexClient {
         character = new CharacterImpl();
         character.setName(characterName);
 
-        this.resourceProvider = resourceProvider;
+        this.resourceProvider = new ResourceProvider();
         baseClient = new BaseClient(objectMapper);
         baseClient.setServer(server, port);
         baseClient.setCredentials(username, cookie);
@@ -210,7 +209,7 @@ public final class ComplexClient {
     // ##################################################
 
     public List<WorldObject> getWorldObjects() {
-        return Collections.unmodifiableList(objectIndex.getObjectList());
+        return objectIndex.getObjectList();
     }
 
     // ##################################################
@@ -225,12 +224,23 @@ public final class ComplexClient {
         return parentId;
     }
 
+    public boolean parentIdIsTaken() {
+        return parentIdForNewInventory == null;
+    }
+
     public Result<Void> setParentIdForNewInventory(final Number parentIdForNewInventory) {
         if (this.parentIdForNewInventory != null) {
             return Result.fail(ResultCode.ANOTHER_INVENTORY_ALREADY_QUEUED_WOR_OPENNING);
         }
         this.parentIdForNewInventory = parentIdForNewInventory;
         return Result.ok();
+    }
+
+    public List<WorldInventory> getInventories() {
+        final List<WorldInventory> inventories = new ArrayList<>();
+        inventories.add(getCharacter().getMain());
+        inventories.addAll(inventoryIndex.getInventories());
+        return inventories;
     }
 
     // ##################################################

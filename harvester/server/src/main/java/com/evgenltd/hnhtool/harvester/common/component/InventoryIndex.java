@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.common.component;
 
 import com.evgenltd.hnhtools.common.Result;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 /**
  * <p></p>
@@ -9,7 +11,13 @@ import com.evgenltd.hnhtools.common.Result;
  * <p>Author:  lebed</p>
  * <p>Created: 17-04-2019 23:41</p>
  */
-public class ItemIndex {
+public class InventoryIndex {
+
+    private final BiMap<Long, Integer> itemIndex = HashBiMap.create();
+
+    public void putMatch(final Long knownItemId, final Integer worldItemId) {
+        itemIndex.put(knownItemId, worldItemId);
+    }
 
     public Result<Integer> getMatchedWorldItemId(final Long knownItemId) {
         return Result.ok(0);

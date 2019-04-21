@@ -3,6 +3,8 @@ package com.evgenltd.hnhtools.complexclient.entity.impl;
 import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
+import java.util.function.Supplier;
+
 /**
  * <p></p>
  * <br/>
@@ -14,8 +16,8 @@ public final class WorldObjectImpl implements WorldObject {
 
     private Long id;
     private int frame;
-    private IntPoint position;
-    private Long resourceId;
+    private IntPoint position = new IntPoint();
+    private Supplier<String> resourceGetter = () -> null;
     private boolean moving;
 
     public WorldObjectImpl(final Long id) {
@@ -43,11 +45,11 @@ public final class WorldObjectImpl implements WorldObject {
     }
 
     @Override
-    public Long getResourceId() {
-        return resourceId;
+    public String getResource() {
+        return resourceGetter.get();
     }
-    public void setResourceId(final Long resourceId) {
-        this.resourceId = resourceId;
+    public void setResource(final Supplier<String> resourceGetter) {
+        this.resourceGetter = resourceGetter;
     }
 
     @Override

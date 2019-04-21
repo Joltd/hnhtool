@@ -6,11 +6,6 @@ create table users (
 
 insert into users (username, password) values ('root', '$2a$10$xFtCg53fRadQvBiLZ962TORMZzf/AFFgEVj3BweUJ5Q9LTPmLw9my');
 
-create table resources (
-	id numeric(19,0) primary key,
-	name varchar(255)
-);
-
 create table spaces (
 	id numeric(19,0) identity(1,1) primary key,
 	name varchar(255),
@@ -20,7 +15,7 @@ create table spaces (
 create table known_objects (
 	id numeric(19,0) identity(1,1) primary key,
 	owner_id numeric(19,0) foreign key references spaces(id),
-	resource_id numeric(19,0),
+	resource varchar(255),
 	x int,
 	y int,
 	actual datetime,
@@ -48,17 +43,12 @@ create table paths (
 create table known_items (
 	id numeric(19,0) identity(1,1) primary key,
 	owner_id numeric(19,0) foreign key references known_objects(id),
+	parent_id numeric(19,0) foreign key references known_items(id),
+	resource varchar(255),
+	actual datetime,
 	name varchar(255),
 	quality float,
 	food tinyint,
 	weapon tinyint,
 	curiosity tinyint
-);
-
-create table tasks (
-	id numeric(19,0) identity(1,1) primary key,
-	module varchar(255),
-	step varchar(255),
-	status varchar(255),
-	fail_reason varchar(255)
 );

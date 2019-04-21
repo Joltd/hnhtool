@@ -15,7 +15,7 @@ public interface WorldObject {
 
     IntPoint getPosition();
 
-    Long getResourceId();
+    String getResource();
 
     boolean isMoving();
 

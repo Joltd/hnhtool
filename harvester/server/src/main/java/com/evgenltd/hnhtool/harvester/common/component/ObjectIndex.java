@@ -15,7 +15,7 @@ import com.google.common.collect.HashBiMap;
  */
 public class ObjectIndex {
 
-    private final BiMap<Long, Long> index = HashBiMap.create();
+    private final BiMap<Long, Long> index = HashBiMap.create(); // known object - world object
     private IntPoint offset = new IntPoint();
 
     //
