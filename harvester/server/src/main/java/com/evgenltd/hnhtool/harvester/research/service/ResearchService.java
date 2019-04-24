@@ -156,7 +156,8 @@ public class ResearchService implements Module {
     private Result<Void> researchContainer(final Agent agent, final KnownObject targetContainer) {
         return routingService.route(agent.getCharacter(), targetContainer)
                 .thenApplyCombine(route -> MoveByRoute.performWithoutFromAndTo(agent, route))
-                .thenCombine(() -> OpenContainer.perform(agent, targetContainer));
+                .thenCombine(() -> OpenContainer.perform(agent, targetContainer))
+                .then(() -> knownObjectRepository.markAsResearched(targetContainer));
     }
 
 }

@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
-import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
+import com.evgenltd.hnhtool.harvester.common.command.Await;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -36,7 +36,8 @@ public class OpenContainer {
         return agent.getMatchedWorldObjectId(container.getId())
                 .thenApplyCombine(woId -> client.setParentIdForNewInventory(woId).then(() -> woId))
                 .thenApplyCombine(client::interact)
-                .thenCombine(() -> CommandUtils.await(client::parentIdIsTaken));
+                .thenCombine(() -> Await.performSimple(client::parentIdIsTaken))
+                .then(() -> agent.matchItemKnowledge());
     }
 
 }

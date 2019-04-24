@@ -47,6 +47,8 @@ create table known_items (
 	owner_id numeric(19,0) foreign key references known_objects(id),
 	parent_id numeric(19,0) foreign key references known_items(id),
 	resource varchar(255),
+	x int,
+	y int,
 	actual datetime,
 	name varchar(255),
 	quality float,

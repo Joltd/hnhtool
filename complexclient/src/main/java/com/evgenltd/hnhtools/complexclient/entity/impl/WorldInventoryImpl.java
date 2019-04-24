@@ -19,7 +19,7 @@ public class WorldInventoryImpl implements WorldInventory {
     private Integer id;
     private Number parentId;
     private IntPoint size;
-    private List<WorldItem> items = new ArrayList<>();
+    private final List<WorldItem> items = new ArrayList<>();
 
     public WorldInventoryImpl(final Integer id) {
         this.id = id;
@@ -52,11 +52,15 @@ public class WorldInventoryImpl implements WorldInventory {
     }
 
     public void addItem(final WorldItem worldItem) {
-        items.add(worldItem);
+        synchronized (items) {
+            items.add(worldItem);
+        }
     }
 
     public void removeItem(final WorldItem worldItem) {
-        items.remove(worldItem);
+        synchronized (items) {
+            items.remove(worldItem);
+        }
     }
 
 }

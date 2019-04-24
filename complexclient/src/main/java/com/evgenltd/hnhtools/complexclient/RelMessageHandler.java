@@ -153,7 +153,7 @@ final class RelMessageHandler {
                 worldItem.setResource(() -> client.getResourceProvider().getResourceName(resourceId));
 
                 if (character.getEquip() != null && Objects.equals(itemParentId, character.getEquip().getId())) {
-                    worldItem.setNumber(accessor.getPArgs().nextInt());
+                    worldItem.setPosition(new IntPoint(accessor.getPArgs().nextInt(), 0));
                 } else {
                     worldItem.setPosition(accessor.getPArgs().nextPoint());
                 }
@@ -190,7 +190,7 @@ final class RelMessageHandler {
             return;
         }
 
-        inventory.getItems().add(worldItem);
+        inventory.addItem(worldItem);
         widget.setHandleMessage(rel -> handleItemMessage(rel, worldItem));
         widget.setDestroy(() -> {
             final WorldInventoryImpl inv = getInventory.get();

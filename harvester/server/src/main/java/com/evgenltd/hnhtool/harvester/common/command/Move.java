@@ -32,7 +32,7 @@ public class Move {
 
     private Result<Void> performImpl() {
         return client.move(target)
-                .thenCombine(() -> CommandUtils.awaitWithResult(Move.this::isAwaitDone));
+                .thenCombine(() -> Await.perform(Move.this::isAwaitDone));
     }
 
     private Result<Boolean> isAwaitDone() {

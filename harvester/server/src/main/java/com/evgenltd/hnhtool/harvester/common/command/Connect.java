@@ -27,7 +27,7 @@ public class Connect {
 
     private Result<Void> performImpl() {
         client.connect();
-        return CommandUtils.awaitWithResult(this::isAwaitDone);
+        return Await.perform(this::isAwaitDone);
     }
 
     private Result<Boolean> isAwaitDone() {

@@ -20,7 +20,6 @@ public class WorldItemImpl implements WorldItem {
     private Supplier<String> resourceGetter = () -> null;
 
     private IntPoint position;
-    private Integer number; // for equip
 
     private List arguments = new ArrayList();
 
@@ -47,14 +46,6 @@ public class WorldItemImpl implements WorldItem {
     }
     public void setPosition(final IntPoint position) {
         this.position = position;
-    }
-
-    @Override
-    public Integer getNumber() {
-        return number;
-    }
-    public void setNumber(final Integer number) {
-        this.number = number;
     }
 
     @Override

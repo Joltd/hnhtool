@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
-import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
+import com.evgenltd.hnhtool.harvester.common.command.Await;
 import com.evgenltd.hnhtool.harvester.common.command.Connect;
 import com.evgenltd.hnhtool.harvester.common.component.InventoryIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
@@ -62,7 +62,7 @@ public class Agent {
     private ComplexClient client;
     private AtomicBoolean withResearch = new AtomicBoolean(true);
     private ObjectIndex objectIndex;
-    private InventoryIndex itemIndex;
+    private InventoryIndex inventoryIndex;
 
     public Agent(
             final ObjectMapper objectMapper,
@@ -97,7 +97,7 @@ public class Agent {
             return;
         }
 
-        log.info("Start matching index with KDB, oldIndex=[{}]", objectIndex);
+//        log.info("Start matching index with KDB, oldIndex=[{}]", objectIndex);
 
         if (account.getCharacterObject() == null) {
             final KnownObject koCharacter = knowledgeMatchingService.rememberCharacterObject(character.getValue());
@@ -114,15 +114,17 @@ public class Agent {
         );
         if (matchResult.isFailed()) {
             objectIndex = new ObjectIndex();
-            log.info("Failed matching index with KDB, {}", matchResult);
+//            log.info("Failed matching index with KDB, {}", matchResult);
             return;
         }
 
         objectIndex = matchResult.getValue();
-        log.info("End matching index with KDB, newIndex=[{}]", objectIndex);
+//        log.info("End matching index with KDB, newIndex=[{}]", objectIndex);
 
-        knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
+    }
 
+    public void matchItemKnowledge() {
+        inventoryIndex = knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
     }
 
     // ##################################################
@@ -213,11 +215,11 @@ public class Agent {
     // item matching
 
     public Result<Integer> getMatchedWorldItemId(final Long knownItemId) {
-        return itemIndex.getMatchedWorldItemId(knownItemId);
+        return inventoryIndex.getMatchedWorldItemId(knownItemId);
     }
 
     public Result<Long> getMatchedKnownItemId(final Integer worldItemId) {
-        return itemIndex.getMatchedKnownItemId(worldItemId);
+        return inventoryIndex.getMatchedKnownItemId(worldItemId);
     }
 
     // ##################################################
@@ -284,7 +286,7 @@ public class Agent {
         Connect.perform(client);
         client.play();
 
-        final Result<Void> result = CommandUtils.await(() -> objectIndex != null);
+        final Result<Void> result = Await.performSimple(() -> objectIndex != null);
         if (result.isFailed()) {
             doDeactivation();
         }

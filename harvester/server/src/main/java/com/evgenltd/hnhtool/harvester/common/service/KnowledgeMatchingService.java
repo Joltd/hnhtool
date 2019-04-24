@@ -289,7 +289,7 @@ public class KnowledgeMatchingService {
     // #                                                #
     // ##################################################
 
-    public void matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
+    public InventoryIndex matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
 
         final InventoryIndex inventoryIndex = new InventoryIndex();
 
@@ -302,12 +302,12 @@ public class KnowledgeMatchingService {
                     forNextIteration
             );
             if (notHandled.isEmpty()) {
-                return;
+                return inventoryIndex;
             }
 
             if (notHandled.size() == forNextIteration.size()) {
                 log.warn("Some of inventories can not be matched with KDB");
-                return;
+                return inventoryIndex;
             }
 
             forNextIteration = notHandled;
@@ -333,21 +333,23 @@ public class KnowledgeMatchingService {
 
             final List<KnownItem> knownItems = itemOwnerHandler.getValue().loadKnownItems();
 
-            for (final WorldItem worldItem : inventory.getItems()) {
+            synchronized (inventory.getItems()) {
+                for (final WorldItem worldItem : inventory.getItems()) {
 
-                final ItemInfo itemInfo = readItemInfo(worldItem.getArguments());
-                KnownItem knownItem = lookupKnownItem(worldItem.getResource(), itemInfo, knownItems);
+                    final ItemInfo itemInfo = readItemInfo(worldItem.getArguments());
+                    KnownItem knownItem = lookupKnownItem(worldItem, itemInfo, knownItems);
 
-                if (knownItem == null) {
-                    knownItem = prepareItem(worldItem.getResource(), itemInfo);
-                    itemOwnerHandler.getValue().setOwner(knownItem);
+                    if (knownItem == null) {
+                        knownItem = prepareItem(worldItem, itemInfo);
+                        itemOwnerHandler.getValue().setOwner(knownItem);
+                    }
+
+                    knownItem.setActual(LocalDateTime.now());
+                    knownItemRepository.save(knownItem);
+
+                    inventoryIndex.putMatch(knownItem.getId(), worldItem.getId());
+
                 }
-
-                knownItem.setActual(LocalDateTime.now());
-                knownItemRepository.save(knownItem);
-
-                inventoryIndex.putMatch(knownItem.getId(), worldItem.getId());
-
             }
 
             knownItemRepository.deleteAll(knownItems); //?
@@ -392,14 +394,20 @@ public class KnowledgeMatchingService {
     }
 
     private KnownItem lookupKnownItem(
-            final String worldResource,
+            final WorldItem worldItem,
             final ItemInfo itemInfo,
             final List<KnownItem> knownItems
     ) {
 
         for (final Iterator<KnownItem> iterator = knownItems.iterator(); iterator.hasNext(); ) {
             final KnownItem knownItem = iterator.next();
-            final boolean resourceMatches = Objects.equals(knownItem.getResource(), worldResource);
+
+            final boolean positionMatches = Objects.equals(knownItem.getPosition(),  worldItem.getPosition());
+            if (!positionMatches) {
+                continue;
+            }
+
+            final boolean resourceMatches = Objects.equals(knownItem.getResource(), worldItem.getResource());
             if (!resourceMatches) {
                 continue;
             }
@@ -418,11 +426,13 @@ public class KnowledgeMatchingService {
     }
 
     private KnownItem prepareItem(
-            final String resource,
+            final WorldItem worldItem,
             final ItemInfo itemInfo
     ) {
         final KnownItem knownItem = new KnownItem();
-        knownItem.setResource(resource);
+        knownItem.setResource(worldItem.getResource());
+        knownItem.setX(worldItem.getPosition().getX());
+        knownItem.setY(worldItem.getPosition().getY());
         knownItem.setQuality(itemInfo.getQuality());
         return knownItem;
     }

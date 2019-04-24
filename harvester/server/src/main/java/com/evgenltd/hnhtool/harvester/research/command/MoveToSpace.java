@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
-import com.evgenltd.hnhtool.harvester.common.command.CommandUtils;
+import com.evgenltd.hnhtool.harvester.common.command.Await;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
@@ -57,7 +57,7 @@ public class MoveToSpace {
 
         return agent.getClient()
                 .interact(matchedDoorwayId.getValue(), decideObjectPartition())
-                .thenCombine(() -> CommandUtils.awaitWithResult(this::isAwaitDone))
+                .thenCombine(() -> Await.perform(this::isAwaitDone))
                 .anyway(() -> agent.knowledgeMatchingWithResearch(false));
     }
 

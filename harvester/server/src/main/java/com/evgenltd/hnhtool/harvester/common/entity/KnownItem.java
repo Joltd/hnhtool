@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.entity;
 
+import com.evgenltd.hnhtools.entity.IntPoint;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -27,6 +29,10 @@ public class KnownItem implements Identified {
     private KnownItem parent;
 
     private String resource;
+
+    private Integer x;
+
+    private Integer y;
 
     private LocalDateTime actual;
 
@@ -66,6 +72,24 @@ public class KnownItem implements Identified {
     }
     public void setResource(final String resource) {
         this.resource = resource;
+    }
+
+    public Integer getX() {
+        return x;
+    }
+    public void setX(final Integer x) {
+        this.x = x;
+    }
+
+    public Integer getY() {
+        return y;
+    }
+    public void setY(final Integer y) {
+        this.y = y;
+    }
+
+    public IntPoint getPosition() {
+        return new IntPoint(x, y);
     }
 
     public LocalDateTime getActual() {

@@ -19,8 +19,6 @@ public interface WorldItem {
 
     IntPoint getPosition();
 
-    Integer getNumber();
-
     List getArguments();
 
 }
