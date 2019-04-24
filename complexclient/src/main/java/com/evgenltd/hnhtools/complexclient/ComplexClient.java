@@ -237,10 +237,10 @@ public final class ComplexClient {
     }
 
     public List<WorldInventory> getInventories() {
-        final List<WorldInventory> inventories = new ArrayList<>();
-        inventories.add(getCharacter().getMain());
-        inventories.addAll(inventoryIndex.getInventories());
-        return inventories;
+        final List<WorldInventory> result = new ArrayList<>();
+        result.add(getCharacter().getMain());
+        result.addAll(inventoryIndex.getInventories());
+        return result;
     }
 
     // ##################################################

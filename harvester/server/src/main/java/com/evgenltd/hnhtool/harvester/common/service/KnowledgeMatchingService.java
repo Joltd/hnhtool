@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -349,6 +350,8 @@ public class KnowledgeMatchingService {
 
             }
 
+            knownItemRepository.deleteAll(knownItems); //?
+
         }
 
         return notHandled;
@@ -394,13 +397,15 @@ public class KnowledgeMatchingService {
             final List<KnownItem> knownItems
     ) {
 
-        for (final KnownItem knownItem : knownItems) {
+        for (final Iterator<KnownItem> iterator = knownItems.iterator(); iterator.hasNext(); ) {
+            final KnownItem knownItem = iterator.next();
             final boolean resourceMatches = Objects.equals(knownItem.getResource(), worldResource);
             if (!resourceMatches) {
                 continue;
             }
 
             if (Objects.equals(knownItem.getQuality(), itemInfo.getQuality())) {
+                iterator.remove();
                 return knownItem;
             }
         }

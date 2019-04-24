@@ -8,6 +8,7 @@ import com.evgenltd.hnhtool.harvester.common.service.Module;
 import com.evgenltd.hnhtool.harvester.common.service.TaskService;
 import com.evgenltd.hnhtool.harvester.research.command.MoveByRoute;
 import com.evgenltd.hnhtool.harvester.research.command.MoveToSpace;
+import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
 import com.evgenltd.hnhtool.harvester.research.entity.Path;
 import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
 import com.evgenltd.hnhtool.harvester.research.repository.PathRepository;
@@ -15,6 +16,7 @@ import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,7 +39,6 @@ public class ResearchService implements Module {
     private RoutingService routingService;
 
     private Task researchDoorwayTask;
-
     private Task researchContainerTask;
 
     public ResearchService(
@@ -52,10 +53,10 @@ public class ResearchService implements Module {
         this.routingService = routingService;
     }
 
-//    @Scheduled(fixedDelay = 10_000L)
+    @Scheduled(fixedDelay = 10_000L)
     public void main() {
-        scheduleDoorwayResearch();
-//        scheduleContainerResearch();
+//        scheduleDoorwayResearch();
+        scheduleContainerResearch();
     }
 
     // ##################################################
@@ -148,19 +149,14 @@ public class ResearchService implements Module {
         final KnownObject targetContainer = unknownContainer.get(0);
         log.info("Found unknown container, id=[{}], owner=[{}]", targetContainer.getId(), targetContainer.getOwner().getId());
         
-        researchContainerTask = taskService.openTask(this::researchContainer);
+        researchContainerTask = taskService.openTask(agent -> researchContainer(agent, targetContainer));
         log.info("Created research task, id=[{}]", researchContainerTask.getId());
     }
 
-    private Result<Void> researchContainer(final Agent agent) {
-        return Result.ok();
+    private Result<Void> researchContainer(final Agent agent, final KnownObject targetContainer) {
+        return routingService.route(agent.getCharacter(), targetContainer)
+                .thenApplyCombine(route -> MoveByRoute.performWithoutFromAndTo(agent, route))
+                .thenCombine(() -> OpenContainer.perform(agent, targetContainer));
     }
-
-    private Result<Void> moveToContainerByRoute(final Agent agent, final KnownObject targetContainer, final List<KnownObject> route) {
-        route.remove(agent.getCharacter());
-        route.remove(targetContainer);
-        return MoveByRoute.perform(agent, route);
-    }
-
 
 }

@@ -40,6 +40,16 @@ public class KnownObject implements Identified {
 
     private Boolean container;
 
+    /**
+     * <p>For stack</p>
+     */
+    private Integer count;
+
+    /**
+     * <p>For stack</p>
+     */
+    private Integer max;
+
     public Long getId() {
         return id;
     }
@@ -112,6 +122,20 @@ public class KnownObject implements Identified {
     }
     public void setContainer(final Boolean container) {
         this.container = container;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+    public void setCount(final Integer count) {
+        this.count = count;
+    }
+
+    public Integer getMax() {
+        return max;
+    }
+    public void setMax(final Integer max) {
+        this.max = max;
     }
 
     @Override

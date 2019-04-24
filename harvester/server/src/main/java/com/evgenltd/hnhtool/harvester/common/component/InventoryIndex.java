@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.component;
 
+import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtools.common.Result;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -20,11 +21,19 @@ public class InventoryIndex {
     }
 
     public Result<Integer> getMatchedWorldItemId(final Long knownItemId) {
-        return Result.ok(0);
+        final Integer worldItemId = itemIndex.get(knownItemId);
+        if (worldItemId == null) {
+            return Result.fail(ServerResultCode.NO_MATCHED_WORLD_ITEM_FOUND);
+        }
+        return Result.ok(worldItemId);
     }
 
     public Result<Long> getMatchedKnownItemId(final Integer worldItemId) {
-        return Result.ok(0L);
+        final Long knownItemId = itemIndex.inverse().get(worldItemId);
+        if (knownItemId == null) {
+            return Result.fail(ServerResultCode.NO_MATCHED_KNOWN_ITEM_FOUND);
+        }
+        return Result.ok(knownItemId);
     }
 
 }

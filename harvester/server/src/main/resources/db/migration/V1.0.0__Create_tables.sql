@@ -22,7 +22,9 @@ create table known_objects (
 	researched tinyint,
 	player tinyint,
 	doorway tinyint,
-	container tinyint
+	container tinyint,
+	count int,
+	max int
 );
 
 create table accounts (

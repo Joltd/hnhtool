@@ -61,7 +61,7 @@ public class Result<T> {
     }
 
     public <U> Result<U> cast() {
-        return Result.fail(code);
+        return then(() -> null);
     }
 
     public Result<T> then(Runnable runnable) {
