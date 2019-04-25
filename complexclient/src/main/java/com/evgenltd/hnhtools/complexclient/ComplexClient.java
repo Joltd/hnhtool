@@ -228,6 +228,9 @@ public final class ComplexClient {
         return parentIdForNewInventory == null;
     }
 
+    /**
+     * @param parentIdForNewInventory should be id in context of world objects
+     */
     public Result<Void> setParentIdForNewInventory(final Number parentIdForNewInventory) {
         if (this.parentIdForNewInventory != null) {
             return Result.fail(ResultCode.ANOTHER_INVENTORY_ALREADY_QUEUED_WOR_OPENNING);
