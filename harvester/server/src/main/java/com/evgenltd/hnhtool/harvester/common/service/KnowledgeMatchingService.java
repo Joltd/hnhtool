@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
-import com.evgenltd.hnhtool.harvester.common.component.InventoryIndex;
+import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
@@ -289,25 +289,25 @@ public class KnowledgeMatchingService {
     // #                                                #
     // ##################################################
 
-    public InventoryIndex matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
+    public ItemIndex matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
 
-        final InventoryIndex inventoryIndex = new InventoryIndex();
+        final ItemIndex itemIndex = new ItemIndex();
 
         List<WorldInventory> forNextIteration = inventories;
 
         while (true) {
             final List<WorldInventory> notHandled = matchItemsOneIteration(
                     objectIndex,
-                    inventoryIndex,
+                    itemIndex,
                     forNextIteration
             );
             if (notHandled.isEmpty()) {
-                return inventoryIndex;
+                return itemIndex;
             }
 
             if (notHandled.size() == forNextIteration.size()) {
                 log.warn("Some of inventories can not be matched with KDB");
-                return inventoryIndex;
+                return itemIndex;
             }
 
             forNextIteration = notHandled;
@@ -315,7 +315,7 @@ public class KnowledgeMatchingService {
 
     }
 
-    private List<WorldInventory> matchItemsOneIteration(final ObjectIndex objectIndex, final InventoryIndex inventoryIndex, final List<WorldInventory> inventories) {
+    private List<WorldInventory> matchItemsOneIteration(final ObjectIndex objectIndex, final ItemIndex itemIndex, final List<WorldInventory> inventories) {
 
         final List<WorldInventory> notHandled = new ArrayList<>();
 
@@ -324,7 +324,7 @@ public class KnowledgeMatchingService {
             final Result<ItemOwnerHandler> itemOwnerHandler = decideOwnerHandler(
                     inventory,
                     objectIndex,
-                    inventoryIndex
+                    itemIndex
             );
             if (itemOwnerHandler.isFailed()) {
                 notHandled.add(inventory);
@@ -347,7 +347,7 @@ public class KnowledgeMatchingService {
                     knownItem.setActual(LocalDateTime.now());
                     knownItemRepository.save(knownItem);
 
-                    inventoryIndex.putMatch(knownItem.getId(), worldItem.getId());
+                    itemIndex.putMatch(knownItem.getId(), worldItem.getId());
 
                 }
             }
@@ -360,7 +360,7 @@ public class KnowledgeMatchingService {
 
     }
 
-    private Result<ItemOwnerHandler> decideOwnerHandler(final WorldInventory inventory, final ObjectIndex objectIndex, final InventoryIndex inventoryIndex) {
+    private Result<ItemOwnerHandler> decideOwnerHandler(final WorldInventory inventory, final ObjectIndex objectIndex, final ItemIndex itemIndex) {
         if (inventory.isObjectParentId()) {
             return objectIndex.getMatchedKnownObjectId(inventory.getObjectParentId())
                     .thenApply(knownObjectId -> new ItemOwnerHandler() {
@@ -375,7 +375,7 @@ public class KnowledgeMatchingService {
                         }
                     });
         } else if (inventory.isItemParentId()) {
-            return inventoryIndex.getMatchedKnownItemId(inventory.getItemParentId())
+            return itemIndex.getMatchedKnownItemId(inventory.getItemParentId())
                     .thenApply(knownItemId -> new ItemOwnerHandler() {
                         @Override
                         public List<KnownItem> loadKnownItems() {

@@ -2,7 +2,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
 import com.evgenltd.hnhtool.harvester.common.command.Connect;
-import com.evgenltd.hnhtool.harvester.common.component.InventoryIndex;
+import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
 import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
@@ -62,7 +62,7 @@ public class Agent {
     private ComplexClient client;
     private AtomicBoolean withResearch = new AtomicBoolean(true);
     private ObjectIndex objectIndex;
-    private InventoryIndex inventoryIndex;
+    private ItemIndex itemIndex;
 
     public Agent(
             final ObjectMapper objectMapper,
@@ -124,7 +124,7 @@ public class Agent {
     }
 
     public void matchItemKnowledge() {
-        inventoryIndex = knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
+        itemIndex = knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
     }
 
     // ##################################################
@@ -215,11 +215,11 @@ public class Agent {
     // item matching
 
     public Result<Integer> getMatchedWorldItemId(final Long knownItemId) {
-        return inventoryIndex.getMatchedWorldItemId(knownItemId);
+        return itemIndex.getMatchedWorldItemId(knownItemId);
     }
 
     public Result<Long> getMatchedKnownItemId(final Integer worldItemId) {
-        return inventoryIndex.getMatchedKnownItemId(worldItemId);
+        return itemIndex.getMatchedKnownItemId(worldItemId);
     }
 
     // ##################################################

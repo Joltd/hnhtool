@@ -207,6 +207,10 @@ public final class ComplexClient {
         return character;
     }
 
+    public Long getCharacterId() {
+        return character.getId();
+    }
+
     public Result<WorldObject> getCharacterObject() {
         final WorldObjectImpl object = objectIndex.getObject(getCharacter().getId());
         return object != null

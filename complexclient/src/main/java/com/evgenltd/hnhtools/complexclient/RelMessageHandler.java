@@ -157,6 +157,7 @@ final class RelMessageHandler {
                     pArgs.nextString();
                     worldItem.setPosition(pArgs.nextPoint());
                     client.setHand(worldItem);
+                    widget.setDestroy(() -> client.setHand(null));
                 } else if (character.getEquip() != null && Objects.equals(itemParentId, character.getEquip().getId())) {
                     worldItem.setPosition(new IntPoint(accessor.getPArgs().nextInt(), 0));
                 } else {

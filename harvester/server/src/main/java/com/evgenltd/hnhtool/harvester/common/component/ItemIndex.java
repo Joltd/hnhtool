@@ -12,7 +12,7 @@ import com.google.common.collect.HashBiMap;
  * <p>Author:  lebed</p>
  * <p>Created: 17-04-2019 23:41</p>
  */
-public class InventoryIndex {
+public class ItemIndex {
 
     private final BiMap<Long, Integer> itemIndex = HashBiMap.create();
 

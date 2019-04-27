@@ -31,8 +31,9 @@ public class TakeItemFromStack {
     }
 
     private Result<Void> performImpl() {
-        return agent.getMatchedWorldItemId(knownStack.getId())
-                .then(wiId -> agent.getClient().takeItemInHandFromStack(wiId))
+        return agent.getMatchedWorldObjectId(knownStack.getId())
+                .thenApplyCombine(woId -> agent.getClient().getStack(woId))
+                .then(stack -> agent.getClient().takeItemInHandFromStack(stack.getId()))
                 .then(() -> Await.performSimple(() -> agent.getClient().getHand() != null))
                 .cast();
     }
