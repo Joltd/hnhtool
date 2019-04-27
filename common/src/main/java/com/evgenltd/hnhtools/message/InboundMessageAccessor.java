@@ -256,6 +256,10 @@ public class InboundMessageAccessor {
             iterator = data.iterator();
         }
 
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
         public void skip() {
             iterator.next();
         }

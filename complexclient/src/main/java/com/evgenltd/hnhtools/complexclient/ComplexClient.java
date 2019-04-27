@@ -3,16 +3,14 @@ package com.evgenltd.hnhtools.complexclient;
 import com.evgenltd.hnhtools.baseclient.BaseClient;
 import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
-import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
-import com.evgenltd.hnhtools.complexclient.entity.impl.CharacterImpl;
-import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
+import com.evgenltd.hnhtools.complexclient.entity.*;
+import com.evgenltd.hnhtools.complexclient.entity.impl.*;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.entity.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -50,11 +48,14 @@ public final class ComplexClient {
     private final ObjectIndex objectIndex;
     private final WidgetIndex widgetIndex;
     private final InventoryIndex inventoryIndex;
+    private final StackIndex stackIndex;
 
     private Integer gameUiId;
     private Integer mapViewId;
     private Integer craftMenuId;
     private final CharacterImpl character;
+    private WorldItemImpl hand;
+    private ContextMenu contextMenu;
 
     private Number parentIdForNewInventory;
 
@@ -80,6 +81,7 @@ public final class ComplexClient {
         objectIndex = new ObjectIndex();
         widgetIndex = new WidgetIndex();
         inventoryIndex = new InventoryIndex();
+        stackIndex = new StackIndex();
         character = new CharacterImpl();
         character.setName(characterName);
 
@@ -119,6 +121,10 @@ public final class ComplexClient {
         return inventoryIndex;
     }
 
+    StackIndex getStackIndex() {
+        return stackIndex;
+    }
+
     Integer getGameUiId() {
         return gameUiId;
     }
@@ -135,6 +141,13 @@ public final class ComplexClient {
         this.mapViewId = mapViewId;
     }
 
+    public WorldItem getHand() {
+        return hand;
+    }
+    void setHand(final WorldItemImpl hand) {
+        this.hand = hand;
+    }
+
     Integer getCraftMenuId() {
         return craftMenuId;
     }
@@ -142,6 +155,17 @@ public final class ComplexClient {
         this.craftMenuId = craftMenuId;
     }
 
+    void setContextMenu(final ContextMenu contextMenu) {
+        this.contextMenu = contextMenu;
+    }
+    public List<String> getContextMenuCommands() {
+        return contextMenu != null
+                ? Collections.unmodifiableList(contextMenu.getCommands())
+                : Collections.emptyList();
+    }
+    public boolean hasContextMenu() {
+        return contextMenu != null;
+    }
 
     // ##################################################
     // #                                                #
@@ -240,10 +264,21 @@ public final class ComplexClient {
     }
 
     public List<WorldInventory> getInventories() {
-        final List<WorldInventory> result = new ArrayList<>();
-        result.add(getCharacter().getMain());
-        result.addAll(inventoryIndex.getInventories());
-        return result;
+        return inventoryIndex.getInventories();
+    }
+
+    public Result<WorldInventory> getInventoryByParentId(final Number parentId) {
+        final WorldInventoryImpl inventory = inventoryIndex.getInventoryByParentId(parentId);
+        if (inventory == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
+        }
+
+        return Result.ok(inventory);
+    }
+
+    public Result<WorldStack> getStack(final Long parentId) {
+        final WorldStack stack = stackIndex.getStackByParentId(parentId);
+        return stack != null ? Result.ok(stack) : Result.fail(ResultCode.NO_STACK);
     }
 
     // ##################################################
@@ -337,7 +372,7 @@ public final class ComplexClient {
                 itemId,
                 I_ACT_COMMAND,
                 new IntPoint(),
-                UNKNOWN_FLAG
+                NO_KEYBOARD_MODIFIER
         );
     }
 
@@ -349,12 +384,40 @@ public final class ComplexClient {
         );
     }
 
+    public void takeItemInHandFromStack(final Integer stackId) {
+        baseClient.pushOutboundRel(stackId, CLICK_COMMAND);
+    }
+
     public void dropItemFromHandInInventory(final Integer inventoryId, final IntPoint position) {
         baseClient.pushOutboundRel(
                 inventoryId,
                 DROP_COMMAND,
                 position
         );
+    }
+
+    public void dropItemFromHandInStack(final Integer stackId) {
+        baseClient.pushOutboundRel(
+                stackId,
+                DROP_COMMAND
+        );
+    }
+
+    public Result<Void> dropItemFromHandInWorld() {
+        final Result<Integer> mapViewId = getMapViewId();
+        if (mapViewId.isFailed()) {
+            return mapViewId.cast();
+        }
+
+        final WorldObjectImpl character = objectIndex.getObject(this.character.getId());
+        baseClient.pushOutboundRel(
+                mapViewId.getValue(),
+                DROP_COMMAND,
+                new IntPoint(),
+                character.getPosition(),
+                NO_KEYBOARD_MODIFIER
+        );
+        return Result.ok();
     }
 
     public void dropItemInWorld(final Integer itemId) {
@@ -414,29 +477,44 @@ public final class ComplexClient {
         });
     }
 
-    public void closeWidget(final Integer widgetId) {
-        baseClient.pushOutboundRel(widgetId, CLOSE_COMMAND);
+    public Result<Void> closeInventory(final Integer inventoryId) {
+        final WorldInventoryImpl inventory = inventoryIndex.getInventory(inventoryId);
+        if (inventory == null) {
+            return Result.fail(ResultCode.NO_INVENTORY);
+        }
+
+        baseClient.pushOutboundRel(inventory.getWindowId(), CLOSE_COMMAND);
+        return Result.ok();
     }
-/*
+
+    public Result<Void> closeStack(final Integer stackId) {
+        final WorldStackImpl stack = stackIndex.getStack(stackId);
+        if (stack == null) {
+            return Result.fail(ResultCode.NO_STACK);
+        }
+
+        baseClient.pushOutboundRel(stack.getWindowId(), CLOSE_COMMAND);
+        return Result.ok();
+    }
+
     public Result<Void> contextMenuCommand(final String command) {
-        final Integer contextMenuId = getContextMenuId();
-        if (contextMenuId == null) {
+        if (contextMenu == null) {
             return Result.fail(ResultCode.NO_CONTEXT_MENU);
         }
 
-        final Integer contextMenuCommandId = getContextMenuCommandId(command);
-        if (contextMenuCommandId < 0) {
+        final int commandIndex = contextMenu.getCommands().indexOf(command);
+        if (commandIndex < 0) {
             return Result.fail(ResultCode.NO_CONTEXT_MENU_COMMAND);
         }
 
         baseClient.pushOutboundRel(
-                contextMenuId,
+                contextMenu.getId(),
                 CONTEXT_MEU_COMMAND,
-                contextMenuCommandId,
+                commandIndex,
                 NO_KEYBOARD_MODIFIER
         );
 
         return Result.ok();
-    }*/
+    }
 
 }

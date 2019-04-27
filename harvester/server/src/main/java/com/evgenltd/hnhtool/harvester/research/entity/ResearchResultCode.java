@@ -19,4 +19,6 @@ public class ResearchResultCode {
     public static final String TO_POINT_UNREACHABLE = "TO_POINT_UNREACHABLE";
 
     public static final String ROUTE_NOT_FOUND = "ROUTE_NOT_FOUND";
+
+    public static final String HAND_IS_EMPTY = "HAND_IS_EMPTY";
 }

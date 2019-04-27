@@ -1,9 +1,7 @@
 package com.evgenltd.hnhtools.complexclient;
 
-import com.evgenltd.hnhtools.complexclient.entity.impl.CharacterImpl;
-import com.evgenltd.hnhtools.complexclient.entity.impl.Widget;
-import com.evgenltd.hnhtools.complexclient.entity.impl.WorldInventoryImpl;
-import com.evgenltd.hnhtools.complexclient.entity.impl.WorldItemImpl;
+import com.evgenltd.hnhtools.complexclient.entity.ContextMenu;
+import com.evgenltd.hnhtools.complexclient.entity.impl.*;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.message.InboundMessageAccessor;
 import com.evgenltd.hnhtools.message.RelType;
@@ -126,6 +124,7 @@ final class RelMessageHandler {
                 if (client.getGameUiId().equals(inventoryParentId)) {
                     inventory.setParentId(character.getId());
                     character.setMain(inventory);
+                    client.getInventoryIndex().addInventory(inventory);
                     widget.setDestroy(() -> character.setMain(null));
                 } else if (character.getSheetId().equals(inventoryParentId)) {
                     character.setStudy(inventory);
@@ -137,6 +136,7 @@ final class RelMessageHandler {
                         break;
                     }
                     inventory.setParentId(objectParentId);
+                    inventory.setWindowId(accessor.getWidgetParentId());
                     client.getInventoryIndex().addInventory(inventory);
                     widget.setDestroy(() -> client.getInventoryIndex().removeInventory(inventory.getId()));
                 }
@@ -152,7 +152,12 @@ final class RelMessageHandler {
                 final Long resourceId = accessor.getCArgs().nextLong();
                 worldItem.setResource(() -> client.getResourceProvider().getResourceName(resourceId));
 
-                if (character.getEquip() != null && Objects.equals(itemParentId, character.getEquip().getId())) {
+                if (Objects.equals(itemParentId, client.getGameUiId())) {
+                    final InboundMessageAccessor.RelArgsAccessor pArgs = accessor.getPArgs();
+                    pArgs.nextString();
+                    worldItem.setPosition(pArgs.nextPoint());
+                    client.setHand(worldItem);
+                } else if (character.getEquip() != null && Objects.equals(itemParentId, character.getEquip().getId())) {
                     worldItem.setPosition(new IntPoint(accessor.getPArgs().nextInt(), 0));
                 } else {
                     worldItem.setPosition(accessor.getPArgs().nextPoint());
@@ -163,23 +168,32 @@ final class RelMessageHandler {
                 addToInventoryIfPossible(widget, character::getMain, itemParentId, worldItem);
                 addToInventoryIfPossible(widget, () -> client.getInventoryIndex().getInventory(itemParentId), itemParentId, worldItem);
 
-//                if (Objects.equals(client.getGameUiId(), itemParentId)) {
-//                    // in hand
-//                }
-
                 break;
             case ISBOX_WIDGET:
-//                final Stack stack = new Stack(widget.getId());
-//                final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getCArgs();
-//                stackArgs.skip();
-//                stack.setCount(stackArgs.nextInt());
-//                stack.setMax(stackArgs.nextInt());
-//                stackIndex.put(widget.getId(), stack);
+                final WorldStackImpl worldStack = new WorldStackImpl(widget.getId());
+                final Number stackParentId = client.takeParentIdForNewInventory();
+                if (stackParentId == null) {
+                    log.warn("Parent for Stack [{}] is not provided, skipped", widget.getId());
+                    break;
+                }
+                worldStack.setParentObjectId(stackParentId.longValue());
+
+                final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getCArgs();
+                stackArgs.skip();
+                worldStack.setCount(stackArgs.nextInt());
+                worldStack.setMax(stackArgs.nextInt());
+                client.getStackIndex().addStack(worldStack);
+                widget.setHandleMessage(rel -> handleStackMessage(rel, worldStack));
+                widget.setDestroy(() -> client.getStackIndex().removeStack(worldStack.getId()));
                 break;
             case CONTEXT_MENU:
-//                contextMenu = new ContextMenu(widget.getId());
-//                final InboundMessageAccessor.RelArgsAccessor contextMenuArgs = accessor.getCArgs();
-//                contextMenu.getCommands().add(contextMenuArgs.nextString());
+                final InboundMessageAccessor.RelArgsAccessor contextMenuArgs = accessor.getCArgs();
+                final ContextMenu contextMenu = new ContextMenu(widget.getId());
+                while (contextMenuArgs.hasNext()) {
+                    contextMenu.addCommand(contextMenuArgs.nextString());
+                }
+                client.setContextMenu(contextMenu);
+                widget.setDestroy(() -> client.setContextMenu(null));
                 break;
         }
     }
@@ -215,13 +229,14 @@ final class RelMessageHandler {
         }
     }
 
-    private void handleStackMessage() {
-//        final Stack stack = stackIndex.get(widget.getId());
-//        if (stack != null) {
-//            final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getArgs();
-//            stack.setCount(stackArgs.nextInt());
-//            stack.setMax(stackArgs.nextInt());
-//        }
+    private void handleStackMessage(final InboundMessageAccessor.RelAccessor accessor, final WorldStackImpl worldStack) {
+        if (!Objects.equals(accessor.getWidgetMessageName(), CHANGE_NUM_MESSAGE_NAME)) {
+            return;
+        }
+
+        final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getArgs();
+        worldStack.setCount(stackArgs.nextInt());
+        worldStack.setMax(stackArgs.nextInt());
     }
 
 }

@@ -40,7 +40,7 @@ final class InventoryIndex {
     synchronized void removeInventory(final Integer id) {
         final WorldInventoryImpl inventory = index.remove(id);
         if (inventory != null) {
-            parentIndex.get(inventory.getParentId());
+            parentIndex.remove(inventory.getParentId());
         }
     }
 

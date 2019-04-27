@@ -17,7 +17,11 @@ import java.util.List;
 public class WorldInventoryImpl implements WorldInventory {
 
     private Integer id;
+    /**
+     * WorldObject or WorldItem who is an actual owner of inventory
+     */
     private Number parentId;
+    private Integer windowId;
     private IntPoint size;
     private final List<WorldItem> items = new ArrayList<>();
 
@@ -36,6 +40,13 @@ public class WorldInventoryImpl implements WorldInventory {
     @Override
     public Number getParentId() {
         return parentId;
+    }
+
+    public Integer getWindowId() {
+        return windowId;
+    }
+    public void setWindowId(final Integer windowId) {
+        this.windowId = windowId;
     }
 
     public void setSize(final IntPoint size) {
