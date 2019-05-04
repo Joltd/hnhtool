@@ -124,7 +124,7 @@ public class Agent {
     }
 
     public void matchItemKnowledge() {
-        itemIndex = knowledgeMatchingService.matchItems(objectIndex, client.getInventories());
+        itemIndex = knowledgeMatchingService.matchItems(objectIndex, client.getInventories(), client.getStacks());
     }
 
     // ##################################################
@@ -220,6 +220,18 @@ public class Agent {
 
     public Result<Long> getMatchedKnownItemId(final Integer worldItemId) {
         return itemIndex.getMatchedKnownItemId(worldItemId);
+    }
+
+    public Result<Integer> getMatchedWorldInventoryId(final Long parentId) {
+        return itemIndex.getMatchedWorldInventoryId(parentId);
+    }
+
+    public Result<Integer> getMatchedWorldInventoryIdByObjectParent(final Long parentKnownObjectId) {
+        return itemIndex.getMatchedWorldInventoryIdByObjectParent(parentKnownObjectId);
+    }
+
+    public Result<Integer> getMatchedWorldInventoryIdByItemParent(final Long parentKnownItemId) {
+        return itemIndex.getMatchedWorldInventoryIdByItemParent(parentKnownItemId);
     }
 
     // ##################################################

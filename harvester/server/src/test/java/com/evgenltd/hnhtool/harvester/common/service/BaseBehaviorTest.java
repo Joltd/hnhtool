@@ -5,7 +5,7 @@ import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.research.command.DropItemInInventory;
-import com.evgenltd.hnhtool.harvester.research.command.OpenStack;
+import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
 import com.evgenltd.hnhtool.harvester.research.command.TakeItemFromStack;
 import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.entity.IntPoint;
@@ -56,9 +56,9 @@ public class BaseBehaviorTest {
             }
 
             final KnownObject stackObject = knownObjectRepository.findById(13L).get();
-            final Result<Void> result = OpenStack.perform(agent, stackObject)
+            final Result<Void> result = OpenContainer.perform(agent, stackObject)
                     .thenCombine(() -> TakeItemFromStack.perform(agent, stackObject))
-                    .thenCombine(() -> DropItemInInventory.performImpl(
+                    .thenCombine(() -> DropItemInInventory.perform(
                             agent,
                             agent.getClient().getCharacterId(),
                             new IntPoint(1, 1)

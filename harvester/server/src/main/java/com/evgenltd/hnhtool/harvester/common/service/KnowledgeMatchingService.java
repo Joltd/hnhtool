@@ -16,6 +16,7 @@ import com.evgenltd.hnhtools.common.Result;
 import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
 import com.evgenltd.hnhtools.complexclient.entity.WorldItem;
 import com.evgenltd.hnhtools.complexclient.entity.WorldObject;
+import com.evgenltd.hnhtools.complexclient.entity.WorldStack;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -289,9 +290,20 @@ public class KnowledgeMatchingService {
     // #                                                #
     // ##################################################
 
-    public ItemIndex matchItems(final ObjectIndex objectIndex, final List<WorldInventory> inventories) {
+    public ItemIndex matchItems(
+            final ObjectIndex objectIndex,
+            final List<WorldInventory> inventories,
+            final List<WorldStack> stacks
+    ) {
 
         final ItemIndex itemIndex = new ItemIndex();
+
+        for (WorldStack stack : stacks) {
+            objectIndex.getMatchedKnownObjectId(stack.getParentObjectId())
+                    .then(koId -> matchStack(itemIndex, koId, stack));
+        }
+
+        //
 
         List<WorldInventory> forNextIteration = inventories;
 
@@ -347,12 +359,14 @@ public class KnowledgeMatchingService {
                     knownItem.setActual(LocalDateTime.now());
                     knownItemRepository.save(knownItem);
 
-                    itemIndex.putMatch(knownItem.getId(), worldItem.getId());
+                    itemIndex.putItemMatch(knownItem.getId(), worldItem.getId());
 
                 }
             }
 
-            knownItemRepository.deleteAll(knownItems); //?
+            // update owner count and max values
+
+            knownItemRepository.deleteAll(knownItems);
 
         }
 
@@ -363,6 +377,7 @@ public class KnowledgeMatchingService {
     private Result<ItemOwnerHandler> decideOwnerHandler(final WorldInventory inventory, final ObjectIndex objectIndex, final ItemIndex itemIndex) {
         if (inventory.isObjectParentId()) {
             return objectIndex.getMatchedKnownObjectId(inventory.getObjectParentId())
+                    .then(knownObjectId -> itemIndex.putInventoryMatchWithObjectParent(knownObjectId, inventory.getId()))
                     .thenApply(knownObjectId -> new ItemOwnerHandler() {
                         @Override
                         public List<KnownItem> loadKnownItems() {
@@ -376,6 +391,7 @@ public class KnowledgeMatchingService {
                     });
         } else if (inventory.isItemParentId()) {
             return itemIndex.getMatchedKnownItemId(inventory.getItemParentId())
+                    .then(knownItemId -> itemIndex.putInventoryMatchWithItemParent(knownItemId, inventory.getId()))
                     .thenApply(knownItemId -> new ItemOwnerHandler() {
                         @Override
                         public List<KnownItem> loadKnownItems() {
@@ -435,6 +451,27 @@ public class KnowledgeMatchingService {
         knownItem.setY(worldItem.getPosition().getY());
         knownItem.setQuality(itemInfo.getQuality());
         return knownItem;
+    }
+
+    // stack
+
+    private void matchStack(final ItemIndex itemIndex, final Long knownStackId, final WorldStack worldStack) {
+        final KnownObject knownStack = knownObjectRepository.findById(knownStackId).orElse(null);
+        if (knownStack == null) {
+            return;
+        }
+
+        if (!Objects.equals(worldStack.getCount(), knownStack.getCount())) {
+            knownStack.setResearched(false);
+            knownObjectRepository.save(knownStack);
+            return;
+        }
+
+        knownStack.setCount(worldStack.getCount());
+        knownStack.setMax(worldStack.getMax());
+        knownObjectRepository.save(knownStack);
+
+        itemIndex.putInventoryMatchWithObjectParent(knownStack.getId(), worldStack.getId());
     }
 
     private static class ItemInfo {

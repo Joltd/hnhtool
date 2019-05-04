@@ -1,9 +1,13 @@
 package com.evgenltd.hnhtools.complexclient;
 
+import com.evgenltd.hnhtools.complexclient.entity.WorldStack;
 import com.evgenltd.hnhtools.complexclient.entity.impl.WorldStackImpl;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,6 +42,11 @@ public class StackIndex {
     @Nullable
     synchronized WorldStackImpl getStackByParentId(final Long parentId) {
         return parentIndex.get(parentId);
+    }
+
+    @NotNull
+    synchronized List<WorldStack> getStacks() {
+        return new ArrayList<>(index.values());
     }
 
 }

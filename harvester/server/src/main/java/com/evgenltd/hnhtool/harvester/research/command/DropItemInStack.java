@@ -36,9 +36,8 @@ public class DropItemInStack {
             return Result.fail(ResearchResultCode.HAND_IS_EMPTY);
         }
 
-        return agent.getMatchedWorldObjectId(knownStack.getId())
-                .thenApplyCombine(woId -> agent.getClient().getStack(woId))
-                .then(stack -> agent.getClient().dropItemFromHandInStack(stack.getId()))
+        return agent.getMatchedWorldInventoryId(knownStack.getId())
+                .then(stackId -> agent.getClient().dropItemFromHandInStack(stackId))
                 .then(() -> Await.performSimple(() -> agent.getClient().getHand() == null))
                 .cast();
     }

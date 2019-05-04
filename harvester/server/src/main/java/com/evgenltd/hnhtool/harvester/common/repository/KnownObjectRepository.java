@@ -46,6 +46,10 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
         save(knownObject);
     }
 
+    @Query("select ko from KnownObject ko where ko.container = true and ko.researched = true " +
+            "and ko.count < ko.max and (ko.stack = false or (?1 is not null and ko.resource = ?1))")
+    List<KnownObject> findSuitableContainers(final String stackResource);
+
     interface SpaceInfo {
         Long getSpaceId();
         Integer getX();

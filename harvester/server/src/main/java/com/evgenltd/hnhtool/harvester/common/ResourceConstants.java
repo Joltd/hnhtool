@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.common;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,6 +26,11 @@ public class ResourceConstants {
     public static final String TIMBER_HOUSE = "gfx/terobjs/arch/timberhouse";
 
     public static final String CUPBOARD = "gfx/terobjs/cupboard";
+
+    public static final Map<String,String> ITEM_TO_STACK_MATCHING = new HashMap<>();
+    static {
+        ITEM_TO_STACK_MATCHING.put("", "");
+    }
 
     public static boolean isWaste(final String resourceName) {
         return Arrays.asList(
@@ -68,5 +75,9 @@ public class ResourceConstants {
 
     public static boolean isDoorwayToMine(final String resourceName) {
         return false;
+    }
+
+    public static String getMatchedStack(final String itemResource) {
+        return ITEM_TO_STACK_MATCHING.get(itemResource);
     }
 }

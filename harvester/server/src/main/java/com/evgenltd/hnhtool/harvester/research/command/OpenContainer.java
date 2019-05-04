@@ -34,7 +34,7 @@ public class OpenContainer {
     private Result<Void> performImpl() {
         final ComplexClient client = agent.getClient();
         return agent.getMatchedWorldObjectId(container.getId())
-                .thenApplyCombine(woId -> client.setParentIdForNewInventory(woId).then(() -> woId))
+                .then(client::setParentIdForNewInventory)
                 .thenApplyCombine(client::interact)
                 .thenCombine(() -> Await.performSimple(client::parentIdIsTaken));
     }

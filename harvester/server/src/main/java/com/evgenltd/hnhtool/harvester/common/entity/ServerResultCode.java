@@ -25,6 +25,8 @@ public class ServerResultCode {
     public static final String NO_MATCHED_WORLD_ITEM_FOUND = "NO_MATCHED_WORLD_ITEM_FOUND";
     public static final String NO_MATCHED_KNOWN_ITEM_FOUND = "NO_MATCHED_KNOWN_ITEM_FOUND";
 
+    public static final String NO_MATCHED_WORLD_INVENTORY_FOUND = "NO_MATCHED_WORLD_INVENTORY_FOUND";
+
     public static final String EXCEPTION_DURING_TASK_PERFORMING = "EXCEPTION_DURING_TASK_PERFORMING";
 
     // knowledge matching service

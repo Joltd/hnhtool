@@ -18,29 +18,30 @@ import org.jetbrains.annotations.NotNull;
 public class DropItemInInventory {
 
     private Agent agent;
-    private Number inventoryOwnerId;
+    private Long inventoryOwnerId;
     private IntPoint position;
 
-    private DropItemInInventory(final Agent agent, final Number inventoryOwnerId, final IntPoint position) {
+    private DropItemInInventory(final Agent agent, final Long inventoryOwnerId, final IntPoint position) {
         this.agent = agent;
         this.inventoryOwnerId = inventoryOwnerId;
         this.position = position;
     }
 
-    public static Result<Void> performImpl(@NotNull final Agent agent, @NotNull final Number inventoryOwnerId, @NotNull final IntPoint position) {
+    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final Long inventoryOwnerId, @NotNull final IntPoint position) {
         Assert.valueRequireNonEmpty(agent, "Agent");
         Assert.valueRequireNonEmpty(inventoryOwnerId, "InventoryOwnerId");
         Assert.valueRequireNonEmpty(position, "Position");
-        return new DropItemInInventory(agent, inventoryOwnerId, position).perform();
+        return new DropItemInInventory(agent, inventoryOwnerId, position).performImpl();
     }
 
-    private Result<Void> perform() {
+    private Result<Void> performImpl() {
         if (agent.getClient().getHand() == null) {
             return Result.fail(ResearchResultCode.HAND_IS_EMPTY);
         }
 
-        return agent.getClient().getInventoryByParentId(inventoryOwnerId)
-                .then(inventory -> agent.getClient().dropItemFromHandInInventory(inventory.getId(), position))
+
+        return agent.getMatchedWorldInventoryId(inventoryOwnerId)
+                .then(inventoryId -> agent.getClient().dropItemFromHandInInventory(inventoryId, position))
                 .then(() -> Await.performSimple(() -> agent.getClient().getHand() == null))
                 .cast();
     }

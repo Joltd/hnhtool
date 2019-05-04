@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.ServerResultCode;
 import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.entity.Work;
@@ -82,6 +83,7 @@ public class TaskService {
     private Work workWrapper(final Task task, final Work work) {
         return agent -> {
             try {
+                TaskContext.setupContext(agent);
                 startTask(task);
                 final Result<Void> result = work.apply(agent);
                 if (result.isSuccess()) {
@@ -92,6 +94,8 @@ public class TaskService {
             } catch (Throwable e) {
                 log.error("Unable to perform task", e);
                 failTask(task, ServerResultCode.EXCEPTION_DURING_TASK_PERFORMING);
+            } finally {
+                TaskContext.clearContext();
             }
             return Result.ok();
         };

@@ -21,4 +21,9 @@ public class ResearchResultCode {
     public static final String ROUTE_NOT_FOUND = "ROUTE_NOT_FOUND";
 
     public static final String HAND_IS_EMPTY = "HAND_IS_EMPTY";
+
+    public static final String NOT_IN_MAIN_INVENTORY = "NOT_IN_MAIN_INVENTORY";
+    public static final String NO_SUITABLE_CONTAINER_FOUND = "NO_SUITABLE_CONTAINER_FOUND";
+
+    public static final String STACK_NOT_RESEARCHED = "STACK_NOT_RESEARCHED";
 }

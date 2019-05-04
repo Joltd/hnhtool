@@ -271,13 +271,8 @@ public final class ComplexClient {
         return inventoryIndex.getInventories();
     }
 
-    public Result<WorldInventory> getInventoryByParentId(final Number parentId) {
-        final WorldInventoryImpl inventory = inventoryIndex.getInventoryByParentId(parentId);
-        if (inventory == null) {
-            return Result.fail(ResultCode.NO_INVENTORY);
-        }
-
-        return Result.ok(inventory);
+    public List<WorldStack> getStacks() {
+        return stackIndex.getStacks();
     }
 
     public Result<WorldStack> getStack(final Long parentId) {

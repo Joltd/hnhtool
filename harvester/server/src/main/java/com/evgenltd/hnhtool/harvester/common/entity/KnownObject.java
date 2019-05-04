@@ -32,22 +32,18 @@ public class KnownObject implements Identified {
 
     private LocalDateTime actual;
 
-    private Boolean researched;
+    private Boolean researched = false;
 
-    private Boolean player;
+    private Boolean player = false;
 
-    private Boolean doorway;
+    private Boolean doorway = false;
 
-    private Boolean container;
+    private Boolean container = false;
 
-    /**
-     * <p>For stack</p>
-     */
+    private Boolean stack = false;
+
     private Integer count;
 
-    /**
-     * <p>For stack</p>
-     */
     private Integer max;
 
     public Long getId() {
@@ -122,6 +118,13 @@ public class KnownObject implements Identified {
     }
     public void setContainer(final Boolean container) {
         this.container = container;
+    }
+
+    public Boolean getStack() {
+        return stack;
+    }
+    public void setStack(final Boolean stack) {
+        this.stack = stack;
     }
 
     public Integer getCount() {
