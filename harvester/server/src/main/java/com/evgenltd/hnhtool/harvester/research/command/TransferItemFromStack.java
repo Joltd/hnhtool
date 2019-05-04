@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -22,15 +24,15 @@ public class TransferItemFromStack {
     private KnownObject knownStack;
     private Integer number;
 
-    private TransferItemFromStack(final Agent agent, final KnownObject stack) {
-        this.agent = agent;
+    private TransferItemFromStack(final KnownObject stack) {
+        this.agent = TaskContext.getAgent();
         this.knownStack = stack;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final KnownObject stack) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final KnownObject stack) {
         Assert.valueRequireNonEmpty(stack, "Stack");
-        return new TransferItemFromStack(agent, stack).performImpl();
+        return new TransferItemFromStack(stack).performImpl();
     }
 
     private Result<Void> performImpl() {

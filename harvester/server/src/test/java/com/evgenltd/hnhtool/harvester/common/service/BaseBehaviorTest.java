@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
@@ -48,7 +49,7 @@ public class BaseBehaviorTest {
 
     @Test
     public void commonTest() throws InterruptedException {
-        agentService.offerWork(agent -> {
+        agentService.offerWork(() -> {
 
             try {
                 Thread.sleep(10000L);
@@ -56,11 +57,10 @@ public class BaseBehaviorTest {
             }
 
             final KnownObject stackObject = knownObjectRepository.findById(13L).get();
-            final Result<Void> result = OpenContainer.perform(agent, stackObject)
-                    .thenCombine(() -> TakeItemFromStack.perform(agent, stackObject))
+            final Result<Void> result = OpenContainer.perform(stackObject)
+                    .thenCombine(() -> TakeItemFromStack.perform(stackObject))
                     .thenCombine(() -> DropItemInInventory.perform(
-                            agent,
-                            agent.getClient().getCharacterId(),
+                            TaskContext.getAgent().getClient().getCharacterId(),
                             new IntPoint(1, 1)
                     ));
 

@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -20,15 +22,15 @@ public class OpenContainer {
     private Agent agent;
     private KnownObject container;
 
-    private OpenContainer(final Agent agent, final KnownObject container) {
-        this.agent = agent;
+    private OpenContainer(final KnownObject container) {
+        this.agent = TaskContext.getAgent();
         this.container = container;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final KnownObject container) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final KnownObject container) {
         Assert.valueRequireNonEmpty(container, "Container");
-        return new OpenContainer(agent, container).performImpl();
+        return new OpenContainer(container).performImpl();
     }
 
     private Result<Void> performImpl() {

@@ -2,6 +2,8 @@ package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Space;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
@@ -29,18 +31,15 @@ public class MoveToSpace {
 
     private Space originSpace;
 
-    private MoveToSpace(final Agent agent, final KnownObject doorway) {
-        this.agent = agent;
+    private MoveToSpace(final KnownObject doorway) {
+        this.agent = TaskContext.getAgent();
         this.doorway = doorway;
     }
 
-    public static Result<Void> perform(
-            @NotNull final Agent agent,
-            @NotNull final KnownObject doorwayId
-    ) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final KnownObject doorwayId) {
         Assert.valueRequireNonEmpty(doorwayId, "DoorwayId");
-        return new MoveToSpace(agent, doorwayId).performImpl();
+        return new MoveToSpace(doorwayId).performImpl();
     }
 
     private Result<Void> performImpl() {

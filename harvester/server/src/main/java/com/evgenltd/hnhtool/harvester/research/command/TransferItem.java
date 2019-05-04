@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -18,22 +20,22 @@ public class TransferItem {
     private Agent agent;
     private KnownItem knownItem;
 
-    private TransferItem(final Agent agent, final KnownItem knownItem) {
-        this.agent = agent;
+    private TransferItem(final KnownItem knownItem) {
+        this.agent = TaskContext.getAgent();
         this.knownItem = knownItem;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final KnownItem knownItem) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final KnownItem knownItem) {
         Assert.valueRequireNonEmpty(knownItem, "KnownItem");
-        return new TransferItem(agent, knownItem).performImpl();
+        return new TransferItem(knownItem).performImpl();
     }
 
     private Result<Void> performImpl() {
-        AwaitForItem.appear(agent, knownItem.getId());
+        AwaitForItem.appear(knownItem.getId());
         return agent.getMatchedWorldItemId(knownItem.getId())
                 .then(woId -> agent.getClient().transferItem(woId))
-                .then(woId -> AwaitForItem.disappear(agent, woId))
+                .then(AwaitForItem::disappear)
                 .cast();
     }
 

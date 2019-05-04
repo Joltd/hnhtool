@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -18,22 +19,21 @@ public class TakeItem {
     private Agent agent;
     private KnownItem knownItem;
 
-    private TakeItem(final Agent agent, final KnownItem knownItem) {
-        this.agent = agent;
+    private TakeItem(final KnownItem knownItem) {
+        this.agent = TaskContext.getAgent();
         this.knownItem = knownItem;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final KnownItem knownItem) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    public static Result<Void> perform(@NotNull final KnownItem knownItem) {
         Assert.valueRequireNonEmpty(knownItem, "KnownItem");
-        return new TakeItem(agent, knownItem).performImpl();
+        return new TakeItem(knownItem).performImpl();
     }
 
     private Result<Void> performImpl() {
-        AwaitForItem.appear(agent, knownItem.getId());
+        AwaitForItem.appear(knownItem.getId());
         return agent.getMatchedWorldItemId(knownItem.getId())
                 .then(woId -> agent.getClient().takeItemInHand(woId))
-                .then(woId -> AwaitForItem.disappear(agent, woId))
+                .then(AwaitForItem::disappear)
                 .cast();
     }
 

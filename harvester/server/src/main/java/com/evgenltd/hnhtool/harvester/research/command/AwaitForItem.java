@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
 import org.jetbrains.annotations.NotNull;
@@ -18,22 +20,22 @@ public class AwaitForItem {
     private Long knownItemId;
     private Integer worldItemId;
 
-    private AwaitForItem(final Agent agent, final Long knownItemId, final Integer worldItemId) {
-        this.agent = agent;
+    private AwaitForItem(final Long knownItemId, final Integer worldItemId) {
+        this.agent = TaskContext.getAgent();
         this.knownItemId = knownItemId;
         this.worldItemId = worldItemId;
     }
 
-    public static void appear(@NotNull final Agent agent, @NotNull final Long knownItemId) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static void appear(@NotNull final Long knownItemId) {
         Assert.valueRequireNonEmpty(knownItemId, "KnownItemId");
-        new AwaitForItem(agent, knownItemId, null).appearImpl();
+        new AwaitForItem(knownItemId, null).appearImpl();
     }
 
-    public static void disappear(@NotNull final Agent agent, @NotNull final Integer worldItemId) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static void disappear(@NotNull final Integer worldItemId) {
         Assert.valueRequireNonEmpty(worldItemId, "WorldItemId");
-        new AwaitForItem(agent, null, worldItemId).disappearImpl();
+        new AwaitForItem(null, worldItemId).disappearImpl();
     }
 
     private void appearImpl() {

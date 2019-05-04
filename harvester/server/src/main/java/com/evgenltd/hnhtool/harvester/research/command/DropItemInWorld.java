@@ -1,11 +1,11 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
-import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.common.Result;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * <p></p>
@@ -18,13 +18,13 @@ public class DropItemInWorld {
 
     private Agent agent;
 
-    private DropItemInWorld(final Agent agent) {
-        this.agent = agent;
+    private DropItemInWorld() {
+        this.agent = TaskContext.getAgent();
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
-        return new DropItemInWorld(agent).performImpl();
+    @TaskRequired
+    public static Result<Void> perform() {
+        return new DropItemInWorld().performImpl();
     }
 
     private Result<Void> performImpl() {

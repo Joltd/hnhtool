@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
@@ -20,15 +22,15 @@ public class DropItemInStack {
     private Agent agent;
     private KnownObject knownStack;
 
-    private DropItemInStack(final Agent agent, final KnownObject knownStack) {
-        this.agent = agent;
+    private DropItemInStack(final KnownObject knownStack) {
+        this.agent = TaskContext.getAgent();
         this.knownStack = knownStack;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final KnownObject knownStack) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final KnownObject knownStack) {
         Assert.valueRequireNonEmpty(knownStack, "KnownStack");
-        return new DropItemInStack(agent, knownStack).performImpl();
+        return new DropItemInStack(knownStack).performImpl();
     }
 
     private Result<Void> performImpl() {

@@ -4,6 +4,7 @@ import com.evgenltd.hnhtool.harvester.common.command.Await;
 import com.evgenltd.hnhtool.harvester.common.command.Connect;
 import com.evgenltd.hnhtool.harvester.common.component.ItemIndex;
 import com.evgenltd.hnhtool.harvester.common.component.ObjectIndex;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.*;
 import com.evgenltd.hnhtool.harvester.common.repository.AccountRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
@@ -265,7 +266,9 @@ public class Agent {
                 connectIfNecessary();
 
                 state = State.BUSY;
-                work.apply(this);
+                TaskContext.setupContext(this);
+                final Result<Void> workResult = work.get();
+                TaskContext.clearContext();
                 state = State.READY;
 
             } catch (InterruptedException e) {

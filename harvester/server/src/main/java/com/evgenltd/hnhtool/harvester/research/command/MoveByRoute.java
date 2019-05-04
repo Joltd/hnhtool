@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Move;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
@@ -23,19 +25,19 @@ public class MoveByRoute {
 
     private KnownObject doorway = null;
 
-    private MoveByRoute(final Agent agent, final List<KnownObject> route) {
-        this.agent = agent;
+    private MoveByRoute(final List<KnownObject> route) {
+        this.agent = TaskContext.getAgent();
         this.route = route;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final List<KnownObject> route) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final List<KnownObject> route) {
         Assert.valueRequireNonEmpty(route, "Route");
-        return new MoveByRoute(agent, route).performImpl();
+        return new MoveByRoute(route).performImpl();
     }
 
-    public static Result<Void> performWithoutFromAndTo(@NotNull final Agent agent, @NotNull final List<KnownObject> route) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> performWithoutFromAndTo(@NotNull final List<KnownObject> route) {
         Assert.valueRequireNonEmpty(route, "Route");
         if (route.size() > 0) {
             route.remove(0);
@@ -43,7 +45,7 @@ public class MoveByRoute {
         if (route.size() > 0) {
             route.remove(route.size() - 1);
         }
-        return new MoveByRoute(agent, route).performImpl();
+        return new MoveByRoute(route).performImpl();
     }
 
     private Result<Void> performImpl() {
@@ -69,8 +71,7 @@ public class MoveByRoute {
                 return Result.ok();
             }
 
-            return MoveToSpace.perform(agent, doorway)
-                    .anyway(() -> doorway = null);
+            return MoveToSpace.perform(doorway).anyway(() -> doorway = null);
         }
 
         doorway = null;

@@ -74,8 +74,8 @@ public class WarehouseService {
         for (final KnownObject containerCandidate : containerCandidates) {
 
             final Result<Void> result = routingService.route(character, containerCandidate)
-                    .thenApplyCombine(route -> MoveByRoute.performWithoutFromAndTo(agent, route))
-                    .thenCombine(() -> OpenContainer.perform(agent, containerCandidate))
+                    .thenApplyCombine(MoveByRoute::performWithoutFromAndTo)
+                    .thenCombine(() -> OpenContainer.perform(containerCandidate))
                     .then(agent::matchItemKnowledge);
             if (result.isFailed()) {
                 log.warn("Unable to access to a container [{}], result [{}]", containerCandidate.getId(), result.getCode());
@@ -117,8 +117,8 @@ public class WarehouseService {
     private Result<Void> storeItemInContainer(final KnownObject container, final KnownItem item) {
         // use inv resolver to determine position for storing
 
-        return TakeItem.perform(TaskContext.getAgent(), item)
-                .thenCombine(() -> DropItemInInventory.perform(TaskContext.getAgent(), container.getId(), new IntPoint()));
+        return TakeItem.perform(item)
+                .thenCombine(() -> DropItemInInventory.perform(container.getId(), new IntPoint()));
     }
 
     private Result<Void> storeItemInStack(final KnownObject stack, final KnownItem item) {
@@ -126,7 +126,7 @@ public class WarehouseService {
             return Result.fail(ResearchResultCode.STACK_NOT_RESEARCHED);
         }
 
-        return TransferItem.perform(TaskContext.getAgent(), item)
+        return TransferItem.perform(item)
                 .then(() -> {
                     item.setId(null);
                     item.setOwner(stack);

@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.research.command;
 
 import com.evgenltd.hnhtool.harvester.common.command.Await;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
+import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
 import com.evgenltd.hnhtools.common.Assert;
@@ -21,17 +23,17 @@ public class DropItemInInventory {
     private Long inventoryOwnerId;
     private IntPoint position;
 
-    private DropItemInInventory(final Agent agent, final Long inventoryOwnerId, final IntPoint position) {
-        this.agent = agent;
+    private DropItemInInventory(final Long inventoryOwnerId, final IntPoint position) {
+        this.agent = TaskContext.getAgent();
         this.inventoryOwnerId = inventoryOwnerId;
         this.position = position;
     }
 
-    public static Result<Void> perform(@NotNull final Agent agent, @NotNull final Long inventoryOwnerId, @NotNull final IntPoint position) {
-        Assert.valueRequireNonEmpty(agent, "Agent");
+    @TaskRequired
+    public static Result<Void> perform(@NotNull final Long inventoryOwnerId, @NotNull final IntPoint position) {
         Assert.valueRequireNonEmpty(inventoryOwnerId, "InventoryOwnerId");
         Assert.valueRequireNonEmpty(position, "Position");
-        return new DropItemInInventory(agent, inventoryOwnerId, position).performImpl();
+        return new DropItemInInventory(inventoryOwnerId, position).performImpl();
     }
 
     private Result<Void> performImpl() {

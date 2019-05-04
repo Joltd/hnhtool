@@ -81,11 +81,10 @@ public class TaskService {
     }
 
     private Work workWrapper(final Task task, final Work work) {
-        return agent -> {
+        return () -> {
             try {
-                TaskContext.setupContext(agent);
                 startTask(task);
-                final Result<Void> result = work.apply(agent);
+                final Result<Void> result = work.get();
                 if (result.isSuccess()) {
                     doneTask(task);
                 } else {

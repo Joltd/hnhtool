@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.research.service;
 
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.entity.Task;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
@@ -78,31 +79,30 @@ public class ResearchService implements Module {
         final KnownObject targetDoorway = unknownDoorway.get(0);
         log.info("Found unknown door, id=[{}], owner=[{}]", targetDoorway.getId(), targetDoorway.getOwner().getId());
 
-        researchDoorwayTask = taskService.openTask(agent -> researchDoorway(agent, targetDoorway));
+        researchDoorwayTask = taskService.openTask(() -> researchDoorway(targetDoorway));
         log.info("Created research task, id=[{}]", researchDoorwayTask.getId());
     }
 
-    private Result<Void> researchDoorway(final Agent agent, final KnownObject targetDoorway) {
-        return routingService.route(agent.getCharacter(), targetDoorway)
-                .thenApplyCombine(route -> moveToDoorwayByRoute(agent, route, targetDoorway))
-                .thenCombine(() -> MoveToSpace.perform(agent, targetDoorway))
-                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(agent, targetDoorway));
+    private Result<Void> researchDoorway(final KnownObject targetDoorway) {
+
+        return routingService.route(TaskContext.getAgent().getCharacter(), targetDoorway)
+                .thenApplyCombine(route -> moveToDoorwayByRoute(route, targetDoorway))
+                .thenCombine(() -> MoveToSpace.perform(targetDoorway))
+                .thenApplyCombine(characterPosition -> storeDoorwayResearchResult(targetDoorway));
     }
 
     private Result<Void> moveToDoorwayByRoute(
-            final Agent agent,
             final List<KnownObject> route,
             final KnownObject targetDoorway
     ) {
-        route.remove(agent.getCharacter());
+
+        route.remove(TaskContext.getAgent().getCharacter());
         route.remove(targetDoorway);
-        return MoveByRoute.perform(agent, route);
+        return MoveByRoute.perform(route);
     }
 
-    private Result<Void> storeDoorwayResearchResult(
-            final Agent agent,
-            final KnownObject targetDoorway
-    ) {
+    private Result<Void> storeDoorwayResearchResult(final KnownObject targetDoorway) {
+        final Agent agent = TaskContext.getAgent();
         final IntPoint characterPosition = agent.getCharacter().getPosition();
         final List<KnownObject> nearestDoorways = knownObjectRepository.findNearestDoorway(
                 agent.getCurrentSpace(),
@@ -149,14 +149,14 @@ public class ResearchService implements Module {
         final KnownObject targetContainer = unknownContainer.get(0);
         log.info("Found unknown container, id=[{}], owner=[{}]", targetContainer.getId(), targetContainer.getOwner().getId());
         
-        researchContainerTask = taskService.openTask(agent -> researchContainer(agent, targetContainer));
+        researchContainerTask = taskService.openTask(() -> researchContainer(targetContainer));
         log.info("Created research task, id=[{}]", researchContainerTask.getId());
     }
 
-    private Result<Void> researchContainer(final Agent agent, final KnownObject targetContainer) {
-        return routingService.route(agent.getCharacter(), targetContainer)
-                .thenApplyCombine(route -> MoveByRoute.performWithoutFromAndTo(agent, route))
-                .thenCombine(() -> OpenContainer.perform(agent, targetContainer))
+    private Result<Void> researchContainer(final KnownObject targetContainer) {
+        return routingService.route(TaskContext.getAgent().getCharacter(), targetContainer)
+                .thenApplyCombine(MoveByRoute::performWithoutFromAndTo)
+                .thenCombine(() -> OpenContainer.perform(targetContainer))
                 .then(() -> knownObjectRepository.markAsResearched(targetContainer));
     }
 
