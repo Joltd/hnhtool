@@ -26,4 +26,5 @@ public class ResearchResultCode {
     public static final String NO_SUITABLE_CONTAINER_FOUND = "NO_SUITABLE_CONTAINER_FOUND";
 
     public static final String STACK_NOT_RESEARCHED = "STACK_NOT_RESEARCHED";
+    public static final String ITEM_BELONGS_TO_ANOTHER_ITEM = "ITEM_BELONGS_TO_ANOTHER_ITEM";
 }
