@@ -157,6 +157,8 @@ public class ResearchService implements Module {
         return routingService.route(TaskContext.getAgent().getCharacter(), targetContainer)
                 .thenApplyCombine(MoveByRoute::performWithoutFromAndTo)
                 .thenCombine(() -> OpenContainer.perform(targetContainer))
+                .then(() -> TaskContext.getAgent().matchItemKnowledge())
+                .thenCombine(() -> InventorySolver.fillItemCount(targetContainer))
                 .then(() -> knownObjectRepository.markAsResearched(targetContainer));
     }
 

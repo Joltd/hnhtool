@@ -280,6 +280,11 @@ public final class ComplexClient {
         return stack != null ? Result.ok(stack) : Result.fail(ResultCode.NO_STACK);
     }
 
+    public Result<WorldInventory> getInventory(final Number parentId) {
+        final WorldInventoryImpl inventory = inventoryIndex.getInventoryByParentId(parentId);
+        return inventory != null ? Result.ok(inventory) : Result.fail(ResultCode.NO_INVENTORY);
+    }
+
     // ##################################################
     // #                                                #
     // #  Commands                                      #

@@ -45,6 +45,7 @@ public class DropItemInInventory {
         return agent.getMatchedWorldInventoryId(inventoryOwnerId)
                 .then(inventoryId -> agent.getClient().dropItemFromHandInInventory(inventoryId, position))
                 .then(() -> Await.performSimple(() -> agent.getClient().getHand() == null))
+                .then(() -> agent.matchItemKnowledge())
                 .cast();
     }
 

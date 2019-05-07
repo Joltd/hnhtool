@@ -23,6 +23,7 @@ create table known_objects (
 	player tinyint,
 	doorway tinyint,
 	container tinyint,
+	stack tinyint,
 	count int,
 	max int
 );

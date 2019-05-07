@@ -2,14 +2,10 @@ package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
-import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
-import com.evgenltd.hnhtool.harvester.research.command.DropItemInInventory;
-import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
-import com.evgenltd.hnhtool.harvester.research.command.TakeItemFromStack;
+import com.evgenltd.hnhtool.harvester.research.service.WarehouseService;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.IntPoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -41,6 +37,9 @@ public class BaseBehaviorTest {
     @Autowired
     private KnownItemRepository knownItemRepository;
 
+    @Autowired
+    private WarehouseService warehouseService;
+
     @Test
     public void addAccount() {
         final Result<Void> result = agentService.registerAgent("Grafbredbery", "15051953", "Surname");
@@ -56,13 +55,20 @@ public class BaseBehaviorTest {
             } catch (InterruptedException ignored) {
             }
 
-            final KnownObject stackObject = knownObjectRepository.findById(13L).get();
-            final Result<Void> result = OpenContainer.perform(stackObject)
-                    .thenCombine(() -> TakeItemFromStack.perform(stackObject))
-                    .thenCombine(() -> DropItemInInventory.perform(
-                            TaskContext.getAgent().getClient().getCharacterId(),
-                            new IntPoint(1, 1)
-                    ));
+            TaskContext.getAgent().matchItemKnowledge();
+
+            knownItemRepository.findById(29L).ifPresent(rope -> {
+                final Result<Void> result = warehouseService.storeItem(rope);
+                System.out.println(result);
+            });
+
+//            final KnownObject stackObject = knownObjectRepository.findById(13L).get();
+//            final Result<Void> result = OpenContainer.perform(stackObject)
+//                    .thenCombine(() -> TakeItemFromStack.perform(stackObject))
+//                    .thenCombine(() -> DropItemInInventory.perform(
+//                            TaskContext.getAgent().getClient().getCharacterId(),
+//                            new IntPoint(1, 1)
+//                    ));
 
 //            final KnownObject knownObject = knownObjectRepository.findById(3L).get();
 //            final Result<Void> result = OpenContainer.perform(agent, knownObject)

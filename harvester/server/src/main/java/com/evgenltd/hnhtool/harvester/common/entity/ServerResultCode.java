@@ -29,6 +29,8 @@ public class ServerResultCode {
 
     public static final String EXCEPTION_DURING_TASK_PERFORMING = "EXCEPTION_DURING_TASK_PERFORMING";
 
+    public static final String RESOURCE_NOT_KNOWN = "RESOURCE_NOT_KNOWN";
+
     // knowledge matching service
 
     public static final String KMS_WORLD_OBJECTS_NOT_PRESENTED = "KMS_WORLD_OBJECTS_NOT_PRESENTED";

@@ -27,4 +27,8 @@ public class ResearchResultCode {
 
     public static final String STACK_NOT_RESEARCHED = "STACK_NOT_RESEARCHED";
     public static final String ITEM_BELONGS_TO_ANOTHER_ITEM = "ITEM_BELONGS_TO_ANOTHER_ITEM";
+
+    public static final String NOT_ENOUGH_SPACE_IN_INVENTORY = "NOT_ENOUGH_SPACE_IN_INVENTORY";
+
+    public static final String KNOWN_OBJECT_NOT_FOUND = "KNOWN_OBJECT_NOT_FOUND";
 }

@@ -200,6 +200,9 @@ public class KnowledgeMatchingService {
             knownObject.setDoorway(true);
         } else if (ResourceConstants.isContainer(resource)) {
             knownObject.setContainer(true);
+            if (ResourceConstants.isStack(resource)) {
+                knownObject.setStack(true);
+            }
         }
     }
 
@@ -229,7 +232,7 @@ public class KnowledgeMatchingService {
         final List<String> resourceExclusions = new ArrayList<>();
         return selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
                 .thenApplyCombine(firstWo -> selectReferenceObject(worldObjects, woExclusion, resourceExclusions)
-                                    .thenApplyCombine(secondWo -> findReferencePoint(firstWo, secondWo))
+                        .thenApplyCombine(secondWo -> findReferencePoint(firstWo, secondWo))
                         .then(ko -> {
                             ko.setX(ko.getX() - firstWo.getPosition().getX());
                             ko.setY(ko.getY() - firstWo.getPosition().getY());

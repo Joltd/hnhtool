@@ -1,63 +1,109 @@
-package com.evgenltd.hnhtool.harvester.research.service;/**
- * Project: hnhtool-root
- * Author:  lebed
- * Created: 03-05-2019 12:05
- */
+package com.evgenltd.hnhtool.harvester.research.service;
 
-import com.evgenltd.hnhtool.harvester.common.entity.KnownItem;
+import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
+import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
+import com.evgenltd.hnhtools.common.Assert;
+import com.evgenltd.hnhtools.common.Result;
+import com.evgenltd.hnhtools.complexclient.entity.WorldInventory;
+import com.evgenltd.hnhtools.complexclient.entity.WorldItem;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
+ * <p></p>
+ * <br/>
  * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 03-05-2019 12:05</p>
+ * <p>Created: 07-05-2019 19:54</p>
  */
 public class InventorySolver {
 
-    public InventorySolver(final KnownObject inventory, final List<KnownItem> items) {
+    private KnownObject container;
+    private int totalSize;
+    private Set<IntPoint> occupiedSlots;
+    private Set<IntPoint> emptySlots;
 
+    private InventorySolver(final KnownObject container) {
+        this.container = container;
     }
 
-    public static final class Inventory {
-        private IntPoint size;
-        private List<Item> items = new ArrayList<>();
-
-        public IntPoint getSize() {
-            return size;
-        }
-        public void setSize(final IntPoint size) {
-            this.size = size;
-        }
-
-        public List<Item> getItems() {
-            return items;
-        }
-        public void setItems(final List<Item> items) {
-            this.items = items;
-        }
+    public static Result<IntPoint> getFreeSlot(@NotNull final KnownObject container, @NotNull final IntPoint size) {
+        Assert.valueRequireNonEmpty(container, "Container");
+        Assert.valueRequireNonEmpty(size, "Size");
+        final InventorySolver inventorySolver = new InventorySolver(container);
+        return inventorySolver.readState()
+                .thenCombine(() -> inventorySolver.getFreeSlot(size));
     }
 
-    public static final class Item {
-        private IntPoint position;
-        private IntPoint size;
+    public static Result<Void> fillItemCount(@NotNull final KnownObject container) {
+        Assert.valueRequireNonEmpty(container, "Container");
+        final InventorySolver inventorySolver = new InventorySolver(container);
+        return inventorySolver.readState()
+                .then((Runnable) inventorySolver::fillItemCount);
+    }
 
-        public IntPoint getPosition() {
-            return position;
-        }
-        public void setPosition(final IntPoint position) {
-            this.position = position;
+    //
+
+    private Result<IntPoint> getFreeSlot(final IntPoint size) {
+        for (final IntPoint emptySlot : emptySlots) {
+            final boolean isSuitable = emptySlots.containsAll(slotRectToCollection(emptySlot, size));
+            if (isSuitable) {
+                return Result.ok(emptySlot);
+            }
         }
 
-        public IntPoint getSize() {
-            return size;
+        return Result.fail(ResearchResultCode.NOT_ENOUGH_SPACE_IN_INVENTORY);
+    }
+
+    private void fillItemCount() {
+        container.setCount(occupiedSlots.size());
+        container.setMax(totalSize);
+    }
+
+    //
+
+    private Result<Void> readState() {
+        return TaskContext.getAgent().getMatchedWorldObjectId(container.getId())
+                .thenApplyCombine(worldInventoryId -> TaskContext.getClient().getInventory(worldInventoryId))
+                .thenApplyCombine(this::readSlots);
+    }
+
+    private Result<Void> readSlots(final WorldInventory inventory) {
+        totalSize = inventory.getSize().getX() * inventory.getSize().getY();
+        emptySlots = slotRectToCollection(new IntPoint(), inventory.getSize());
+        occupiedSlots = new LinkedHashSet<>();
+
+        for (final WorldItem item : inventory.getItems()) {
+            final IntPoint itemPosition = item.getPosition();
+            final Result<IntPoint> itemSize = ResourceConstants.getSize(item.getResource());
+            if (itemSize.isFailed()) {
+                return itemSize.cast();
+            }
+
+            slotRectToCollection(itemPosition, itemSize.getValue()).forEach(occupiedSlot -> {
+                occupiedSlots.add(occupiedSlot);
+                emptySlots.remove(occupiedSlot);
+            });
         }
-        public void setSize(final IntPoint size) {
-            this.size = size;
+
+        return Result.ok();
+    }
+
+
+    private Set<IntPoint> slotRectToCollection(final IntPoint from, final IntPoint size) {
+        final IntPoint to = from.add(size);
+        final Set<IntPoint> result = new LinkedHashSet<>();
+        for (int y = from.getY(); y < to.getY(); y++) {
+            for (int x = from.getX(); x < to.getX(); x++) {
+                result.add(new IntPoint(x, y));
+            }
         }
+        return result;
     }
 
 }

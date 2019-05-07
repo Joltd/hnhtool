@@ -45,16 +45,29 @@ public class WarehouseService {
     private KnownItemRepository knownItemRepository;
     private RoutingService routingService;
 
+    public WarehouseService(
+            final KnownObjectRepository knownObjectRepository,
+            final KnownItemRepository knownItemRepository,
+            final RoutingService routingService
+    ) {
+        this.knownObjectRepository = knownObjectRepository;
+        this.knownItemRepository = knownItemRepository;
+        this.routingService = routingService;
+    }
+
     /**
      * <p>Takes item from warehouse and placing it in character inventory</p>
      */
     @TaskRequired
     public Result<Void> takeItem(@NotNull final KnownItem knownItem) {
-        // check main inventory have enough place - via inv solver
 
-        final KnownObject container = knownItem.getOwner();
-        if (container == null) {
+        if (knownItem.getOwner() == null) {
             return Result.fail(ResearchResultCode.ITEM_BELONGS_TO_ANOTHER_ITEM);
+        }
+
+        final KnownObject container = knownObjectRepository.findById(knownItem.getOwner().getId()).orElse(null);
+        if (container == null) {
+            return Result.fail(ResearchResultCode.KNOWN_OBJECT_NOT_FOUND);
         }
 
         final Result<Result<Void>> routeResult = routingService.route(TaskContext.getAgent().getCharacter(), container)
@@ -65,12 +78,9 @@ public class WarehouseService {
             return routeResult.cast();
         }
 
-        final KnownObject actualContainer = knownObjectRepository.findById(container.getId()).orElse(null);
-
-
-        return actualContainer.getStack()
-                ? takeItemFromStack(knownItem/*item solver*/)
-                : takeItemFromContainer(knownItem/*item solver*/);
+        return container.getStack()
+                ? takeItemFromStack(knownItem)
+                : takeItemFromContainer(knownItem);
 
     }
 
@@ -138,8 +148,18 @@ public class WarehouseService {
     }
 
     private Result<Void> takeItemFromContainer(final KnownItem knownItem) {
+        final Result<IntPoint> size = ResourceConstants.getSize(knownItem.getResource());
+        if (size.isFailed()) {
+            return size.cast();
+        }
+
+        final Result<IntPoint> targetPosition = InventorySolver.getFreeSlot(knownItem.getOwner(), size.getValue());
+        if (targetPosition.isFailed()) {
+            return targetPosition.cast();
+        }
+
         return TakeItem.perform(knownItem)
-                .thenCombine(() -> DropItemInInventory.perform(TaskContext.getAgent().getCharacter().getId(), new IntPoint()));
+                .thenCombine(() -> DropItemInInventory.perform(TaskContext.getAgent().getCharacter().getId(), targetPosition.getValue()));
     }
 
     // ##################################################
@@ -157,10 +177,14 @@ public class WarehouseService {
     }
 
     private Result<Void> storeItemInContainer(final KnownObject container, final KnownItem item) {
-        // use inv resolver to determine position for storing
+        final Result<IntPoint> targetPosition = ResourceConstants.getSize(item.getResource())
+                .thenApplyCombine(itemSize -> InventorySolver.getFreeSlot(container, itemSize));
+        if (targetPosition.isFailed()) {
+            return targetPosition.cast();
+        }
 
         return TakeItem.perform(item)
-                .thenCombine(() -> DropItemInInventory.perform(container.getId(), new IntPoint()));
+                .thenCombine(() -> DropItemInInventory.perform(container.getId(), targetPosition.getValue()));
     }
 
     private Result<Void> storeItemInStack(final KnownObject stack, final KnownItem item) {

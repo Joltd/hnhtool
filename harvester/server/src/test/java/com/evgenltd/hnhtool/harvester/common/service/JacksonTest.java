@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
+import com.evgenltd.hnhtool.harvester.common.ResourceConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -16,6 +17,11 @@ import java.util.List;
  * <p>Created: 15-04-2019 23:41</p>
  */
 public class JacksonTest {
+
+    @Test
+    public void testResources() {
+        ResourceConstants.isStack("123");
+    }
 
     @Test
     public void test() throws Exception {

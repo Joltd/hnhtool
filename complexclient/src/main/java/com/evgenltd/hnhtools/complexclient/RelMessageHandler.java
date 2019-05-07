@@ -37,6 +37,7 @@ final class RelMessageHandler {
 
     private static final String LABEL_MESSAGE_NAME = "tt";
     private static final String CHANGE_NUM_MESSAGE_NAME = "chnum";
+    private static final String SZ_MESSAGE_NAME = "sz";
 
     private ComplexClient client;
 
@@ -141,6 +142,8 @@ final class RelMessageHandler {
                     widget.setDestroy(() -> client.getInventoryIndex().removeInventory(inventory.getId()));
                 }
 
+                widget.setHandleMessage(rel -> handleInventoryMessage(rel, inventory));
+
                 break;
             case ITEM_WIDGET:
                 final int itemParentId = accessor.getWidgetParentId();
@@ -166,7 +169,6 @@ final class RelMessageHandler {
 
                 addToInventoryIfPossible(widget, character::getEquip, itemParentId, worldItem);
                 addToInventoryIfPossible(widget, character::getStudy, itemParentId, worldItem);
-                addToInventoryIfPossible(widget, character::getMain, itemParentId, worldItem);
                 addToInventoryIfPossible(widget, () -> client.getInventoryIndex().getInventory(itemParentId), itemParentId, worldItem);
 
                 break;
@@ -214,6 +216,18 @@ final class RelMessageHandler {
             }
         });
 
+    }
+
+    private void handleInventoryMessage(
+            final InboundMessageAccessor.RelAccessor accessor,
+            final WorldInventoryImpl inventory
+    ) {
+        if (!Objects.equals(accessor.getWidgetMessageName(), SZ_MESSAGE_NAME)) {
+            return;
+        }
+
+        final IntPoint newSize = accessor.getArgs().nextPoint();
+        inventory.setSize(newSize);
     }
 
     @SuppressWarnings("unchecked")

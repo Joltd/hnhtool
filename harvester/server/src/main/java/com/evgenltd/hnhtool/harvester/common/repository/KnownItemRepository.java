@@ -20,6 +20,4 @@ public interface KnownItemRepository extends JpaRepository<KnownItem, Long> {
 
     List<KnownItem> findByParentId(final Long parentId);
 
-    List<KnownItem> findByOwnerIdAndResource(final Long ownerId, final String resource);
-
 }

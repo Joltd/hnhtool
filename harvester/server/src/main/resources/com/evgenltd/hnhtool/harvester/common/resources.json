@@ -1,0 +1,35 @@
+[
+  {"name": "gfx/terobjs/arch/hwall", "waste": true},
+  {"name": "gfx/terobjs/arch/palisadeseg", "waste": true},
+  {"name": "gfx/terobjs/arch/palisadecp", "waste": true},
+  {"name": "gfx/terobjs/arch/poleseg", "waste": true},
+
+  {"name": "gfx/terobjs/arch/cellardoor", "doorway": true},
+  {"name": "gfx/terobjs/arch/cellarstairs", "doorway": true},
+  {"name": "gfx/terobjs/arch/timberhouse-door", "doorway": true},
+  {"name": "gfx/terobjs/arch/timberhouse", "doorway": true},
+
+  {"name": "gfx/terobjs/cupboard", "container": true, "size": {"x":8,"y":8}},
+
+  {"name": "gfx/terobjs/stockpile-hempfibre", "container": true, "stack": true},
+
+  {"name": "gfx/invobjs/axe-m", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/bonesaw", "size": {"x":2,"y":1}},
+  {"name": "gfx/invobjs/bushpole-l", "size": {"x":1,"y":2}},
+  {"name": "gfx/invobjs/fryingpan", "size": {"x":2,"y":1}},
+  {"name": "gfx/invobjs/hempfibre", "matchStack": "gfx/terobjs/stockpile-hempfibre", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/hook-bone", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/key", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/key-big", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/linennapkin", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/linentablecloth", "size": {"x":1,"y":2}},
+  {"name": "gfx/invobjs/pickaxe", "size": {"x":1,"y":2}},
+  {"name": "gfx/invobjs/pickingbasket", "size": {"x":3,"y":2}},
+  {"name": "gfx/invobjs/poormansbelt", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/rope", "size": {"x":2,"y":1}},
+  {"name": "gfx/invobjs/shovel-w", "size": {"x":1,"y":2}},
+  {"name": "gfx/invobjs/sling", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/stoneaxe", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/stonewarevase", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/waterflask", "size": {"x":1,"y":1}}
+]
