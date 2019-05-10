@@ -50,4 +50,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
             "and ko.count < ko.max and (ko.stack = false or (?1 is not null and ko.resource = ?1))")
     List<KnownObject> findSuitableContainers(final String stackResource);
 
+    @Query("select ko from KnownObject ko where ko.item = true")
+    List<KnownObject> findDroppedItems();
+
 }

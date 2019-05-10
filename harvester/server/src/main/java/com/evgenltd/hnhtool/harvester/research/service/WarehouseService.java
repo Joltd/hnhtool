@@ -11,7 +11,8 @@ import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtool.harvester.research.command.*;
 import com.evgenltd.hnhtool.harvester.research.entity.ResearchResultCode;
 import com.evgenltd.hnhtools.common.Result;
-import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.complexclient.entity.WorldStack;
+import com.evgenltd.hnhtools.entity.ResultCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,8 +38,8 @@ public class WarehouseService {
             return o1.getResource().compareTo(o2.getResource());
         }
         return o1.getStack() && !o2.getStack()
-                ? 1
-                : -1;
+                ? -1
+                : 1;
     };
 
     private KnownObjectRepository knownObjectRepository;
@@ -59,7 +60,7 @@ public class WarehouseService {
      * <p>Takes item from warehouse and placing it in character inventory</p>
      */
     @TaskRequired
-    public Result<Void> takeItem(@NotNull final KnownItem knownItem) {
+    public Result<KnownItem> takeItem(@NotNull final KnownItem knownItem) {
 
         if (knownItem.getOwner() == null) {
             return Result.fail(ResearchResultCode.ITEM_BELONGS_TO_ANOTHER_ITEM);
@@ -70,24 +71,22 @@ public class WarehouseService {
             return Result.fail(ResearchResultCode.KNOWN_OBJECT_NOT_FOUND);
         }
 
-        final Result<Result<Void>> routeResult = routingService.route(TaskContext.getAgent().getCharacter(), container)
+        return routingService.route(TaskContext.getAgent().getCharacter(), container)
                 .thenApplyCombine(MoveByRoute::performWithoutFromAndTo)
-                .then(() -> OpenContainer.perform(container))
-                .then(() -> TaskContext.getAgent().matchItemKnowledge());
-        if (routeResult.isFailed()) {
-            return routeResult.cast();
-        }
-
-        return container.getStack()
-                ? takeItemFromStack(knownItem)
-                : takeItemFromContainer(knownItem);
+                .thenCombine(() -> OpenContainer.perform(container))
+                .then(() -> TaskContext.getAgent().matchItemKnowledge())
+                .thenCombine(() -> container.getStack()
+                        ? takeItemFromStack(knownItem)
+                        : takeItemFromContainer(knownItem)
+                );
 
     }
 
     /**
      * <p>Store item in warehouse, assume that before operation item stored in character inventory</p>
      */
-    public Result<Void> storeItem(@NotNull final KnownItem knownItem) {
+    @TaskRequired
+    public Result<KnownItem> storeItem(@NotNull final KnownItem knownItem) {
         final Agent agent = TaskContext.getAgent();
         final KnownObject character = agent.getCharacter();
         final Long characterId = character.getId();
@@ -107,17 +106,11 @@ public class WarehouseService {
                 continue;
             }
 
-            final KnownObject actualContainer = knownObjectRepository.findById(containerCandidate.getId()).orElse(null);
-            if (actualContainer == null) {
-                log.warn("Container candidate [{}] actually not found", containerCandidate.getId());
-                continue;
-            }
-
-            final Result<Void> storingResult = actualContainer.getStack()
-                    ? storeItemInStack(actualContainer, knownItem)
-                    : storeItemInContainer(actualContainer, knownItem);
+            final Result<KnownItem> storingResult = containerCandidate.getStack()
+                    ? storeItemInStack(containerCandidate, knownItem)
+                    : storeItemInContainer(containerCandidate, knownItem);
             if (storingResult.isFailed()) {
-                log.warn("Unable to store item in container [{}], result = [{}]", actualContainer.getId(), storingResult.getCode());
+                log.warn("Unable to store item in container [{}], result = [{}]", containerCandidate.getId(), storingResult.getCode());
                 continue;
             }
 
@@ -128,38 +121,60 @@ public class WarehouseService {
         return Result.fail(ResearchResultCode.NO_SUITABLE_CONTAINER_FOUND);
     }
 
+    public Result<Void> digIntoStack(final KnownObject stack, final int depth) {
+        final Result<WorldStack> worldStack = TaskContext.getAgent().getMatchedWorldObjectId(stack.getId())
+                .thenApplyCombine(woId -> TaskContext.getClient().getStack(woId));
+        if (worldStack.isFailed()) {
+            return worldStack.cast();
+        }
+
+        final Integer currentCount = worldStack.getValue().getCount();
+
+        for (int count = currentCount; count > depth; count--) {
+            final Result<Void> takingResult = TakeItemFromStack.perform(stack)
+                    .thenCombine(DropItemInWorld::perform);
+            if (takingResult.isFailed()) {
+                return takingResult.cast();
+            }
+        }
+
+        knownItemRepository.deleteFromStack(stack.getId(), depth);
+
+        final KnownObject actualStack = knownObjectRepository.findById(stack.getId()).orElse(null);
+        if (actualStack == null) {
+            return Result.fail(ResultCode.NO_STACK);
+        }
+        actualStack.setCount(depth);
+        knownObjectRepository.save(actualStack);
+
+        return Result.ok();
+    }
+
     // ##################################################
     // #                                                #
     // #  Taking item                                   #
     // #                                                #
     // ##################################################
 
-    private Result<Void> takeItemFromStack(final KnownItem knownItem) {
-        final KnownObject stack = knownItem.getOwner();
-        for (int count = stack.getCount(); count > knownItem.getX(); count--) {
-            final Result<Void> result = TakeItemFromStack.perform(stack)
-                    .thenCombine(DropItemInWorld::perform);
-            if (result.isFailed()) {
-                return result;
-            }
-        }
-        // delete list of items from stack
-        return Result.ok();
+    private Result<KnownItem> takeItemFromStack(final KnownItem knownItem) {
+        final KnownObject character = TaskContext.getAgent().getCharacter();
+        return ResourceConstants.getSize(knownItem.getResource())
+                .thenApplyCombine(itemSize -> InventorySolver.getFreeSlot(character, itemSize))
+                .thenApplyCombine(freeSlot -> digIntoStack(knownItem.getOwner(), knownItem.getX())
+                        .thenCombine(() -> TakeItemFromStack.perform(knownItem.getOwner()))
+                        .thenCombine(() -> DropItemInInventory.perform(character.getId(), freeSlot))
+                        .thenCombine(() -> knownItemRepository.findByPosition(character.getId(), freeSlot))
+                );
     }
 
-    private Result<Void> takeItemFromContainer(final KnownItem knownItem) {
-        final Result<IntPoint> size = ResourceConstants.getSize(knownItem.getResource());
-        if (size.isFailed()) {
-            return size.cast();
-        }
-
-        final Result<IntPoint> targetPosition = InventorySolver.getFreeSlot(knownItem.getOwner(), size.getValue());
-        if (targetPosition.isFailed()) {
-            return targetPosition.cast();
-        }
-
-        return TakeItem.perform(knownItem)
-                .thenCombine(() -> DropItemInInventory.perform(TaskContext.getAgent().getCharacter().getId(), targetPosition.getValue()));
+    private Result<KnownItem> takeItemFromContainer(final KnownItem knownItem) {
+        final KnownObject character = TaskContext.getAgent().getCharacter();
+        return ResourceConstants.getSize(knownItem.getResource())
+                .thenApplyCombine(itemSize -> InventorySolver.getFreeSlot(character, itemSize))
+                .thenApplyCombine(freeSlot -> TakeItem.perform(knownItem)
+                        .thenCombine(() -> DropItemInInventory.perform(character.getId(), freeSlot))
+                        .thenCombine(() -> knownItemRepository.findByPosition(character.getId(), freeSlot))
+                );
     }
 
     // ##################################################
@@ -169,38 +184,36 @@ public class WarehouseService {
     // ##################################################
 
     private List<KnownObject> selectSuitableContainers(final KnownItem knownItem) {
-        final String matchedStackResource = ResourceConstants.getMatchedStack(knownItem.getResource());
+        final String matchedStackResource = ResourceConstants.getMatchedResource(knownItem.getResource());
         return knownObjectRepository.findSuitableContainers(matchedStackResource)
                 .stream()
                 .sorted(CONTAINER_PRIORITY_COMPARATOR)
                 .collect(Collectors.toList());
     }
 
-    private Result<Void> storeItemInContainer(final KnownObject container, final KnownItem item) {
-        final Result<IntPoint> targetPosition = ResourceConstants.getSize(item.getResource())
-                .thenApplyCombine(itemSize -> InventorySolver.getFreeSlot(container, itemSize));
-        if (targetPosition.isFailed()) {
-            return targetPosition.cast();
-        }
-
-        return TakeItem.perform(item)
-                .thenCombine(() -> DropItemInInventory.perform(container.getId(), targetPosition.getValue()));
+    private Result<KnownItem> storeItemInContainer(final KnownObject container, final KnownItem item) {
+        return ResourceConstants.getSize(item.getResource())
+                .thenApplyCombine(itemSize -> InventorySolver.getFreeSlot(container, itemSize))
+                .thenApplyCombine(freeSlot -> TakeItem.perform(item)
+                        .thenCombine(() -> DropItemInInventory.perform(container.getId(), freeSlot))
+                        .thenCombine(() -> knownItemRepository.findByPosition(container.getId(), freeSlot))
+                );
     }
 
-    private Result<Void> storeItemInStack(final KnownObject stack, final KnownItem item) {
+    private Result<KnownItem> storeItemInStack(final KnownObject stack, final KnownItem item) {
         if (!stack.getResearched()) {
             return Result.fail(ResearchResultCode.STACK_NOT_RESEARCHED);
         }
 
         return TransferItem.perform(item)
                 .then(() -> {
-                    item.setId(null);
-                    item.setOwner(stack);
-                    item.setX(stack.getCount() + 1);
-                    item.setY(0);
-                    knownItemRepository.save(item);
                     stack.setCount(stack.getCount() + 1);
                     knownObjectRepository.save(stack);
+                    item.setId(null);
+                    item.setOwner(stack);
+                    item.setX(stack.getCount());
+                    item.setY(0);
+                    return knownItemRepository.save(item);
                 });
     }
 

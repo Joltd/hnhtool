@@ -4,6 +4,7 @@ import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
+import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
 import com.evgenltd.hnhtool.harvester.research.service.WarehouseService;
 import com.evgenltd.hnhtools.common.Result;
 import org.apache.logging.log4j.LogManager;
@@ -51,39 +52,26 @@ public class BaseBehaviorTest {
         agentService.offerWork(() -> {
 
             try {
-                Thread.sleep(10000L);
+                Thread.sleep(10_000L);
             } catch (InterruptedException ignored) {
             }
 
-            TaskContext.getAgent().matchItemKnowledge();
-
-            knownItemRepository.findById(29L).ifPresent(rope -> {
-                final Result<Void> result = warehouseService.storeItem(rope);
+            knownObjectRepository.findById(3L).ifPresent(container -> {
+                final Result<Void> result = OpenContainer.perform(container)
+                        .then(() -> TaskContext.getAgent().matchItemKnowledge());
                 System.out.println(result);
             });
 
-//            final KnownObject stackObject = knownObjectRepository.findById(13L).get();
-//            final Result<Void> result = OpenContainer.perform(stackObject)
-//                    .thenCombine(() -> TakeItemFromStack.perform(stackObject))
-//                    .thenCombine(() -> DropItemInInventory.perform(
-//                            TaskContext.getAgent().getClient().getCharacterId(),
-//                            new IntPoint(1, 1)
-//                    ));
+//            knownItemRepository.findById(64L).ifPresent(knownItem -> {
+//                final Result<KnownItem> result = warehouseService.takeItem(knownItem);
+//                System.out.println(result);
+//            });
 
-//            final KnownObject knownObject = knownObjectRepository.findById(3L).get();
-//            final Result<Void> result = OpenContainer.perform(agent, knownObject)
-//                    .then(() -> {
-//                        log.info("Transfer start");
-//                        final List<KnownItem> fibers = knownItemRepository.findByOwnerIdAndResource(
-//                                3L,
-//                                "gfx/invobjs/hempfibre"
-//                        );
-//                        for (final KnownItem fiber : fibers) {
-//                            TransferItem.perform(agent, fiber);
-//                            log.info("Transfer item {} done", fiber.getId());
-//                        }
-//                    });
-//            log.info("Task complete");
+//            knownItemRepository.findById(65L).ifPresent(knownItem -> {
+//                final Result<KnownItem> result = warehouseService.takeItem(knownItem);
+//                System.out.println(result);
+//            });
+
             return Result.ok();
         });
         Thread.sleep(60 * 60 * 1000L);

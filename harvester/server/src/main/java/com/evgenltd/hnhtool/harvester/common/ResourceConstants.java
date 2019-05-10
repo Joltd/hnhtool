@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.IntNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +35,8 @@ import java.util.function.Function;
  */
 public class ResourceConstants {
 
-    public static final String PLAYER = "";
+    private static final Logger log = LogManager.getLogger(ResourceConstants.class);
+
     public static final String TIMBER_HOUSE = "gfx/terobjs/arch/timberhouse";
 
     private static final Map<String,Resource> resources = new HashMap<>();
@@ -52,6 +55,10 @@ public class ResourceConstants {
 
     public static boolean isDoorway(final String resourceName) {
         return getBoolean(resourceName, Resource::getDoorway);
+    }
+
+    public static boolean isDroppedItem(final String resourceName) {
+        return getBoolean(resourceName, Resource::getDroppedItem);
     }
 
     public static boolean isContainer(final String resourceName) {
@@ -74,17 +81,28 @@ public class ResourceConstants {
         return false;
     }
 
+    @NotNull
+    public static Result<String> getMatch(final String resourceName) {
+        final String match = getProperty(resourceName, Resource::getMatch);
+        return !Assert.isEmpty(match)
+                ? Result.ok(match)
+                : Result.fail(ServerResultCode.RESOURCE_NOT_KNOWN);
+    }
+
     @Nullable
-    public static String getMatchedStack(final String resourceName) {
-        return getProperty(resourceName, Resource::getMatchStack);
+    public static String getMatchedResource(final String resourceName) {
+        return getProperty(resourceName, Resource::getMatch);
     }
 
     @NotNull
     public static Result<IntPoint> getSize(final String resourceName) {
         final IntPoint size = getProperty(resourceName, Resource::getSize);
-        return size != null
-                ? Result.ok(size)
-                : Result.fail(ServerResultCode.RESOURCE_NOT_KNOWN);
+        if (size != null) {
+            return Result.ok(size);
+        } else {
+            log.info("Resource [{}] not known", resourceName);
+            return Result.fail(ServerResultCode.RESOURCE_NOT_KNOWN);
+        }
     }
 
     private static boolean getBoolean(final String resourceName, final Function<Resource, Boolean> getter) {
@@ -136,10 +154,11 @@ public class ResourceConstants {
         private String name;
         private Boolean waste;
         private Boolean doorway;
+        private Boolean droppedItem;
         private Boolean container;
         private Boolean stack;
         private IntPoint size;
-        private String matchStack;
+        private String match;
 
         public String getName() {
             return name;
@@ -160,6 +179,13 @@ public class ResourceConstants {
         }
         public void setDoorway(final Boolean doorway) {
             this.doorway = doorway;
+        }
+
+        public Boolean getDroppedItem() {
+            return droppedItem;
+        }
+        public void setDroppedItem(final Boolean droppedItem) {
+            this.droppedItem = droppedItem;
         }
 
         public Boolean getContainer() {
@@ -183,11 +209,11 @@ public class ResourceConstants {
             this.size = size;
         }
 
-        public String getMatchStack() {
-            return matchStack;
+        public String getMatch() {
+            return match;
         }
-        public void setMatchStack(final String matchStack) {
-            this.matchStack = matchStack;
+        public void setMatch(final String match) {
+            this.match = match;
         }
     }
 

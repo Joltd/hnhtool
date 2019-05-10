@@ -60,7 +60,10 @@ public class TaskService {
                 continue;
             }
 
-            agentService.offerWork(task.getWork());
+            final Result<Void> offerResult = agentService.offerWork(task.getWork());
+            if (offerResult.isFailed()) {
+                log.info("Task [{}] failed while offering to agents, reason [{}]", task.getId(), offerResult.getCode());
+            }
             // increment trying count, and do something if it too big
         }
 
@@ -102,19 +105,23 @@ public class TaskService {
 
     private void rejectTask(final Task task) {
         task.setStatus(Task.Status.REJECTED);
+        log.info("Task [{}] rejected", task.getId());
     }
 
     private void startTask(final Task task) {
         task.setStatus(Task.Status.IN_PROGRESS);
+        log.info("Task [{}] started", task.getId());
     }
 
     private void doneTask(final Task task) {
         task.setStatus(Task.Status.DONE);
+        log.info("Task [{}] done", task.getId());
     }
 
     private void failTask(final Task task, final String reason) {
         task.setStatus(Task.Status.FAILED);
         task.setFailReason(reason);
+        log.info("Task [{}] failed, reason [{}]", task.getId(), reason);
     }
 
 }

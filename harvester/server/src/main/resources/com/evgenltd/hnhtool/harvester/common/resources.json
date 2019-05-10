@@ -17,7 +17,8 @@
   {"name": "gfx/invobjs/bonesaw", "size": {"x":2,"y":1}},
   {"name": "gfx/invobjs/bushpole-l", "size": {"x":1,"y":2}},
   {"name": "gfx/invobjs/fryingpan", "size": {"x":2,"y":1}},
-  {"name": "gfx/invobjs/hempfibre", "matchStack": "gfx/terobjs/stockpile-hempfibre", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/hempfibre", "match": "gfx/terobjs/stockpile-hempfibre", "size": {"x":1,"y":1}},
+  {"name": "gfx/invobjs/flaxfibre", "match": "gfx/terobjs/stockpile-flaxfibre", "size": {"x":1,"y":1}},
   {"name": "gfx/invobjs/hook-bone", "size": {"x":1,"y":1}},
   {"name": "gfx/invobjs/key", "size": {"x":1,"y":1}},
   {"name": "gfx/invobjs/key-big", "size": {"x":1,"y":1}},
@@ -31,5 +32,9 @@
   {"name": "gfx/invobjs/sling", "size": {"x":1,"y":1}},
   {"name": "gfx/invobjs/stoneaxe", "size": {"x":1,"y":1}},
   {"name": "gfx/invobjs/stonewarevase", "size": {"x":1,"y":1}},
-  {"name": "gfx/invobjs/waterflask", "size": {"x":1,"y":1}}
+  {"name": "gfx/invobjs/waterflask", "size": {"x":1,"y":1}},
+
+  {"name": "gfx/terobjs/items/hempfibre", "droppedItem": true, "match": "gfx/invobjs/hempfibre"},
+  {"name": "gfx/terobjs/items/flaxfibre", "droppedItem": true, "match": "gfx/invobjs/flaxfibre"}
+
 ]

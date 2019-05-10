@@ -30,10 +30,10 @@ public class TakeItem {
     }
 
     private Result<Void> performImpl() {
-        AwaitForItem.appear(knownItem.getId());
-        return agent.getMatchedWorldItemId(knownItem.getId())
+        return AwaitForItem.appear(knownItem.getId())
+                .thenCombine(() -> agent.getMatchedWorldItemId(knownItem.getId()))
                 .then(woId -> agent.getClient().takeItemInHand(woId))
-                .then(AwaitForItem::disappear)
+                .thenApplyCombine(AwaitForItem::disappear)
                 .cast();
     }
 

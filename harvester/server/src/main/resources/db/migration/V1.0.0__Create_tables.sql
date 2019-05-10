@@ -22,6 +22,7 @@ create table known_objects (
 	researched tinyint,
 	player tinyint,
 	doorway tinyint,
+	item tinyint,
 	container tinyint,
 	stack tinyint,
 	count int,

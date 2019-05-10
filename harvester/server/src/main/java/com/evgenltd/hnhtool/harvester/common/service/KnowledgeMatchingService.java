@@ -198,6 +198,8 @@ public class KnowledgeMatchingService {
             knownObject.setPlayer(true);
         } else if (ResourceConstants.isDoorway(resource)) {
             knownObject.setDoorway(true);
+        } else if (ResourceConstants.isDroppedItem(resource)) {
+            knownObject.setItem(true);
         } else if (ResourceConstants.isContainer(resource)) {
             knownObject.setContainer(true);
             if (ResourceConstants.isStack(resource)) {
@@ -367,8 +369,6 @@ public class KnowledgeMatchingService {
                 }
             }
 
-            // update owner count and max values
-
             knownItemRepository.deleteAll(knownItems);
 
         }
@@ -464,15 +464,11 @@ public class KnowledgeMatchingService {
             return;
         }
 
-        if (!Objects.equals(worldStack.getCount(), knownStack.getCount())) {
+        if (knownStack.getResearched() && !Objects.equals(worldStack.getCount(), knownStack.getCount())) {
             knownStack.setResearched(false);
             knownObjectRepository.save(knownStack);
             return;
         }
-
-        knownStack.setCount(worldStack.getCount());
-        knownStack.setMax(worldStack.getMax());
-        knownObjectRepository.save(knownStack);
 
         itemIndex.putInventoryMatchWithObjectParent(knownStack.getId(), worldStack.getId());
     }

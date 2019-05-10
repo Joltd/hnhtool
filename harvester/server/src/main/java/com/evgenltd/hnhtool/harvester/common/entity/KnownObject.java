@@ -38,6 +38,8 @@ public class KnownObject implements Identified {
 
     private Boolean doorway = false;
 
+    private Boolean item = false;
+
     private Boolean container = false;
 
     private Boolean stack = false;
@@ -111,6 +113,13 @@ public class KnownObject implements Identified {
     }
     public void setDoorway(final Boolean doorway) {
         this.doorway = doorway;
+    }
+
+    public Boolean getItem() {
+        return item;
+    }
+    public void setItem(final Boolean item) {
+        this.item = item;
     }
 
     public Boolean getContainer() {

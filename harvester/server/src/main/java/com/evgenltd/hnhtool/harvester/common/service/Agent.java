@@ -88,7 +88,7 @@ public class Agent {
     }
 
     @Scheduled(fixedDelay = 5_000L)
-    public void matchObjectKnowledge() {
+    public synchronized void matchObjectKnowledge() {
         if (client == null || !client.isLife()) {
             return;
         }
@@ -268,6 +268,7 @@ public class Agent {
                 state = State.BUSY;
                 TaskContext.setupContext(this);
                 final Result<Void> workResult = work.get();
+                // todo
                 TaskContext.clearContext();
                 state = State.READY;
 

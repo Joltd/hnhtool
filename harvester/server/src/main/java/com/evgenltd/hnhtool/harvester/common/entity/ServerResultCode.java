@@ -31,6 +31,8 @@ public class ServerResultCode {
 
     public static final String RESOURCE_NOT_KNOWN = "RESOURCE_NOT_KNOWN";
 
+    public static final String ITEM_NOT_FOUND = "ITEM_NOT_FOUND";
+
     // knowledge matching service
 
     public static final String KMS_WORLD_OBJECTS_NOT_PRESENTED = "KMS_WORLD_OBJECTS_NOT_PRESENTED";

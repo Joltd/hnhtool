@@ -5,6 +5,7 @@ import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.component.TaskRequired;
 import com.evgenltd.hnhtool.harvester.common.service.Agent;
 import com.evgenltd.hnhtools.common.Assert;
+import com.evgenltd.hnhtools.common.Result;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -27,19 +28,19 @@ public class AwaitForItem {
     }
 
     @TaskRequired
-    public static void appear(@NotNull final Long knownItemId) {
+    public static Result<Void> appear(@NotNull final Long knownItemId) {
         Assert.valueRequireNonEmpty(knownItemId, "KnownItemId");
-        new AwaitForItem(knownItemId, null).appearImpl();
+        return new AwaitForItem(knownItemId, null).appearImpl();
     }
 
     @TaskRequired
-    public static void disappear(@NotNull final Integer worldItemId) {
+    public static Result<Void> disappear(@NotNull final Integer worldItemId) {
         Assert.valueRequireNonEmpty(worldItemId, "WorldItemId");
-        new AwaitForItem(null, worldItemId).disappearImpl();
+        return new AwaitForItem(null, worldItemId).disappearImpl();
     }
 
-    private void appearImpl() {
-        Await.simple(() -> {
+    private Result<Void> appearImpl() {
+        return Await.simple(() -> {
             final boolean appeared = agent.getMatchedWorldItemId(knownItemId).isSuccess();
             if (appeared) {
                 return true;
@@ -50,8 +51,8 @@ public class AwaitForItem {
         }).timeout(100L).perform();
     }
 
-    private void disappearImpl() {
-        Await.simple(() -> {
+    private Result<Void> disappearImpl() {
+        return Await.simple(() -> {
             final boolean disappeared = agent.getMatchedKnownItemId(worldItemId).isFailed();
             if (disappeared) {
                 return true;
