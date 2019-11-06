@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.messagebroker;
 
+import com.evgenltd.hnhtools.messagebroker.impl.MessageBrokerImpl;
+
 /**
  * <p></p>
  * <br/>
@@ -10,7 +12,7 @@ package com.evgenltd.hnhtools.messagebroker;
 public class MessageBrokerFactory {
 
     public static MessageBroker buildMessaeBroker() {
-        return null;
+        return new MessageBrokerImpl();
     }
 
 }

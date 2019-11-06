@@ -17,6 +17,9 @@ public interface MessageBroker {
 
     void setObjectMapper(@NotNull ObjectMapper objectMapper);
 
+    /**
+     * @throws MessageBrokerException if server have incorrect format
+     */
     void setServer(@NotNull String host, int port);
 
     void setCredentials(@NotNull String username, @NotNull byte[] cookie);
@@ -33,8 +36,14 @@ public interface MessageBroker {
     // #                                                #
     // ##################################################
 
+    /**
+     * @throws MessageBrokerException if broker not in initial state or socket unable to be opened
+     */
     void connect();
 
+    /**
+     * @throws MessageBrokerException if broker not in life or closing state
+     */
     void disconnect();
 
     State getState();

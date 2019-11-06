@@ -41,11 +41,11 @@ final class ObjectDataHolder {
         private int frame;
         private long receivedTime;
 
-        public long getId() {
+        long getId() {
             return id;
         }
 
-        public void setId(final long id) {
+        void setId(final long id) {
             this.id = id;
         }
 

@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  * <p>Author:  lebed</p>
  * <p>Created: 06-11-2019 22:06</p>
  */
-public class MessageBrokerImpl implements MessageBroker {
+public final class MessageBrokerImpl implements MessageBroker {
 
     private static final Logger log = LogManager.getLogger(MessageBroker.class);
 
