@@ -2,47 +2,48 @@ package com.hnh.auth;
 
 import java.nio.charset.StandardCharsets;
 
-public class DataReader {
+@SuppressWarnings({"unused", "WeakerAccess"})
+final class DataReader {
 
-    public static final int BIT_8 = 8;
-    public static final int BYTE = 0xFF; // 8
+    private static final int BIT_8 = 8;
+    private static final int BYTE = 0xFF; // 8
 
-    protected byte[] data;
-    protected int pointer = 0;
+    private byte[] data;
+    private int pointer = 0;
 
-    public DataReader(final byte[] data) {
+    DataReader(final byte[] data) {
         this.data = data;
     }
 
-    public boolean hasNext() {
+    boolean hasNext() {
         return pointer < data.length;
     }
 
-    public int int8() {
+    int int8() {
         return data[pointer++];
     }
 
-    public int uint8() {
+    int uint8() {
         return data[pointer++] & BYTE;
     }
 
-    public int int16() {
+    int int16() {
         return (short) read(2);
     }
 
-    public int uint16() {
+    int uint16() {
         return (int) read(2);
     }
 
-    public int int32() {
+    int int32() {
         return (int) read(4);
     }
 
-    public long uint32() {
+    long uint32() {
         return read(4);
     }
 
-    public long int64() {
+    long int64() {
         return read(8);
     }
 
@@ -57,15 +58,15 @@ public class DataReader {
         return value;
     }
 
-    public float float32() {
+    float float32() {
         return Float.intBitsToFloat(int32());
     }
 
-    public double float64() {
+    double float64() {
         return Double.longBitsToDouble(int64());
     }
 
-    public String string() {
+    String string() {
         int stringLength = 0;
         while (true) {
             if (data[stringLength + pointer] == 0) {
@@ -77,24 +78,24 @@ public class DataReader {
         }
     }
 
-    public byte[] bytes() {
+    byte[] bytes() {
         final int newLength = data.length - pointer;
         return bytes(newLength);
     }
 
-    public byte[] bytes(final int length) {
+    byte[] bytes(final int length) {
         final byte[] bytes = new byte[length];
         System.arraycopy(data, pointer, bytes, 0, length);
         pointer = pointer + length;
         return bytes;
     }
 
-    public DataReader asReader() {
+    DataReader asReader() {
         final int newLength = data.length - pointer;
         return asReader(newLength);
     }
 
-    public DataReader asReader(final int length) {
+    private DataReader asReader(final int length) {
         final byte[] newData = bytes(length);
         return new DataReader(newData);
     }

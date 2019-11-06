@@ -16,7 +16,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.Objects;
 
-public class Authentication implements AutoCloseable {
+@SuppressWarnings("unused")
+public final class Authentication implements AutoCloseable {
 
 	private static final Integer COOKIE_SIZE = 32;
 	private static final Integer TOKEN_SIZE = 32;
@@ -53,7 +54,7 @@ public class Authentication implements AutoCloseable {
 			messageDigest.update(password.getBytes(StandardCharsets.UTF_8));
 			return messageDigest.digest();
 		}catch (Exception e) {
-			throw AuthenticationException.throwPasswordHashingFailed(e);
+			throw new AuthenticationException("Password hash calculation error");
 		}
 	}
 
@@ -69,7 +70,7 @@ public class Authentication implements AutoCloseable {
 
 			trustedStore.setCertificateEntry(generateCertificateAlias(), certificate);
 		}catch (Exception e) {
-			AuthenticationException.throwInitializationFailed(e);
+			throw new AuthenticationException("Instantiating error");
 		}
 
 	}
@@ -103,7 +104,7 @@ public class Authentication implements AutoCloseable {
 			socket.connect(new InetSocketAddress(host, port));
 			connectionSocket = socketFactory.createSocket(socket, host, port, true);
 		}catch (Exception e) {
-			AuthenticationException.throwInitializationFailed(e);
+			throw new AuthenticationException("Initialization error");
 		}
 
 		return this;
@@ -138,7 +139,7 @@ public class Authentication implements AutoCloseable {
         try {
             connectionSocket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AuthenticationException("An error has occurred during closing socket", e);
         }
     }
 
@@ -155,7 +156,7 @@ public class Authentication implements AutoCloseable {
 		final String status = response.string();
 		final String details = response.string();
 		if (status.equals(ANSWER_NO)) {
-			AuthenticationException.throwAuthenticationFailed(details);
+			throw new AuthenticationException("Login failed: %s", details);
 		}
 
 		checkResponseStatusOk(status);
@@ -194,7 +195,7 @@ public class Authentication implements AutoCloseable {
 
 			connectionSocket.getOutputStream().write(writerWithLength.bytes());
 		}catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new AuthenticationException("Sending message error", e);
 		}
 	}
 
@@ -205,7 +206,7 @@ public class Authentication implements AutoCloseable {
                     | lengthHeader.uint8();
 			return read(messageLength);
 		}catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new AuthenticationException("Reading message error", e);
 		}
 	}
 
@@ -214,7 +215,7 @@ public class Authentication implements AutoCloseable {
 		for (int index = 0, rv; index < count; index += rv) {
 			rv = connectionSocket.getInputStream().read(result, index, count - index);
 			if (rv < 0) {
-				throw (new IOException("Premature end of input"));
+				throw new IOException("Premature end of input");
 			}
 		}
 		return new DataReader(result);
@@ -224,7 +225,7 @@ public class Authentication implements AutoCloseable {
 
 	private void checkResponseStatusOk(final String status) {
 		if (!status.equals(ANSWER_OK)) {
-			AuthenticationException.throwUnknownServerAnswer(status);
+			throw new AuthenticationException("Unknown answer from server: %s", status);
 		}
 	}
 

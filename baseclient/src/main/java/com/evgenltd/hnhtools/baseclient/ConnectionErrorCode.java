@@ -7,15 +7,15 @@ package com.evgenltd.hnhtools.baseclient;
  * <p>Author:  lebed</p>
  * <p>Created: 11-03-2019 00:32</p>
  */
-public class ConnectionErrorCode {
+final class ConnectionErrorCode {
 
-    public static final String OK = "OK";
-    public static final String INVALID_AUTH_TOKEN = "INVALID_AUTH_TOKEN";
-    public static final String ALREADY_LOGGED_IN = "ALREADY_LOGGED_IN";
-    public static final String COULD_NOT_CONNECT = "COULD_NOT_CONNECT";
-    public static final String CLIENT_TOO_OLD = "CLIENT_TOO_OLD";
-    public static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
-    public static final String UNKNOWN = "UNKNOWN";
+    static final String OK = "OK";
+    private static final String INVALID_AUTH_TOKEN = "INVALID_AUTH_TOKEN";
+    private static final String ALREADY_LOGGED_IN = "ALREADY_LOGGED_IN";
+    private static final String COULD_NOT_CONNECT = "COULD_NOT_CONNECT";
+    private static final String CLIENT_TOO_OLD = "CLIENT_TOO_OLD";
+    private static final String AUTH_TOKEN_EXPIRED = "AUTH_TOKEN_EXPIRED";
+    private static final String UNKNOWN = "UNKNOWN";
 
     public static String of(final Integer code) {
         if (code == null) {

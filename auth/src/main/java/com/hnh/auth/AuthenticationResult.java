@@ -1,11 +1,11 @@
 package com.hnh.auth;
 
-public class AuthenticationResult {
+public final class AuthenticationResult {
 
 	private byte[] cookie;
 	private byte[] token;
 
-	public AuthenticationResult(final byte[] cookie, final byte[] token) {
+	AuthenticationResult(final byte[] cookie, final byte[] token) {
 		this.cookie = cookie;
 		this.token = token;
 	}

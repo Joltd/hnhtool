@@ -4,7 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataWriter {
+@SuppressWarnings({"unused", "WeakerAccess"})
+final class DataWriter {
 
     private static final int BIT_8 = 8;
 
@@ -19,52 +20,47 @@ public class DataWriter {
     // #                                                #
     // ##################################################
 
-
-    public void adduint8(final int value) {
+    void adduint8(final int value) {
         data.add((byte) value);
     }
 
-    public void adduint16(final int value) {
+    void adduint16(final int value) {
         write(value, 2);
     }
 
-    public void addint32(final int value) {
+    void addint32(final int value) {
         write(value, 4);
     }
 
-    public void adduint32(final long value) {
+    void adduint32(final long value) {
         write(value, 4);
     }
 
-    public void addint64(final long value) {
+    void addint64(final long value) {
         write(value, 8);
     }
 
-    public void addfloat32(final float value) {
+    void addfloat32(final float value) {
         addint32(Float.floatToIntBits(value));
     }
 
-    public void addfloat64(final double value) {
+    void addfloat64(final double value) {
         addint64(Double.doubleToLongBits(value));
     }
 
-    public void addString(final String value) {
+    void addString(final String value) {
         final byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
         addbytes(bytes);
         adduint8(0);
     }
 
-    public void addbytes(final byte[] value) {
+    void addbytes(final byte[] value) {
         for (final byte b : value) {
             data.add(b);
         }
     }
 
-    public void addlist() {
-
-    }
-
-    public byte[] bytes() {
+    byte[] bytes() {
         final byte[] result = new byte[data.size()];
         for (int index = 0; index < data.size(); index++) {
             result[index] = data.get(index);
