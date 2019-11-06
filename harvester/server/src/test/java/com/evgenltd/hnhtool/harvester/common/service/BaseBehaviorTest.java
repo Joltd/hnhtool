@@ -1,10 +1,8 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
-import com.evgenltd.hnhtool.harvester.common.component.TaskContext;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.common.repository.KnownObjectRepository;
-import com.evgenltd.hnhtool.harvester.research.command.OpenContainer;
 import com.evgenltd.hnhtool.harvester.research.service.WarehouseService;
 import com.evgenltd.hnhtools.common.Result;
 import org.apache.logging.log4j.LogManager;
@@ -55,22 +53,6 @@ public class BaseBehaviorTest {
                 Thread.sleep(10_000L);
             } catch (InterruptedException ignored) {
             }
-
-            knownObjectRepository.findById(3L).ifPresent(container -> {
-                final Result<Void> result = OpenContainer.perform(container)
-                        .then(() -> TaskContext.getAgent().matchItemKnowledge());
-                System.out.println(result);
-            });
-
-//            knownItemRepository.findById(64L).ifPresent(knownItem -> {
-//                final Result<KnownItem> result = warehouseService.takeItem(knownItem);
-//                System.out.println(result);
-//            });
-
-//            knownItemRepository.findById(65L).ifPresent(knownItem -> {
-//                final Result<KnownItem> result = warehouseService.takeItem(knownItem);
-//                System.out.println(result);
-//            });
 
             return Result.ok();
         });

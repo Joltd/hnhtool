@@ -33,7 +33,9 @@ public class DropItemInWorld {
         }
 
         return agent.getClient().dropItemFromHandInWorld()
-                .then(() -> Await.performSimple(() -> agent.getClient().getHand() != null))
+                .then(() -> Await.simple(() -> agent.getClient().getHand() != null)
+                        .timeout(100L)
+                        .perform())
                 .cast();
     }
 
