@@ -14,7 +14,7 @@ public class OutboundMessageConverter {
 
     public OutboundMessageConverter() {}
 
-    public void convert(final ObjectNode root, final byte[] data) {
+    public static void convert(final ObjectNode root, final byte[] data) {
         final DataReader reader = new DataReader(data);
 
         final MessageType messageType = MessageType.of(reader.int8());

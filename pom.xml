@@ -5,14 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evgenltd.hnhtool</groupId>
-    <artifactId>hnhtool</artifactId>
+    <artifactId>root</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>1.0</version>
     <modules>
         <module>common</module>
         <module>auth</module>
         <module>gate</module>
 
+        <module>messagebroker</module>
         <module>baseclient</module>
         <module>complexclient</module>
 

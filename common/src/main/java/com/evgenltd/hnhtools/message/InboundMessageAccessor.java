@@ -43,13 +43,38 @@ public class InboundMessageAccessor {
     // #                                                #
     // ##################################################
 
-    public Integer getConnectionErrorCode() {
+    public ConnectionErrorCode getConnectionErrorCode() {
         final JsonNode errorCodeNode = data.get(MessageFields.ERROR_CODE);
         if (errorCodeNode == null || errorCodeNode.isNull()) {
             return null;
         }
 
-        return errorCodeNode.asInt();
+        switch (errorCodeNode.asInt()) {
+            case 0:
+                return ConnectionErrorCode.OK;
+            case 1:
+                return ConnectionErrorCode.INVALID_AUTH_TOKEN;
+            case 2:
+                return ConnectionErrorCode.ALREADY_LOGGED_IN;
+            case 3:
+                return ConnectionErrorCode.COULD_NOT_CONNECT;
+            case 4:
+                return ConnectionErrorCode.CLIENT_TOO_OLD;
+            case 5:
+                return ConnectionErrorCode.AUTH_TOKEN_EXPIRED;
+            default:
+                return ConnectionErrorCode.UNKNOWN;
+        }
+    }
+
+    public enum ConnectionErrorCode {
+        OK,
+        INVALID_AUTH_TOKEN,
+        ALREADY_LOGGED_IN,
+        COULD_NOT_CONNECT,
+        CLIENT_TOO_OLD,
+        AUTH_TOKEN_EXPIRED,
+        UNKNOWN
     }
 
     // ##################################################
@@ -179,7 +204,7 @@ public class InboundMessageAccessor {
             return data;
         }
 
-        DataReader getFragment() {
+        public DataReader getFragment() {
             try {
                 return new DataReader(data.get(MessageFields.FRAGMENT).binaryValue());
             } catch (IOException e) {

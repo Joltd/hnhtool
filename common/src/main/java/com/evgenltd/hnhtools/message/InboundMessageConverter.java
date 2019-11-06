@@ -13,11 +13,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class InboundMessageConverter {
 
-    private RelFragmentBuilder relFragmentBuilder = new RelFragmentBuilder();
-
     public InboundMessageConverter() {}
 
-    public void convert(final ObjectNode root, final byte[] data) {
+    public static void convert(final ObjectNode root, final byte[] data) {
 
         final DataReader reader = new DataReader(data);
 
@@ -67,7 +65,7 @@ public class InboundMessageConverter {
 
     }
 
-    private void convertRel(final ObjectNode rel, final int relTypeValue, final DataReader reader) {
+    public static void convertRel(final ObjectNode rel, final int relTypeValue, final DataReader reader) {
         final RelType relType = RelType.of(relTypeValue);
         rel.put(MessageFields.REL_TYPE, relType.name());
         switch (relType) {
@@ -178,7 +176,7 @@ public class InboundMessageConverter {
         }
     }
 
-    private void convertObjectDelta(final ObjectNode root, final DataReader reader) {
+    private static void convertObjectDelta(final ObjectNode root, final DataReader reader) {
         final ArrayNode objectDataArray = root.putArray(MessageFields.OBJECT_DATA);
         while (reader.hasNext()) {
             final ObjectNode objectData = objectDataArray.addObject();
@@ -372,7 +370,7 @@ public class InboundMessageConverter {
         }
     }
 
-    private void readResource(final DataReader reader, final ArrayNode resourceList) {
+    private static void readResource(final DataReader reader, final ArrayNode resourceList) {
         while (true) {
             final ObjectNode resource = resourceList.addObject();
             int poseResourceId = reader.uint16();
@@ -388,25 +386,6 @@ public class InboundMessageConverter {
                 resource.put("resourceContent", reader.bytes(poseResourceLength));
             }
         }
-    }
-
-    public boolean appendRelFragment(final InboundMessageAccessor.RelAccessor data) {
-        final DataReader reader = data.getFragment();
-        return relFragmentBuilder.build(reader);
-    }
-
-    public byte[] convertRelFragment(final InboundMessageAccessor.RelAccessor relAccessor) {
-        final int type = relFragmentBuilder.getType();
-        final byte[] data = relFragmentBuilder.getData();
-        relFragmentBuilder.clear();
-        convertRel((ObjectNode) relAccessor.getData(), type, new DataReader(data));
-
-        final DataWriter writer = new DataWriter();
-        writer.adduint8(MessageType.MESSAGE_TYPE_REL.getValue());
-        writer.adduint16(ByteUtil.BIT_16);
-        writer.adduint8(type);
-        writer.addbytes(data);
-        return writer.bytes();
     }
 
 }

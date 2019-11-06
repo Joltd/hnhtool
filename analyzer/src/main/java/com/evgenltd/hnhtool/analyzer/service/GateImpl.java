@@ -31,9 +31,6 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
 
     private static final Logger log = LogManager.getLogger(GateImpl.class);
 
-    private InboundMessageConverter inboundMessageConverter;
-    private OutboundMessageConverter outboundMessageConverter;
-
     private MessageFilter messageFilter;
 
     private boolean enabled;
@@ -42,9 +39,6 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
 
     @Override
     public void init() {
-        inboundMessageConverter = new InboundMessageConverter();
-        outboundMessageConverter = new OutboundMessageConverter();
-
         messageFilter = new MessageFilter();
     }
 
@@ -70,7 +64,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
 
         final ObjectNode root = C.getMapper().createObjectNode();
         try {
-            inboundMessageConverter.convert(root, truncated);
+            InboundMessageConverter.convert(root, truncated);
         } catch (Exception e) {
             log.error("", e);
             printStackTrace(root, e);
@@ -87,7 +81,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
         }
         final ObjectNode root = C.getMapper().createObjectNode();
         try {
-            outboundMessageConverter.convert(root, data);
+            OutboundMessageConverter.convert(root, data);
         } catch (Exception e) {
             log.error("", e);
             printStackTrace(root, e);

@@ -1,8 +1,8 @@
-package com.evgenltd.hnhtools.baseclient;
+package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.common.ApplicationException;
-import com.evgenltd.hnhtools.common.Assert;
 import com.evgenltd.hnhtools.message.*;
+import com.evgenltd.hnhtools.messagebroker.MessageBroker;
+import com.evgenltd.hnhtools.messagebroker.MessageBrokerException;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,208 +13,191 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * <p></p>
  * <br/>
- * <p>Project: hnhtool</p>
+ * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 04-03-2019 21:48</p>
+ * <p>Created: 06-11-2019 22:06</p>
  */
-public final class BaseClient {
+public class MessageBrokerImpl implements MessageBroker {
+
+    private static final Logger log = LogManager.getLogger(MessageBroker.class);
 
     private static final int PROTOCOL_VERSION = 17;
+    private static final String BROKER_NAME = "Hafen";
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;
-
-    private static final Logger log = LogManager.getLogger(BaseClient.class);
     private static final int AUTH_TIMEOUT = 200;
     private static final int CLOSE_TIMEOUT = 200;
     private static final int LIFE_TIMEOUT = 100;
 
-    private State state = State.INIT;
-    private InboundMessageAccessor.ConnectionErrorCode connectionErrorCode;
-
-    // dependencies
-    private final ObjectMapper objectMapper;
-
     // configurable
-    private RelQueue relQueue;
-    private ObjectDataQueue objectDataQueue;
-
+    private ObjectMapper objectMapper;
+    private Consumer<InboundMessageAccessor.RelAccessor> relReceiver;
+    private Consumer<InboundMessageAccessor.ObjectDataAccessor> objectDataReceiver;
     private SocketAddress server;
     private String username;
     private byte[] cookie;
-
     private Monitor monitor;
 
-    // inner
+    // inner state
+    private String messageBrokerName = "message-broker";
+    private State state = State.INIT;
 
-    @UsedInInboundThread
-    @UsedInOutboundThread
     private final ObjectDataHolder objectDataHolder;
-    @UsedInInboundThread
-    @UsedInOutboundThread
     private final InboundRelHolder inboundRelHolder;
-    @UsedInInboundThread
-    @UsedInOutboundThread
     private final OutboundRelHolder outboundRelHolder;
 
     private final RelFragmentAssembly relFragmentAssembly;
 
-    private final DatagramSocket socket;
+    private DatagramSocket socket;
 
     private final Thread inbound;
     private final Thread outbound;
 
-    public BaseClient(@NotNull final ObjectMapper objectMapper) {
-        Assert.valueRequireNonEmpty(objectMapper, "ObjectMapper");
+    public MessageBrokerImpl() {
+        this.objectMapper = new ObjectMapper();
+        objectDataHolder = new ObjectDataHolder();
+        inboundRelHolder = new InboundRelHolder();
+        outboundRelHolder = new OutboundRelHolder();
+        relFragmentAssembly = new RelFragmentAssembly();
+
+        inbound = new Thread(this::inboundLoop);
+        outbound = new Thread(this::outboundLoop);
+    }
+
+    @Override
+    public void setObjectMapper(@NotNull final ObjectMapper objectMapper) {
+        Objects.requireNonNull(objectMapper, "[ObjectMapper] should not be empty");
         this.objectMapper = objectMapper;
-        try {
-            objectDataHolder = new ObjectDataHolder();
-            inboundRelHolder = new InboundRelHolder();
-            outboundRelHolder = new OutboundRelHolder();
-            relFragmentAssembly = new RelFragmentAssembly();
-
-            socket = new DatagramSocket();
-            socket.setSoTimeout(SOCKET_TIMEOUT);
-            inbound = new Thread(this::inboundLoop);
-            outbound = new Thread(this::outboundLoop);
-        } catch (final Exception e) {
-            throw new ApplicationException(e);
-        }
     }
 
-    // ##################################################
-    // #                                                #
-    // #  API                                           #
-    // #                                                #
-    // ##################################################
-
-    private boolean isAlive() {
-        return Arrays.asList(
-                State.CONNECTION,
-                State.LIFE,
-                State.CLOSING
-        ).contains(state);
-    }
-
-    private boolean isInit() {
-        return state.equals(State.INIT);
-    }
-
-    private boolean isConnection() {
-        return state.equals(State.CONNECTION);
-    }
-
-    public boolean isLife() {
-        return state.equals(State.LIFE);
-    }
-
-    private boolean isClosing() {
-        return state.equals(State.CLOSING);
-    }
-
-    public boolean isClosed() {
-        return state.equals(State.CLOSED);
-    }
-
-    public String getConnectionErrorCode() {
-        return connectionErrorCode.name();
-    }
-
-    @Deprecated
-    public void printHealth() {
-        System.out.printf("state = [%s]\n", state);
-        System.out.printf("errorCode = [%s]\n", connectionErrorCode);
-    }
-
-    public void setServer(final String host, final int port) {
-        Assert.valueRequireNonEmpty(host, "Host");
-        Assert.valueRequireNonEmpty(port, "Port");
+    @Override
+    public void setServer(@NotNull final String host, final int port) {
+        Objects.requireNonNull(host, "[Host] should not be empty");
         try {
             server = new InetSocketAddress(InetAddress.getByName(host), port);
         } catch (UnknownHostException e) {
-            throw new ApplicationException(e, "Unknown host [%s]", host);
+            throw new MessageBrokerException("Wrong server host [%s]", e, host);
         }
     }
 
-    public void setCredentials(final String username, final byte[] cookie) {
-        Assert.valueRequireNonEmpty(username, "Username");
-        Assert.valueRequireNonEmpty(cookie, "Cookie");
+    @Override
+    public void setCredentials(@NotNull final String username, @NotNull final byte[] cookie) {
+        Objects.requireNonNull(username, "[Username] should not be empty");
+        Objects.requireNonNull(cookie, "[Cookie] should not be empty");
         this.username = username;
         this.cookie = cookie;
-        inbound.setName(String.format("baseClient-%s-inbound", username));
-        outbound.setName(String.format("baseClient-%s-outbound", username));
+        this.messageBrokerName = String.format("%s-%s", username, messageBrokerName);
+        inbound.setName(String.format("%s-inbound", this.messageBrokerName));
+        outbound.setName(String.format("%s-outbound", this.messageBrokerName));
     }
 
-    public void setRelQueue(final RelQueue relQueue) {
-        Assert.valueRequireNonEmpty(relQueue, "RelQueue");
-        this.relQueue = relQueue;
+    @Override
+    public void setRelReceiver(@NotNull final Consumer<InboundMessageAccessor.RelAccessor> relReceiver) {
+        Objects.requireNonNull(relReceiver, "[RelReceiver] should not be empty");
+        this.relReceiver = relReceiver;
     }
 
-    public void setObjectDataQueue(final ObjectDataQueue objectDataQueue) {
-        Assert.valueRequireNonEmpty(objectDataQueue, "ObjectDataQueue");
-        this.objectDataQueue = objectDataQueue;
+    @Override
+    public void setObjectDataReceiver(@NotNull final Consumer<InboundMessageAccessor.ObjectDataAccessor> objectDataReceiver) {
+        Objects.requireNonNull(objectDataReceiver, "[ObjectDataReceiver] should not be empty");
+        this.objectDataReceiver = objectDataReceiver;
     }
 
+    @Override
+    public void withMonitoring() {
+        monitor = new Monitor();
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Lifecycle                                     #
+    // #                                                #
+    // ##################################################
+
+    @Override
     public void connect() {
+        Objects.requireNonNull(relReceiver, "[RelReceiver] should not be empty");
+        Objects.requireNonNull(objectDataReceiver, "[ObjectDataReceiver] should not be empty");
+        Objects.requireNonNull(server, "[Server] should not be empty");
+        Objects.requireNonNull(username, "[Username] should not be empty");
+        Objects.requireNonNull(cookie, "[Cookie] should not be empty");
 
-        Assert.valueRequireNonEmpty(relQueue, "RelQueue");
-        Assert.valueRequireNonEmpty(objectDataQueue, "ObjectDataQueue");
-        Assert.valueRequireNonEmpty(server, "Server");
-        Assert.valueRequireNonEmpty(username, "Username");
-        Assert.valueRequireNonEmpty(cookie, "Cookie");
-
-        if (!state.equals(State.INIT)) {
-            return; // needed light error response
+        if (!isInit()) {
+            throw new MessageBrokerException("%s not in init state", this.messageBrokerName);
         }
 
-        state = State.CONNECTION;
+        setState(State.CONNECTION);
+
+        try {
+            socket = new DatagramSocket();
+            socket.setSoTimeout(SOCKET_TIMEOUT);
+        } catch (final SocketException e) {
+            throw new MessageBrokerException("%s failed on starting connection", e, this.messageBrokerName);
+        }
 
         inbound.start();
         outbound.start();
     }
 
+    @Override
     public void disconnect() {
         if (!isLife() && !isClosing()) {
-            return; // needed light error response
+            throw new MessageBrokerException("%s not in life state", this.messageBrokerName);
         }
 
-        state = State.CLOSING;
+        setState(State.CLOSING);
     }
 
-    private void pushInboundRel(final InboundMessageAccessor.RelAccessor relAccessor) {
-        final RelType relType = relAccessor.getRelType();
-        if (!Objects.equals(relType, RelType.REL_MESSAGE_FRAGMENT)) {
-            relQueue.push(relAccessor);
-            return;
-        }
-
-        final boolean result = relFragmentAssembly.append(relAccessor);
-        if (result) {
-            final InboundMessageAccessor.RelAccessor relFragmentComposition = new InboundMessageAccessor.RelAccessor(objectMapper.createObjectNode());
-            final byte[] data = relFragmentAssembly.convert(relFragmentComposition);
-            relQueue.push(relFragmentComposition);
-            if (monitor != null) {
-                monitor.sendInbound(data, data.length);
-            }
-        }
+    @Override
+    public synchronized State getState() {
+        return state;
     }
 
-    private void pushObjectData(final InboundMessageAccessor.ObjectDataAccessor objectDataAccessor) {
-        objectDataQueue.push(objectDataAccessor);
+    private synchronized void setState(final State state) {
+        this.state = state;
     }
 
-    public void pushOutboundRel(final int id, final String name, final Object... args) {
+    @Override
+    public boolean isInit() {
+        return getState().equals(State.INIT);
+    }
+
+    @Override
+    public boolean isConnection() {
+        return getState().equals(State.CONNECTION);
+    }
+
+    @Override
+    public boolean isLife() {
+        return getState().equals(State.LIFE);
+    }
+
+    @Override
+    public boolean isClosing() {
+        return getState().equals(State.CLOSING);
+    }
+
+    @Override
+    public boolean isClosed() {
+        return getState().equals(State.CLOSED);
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Exchange                                      #
+    // #                                                #
+    // ##################################################
+
+    @Override
+    public void sendRel(final int id, final String name, final Object... args) {
         outboundRelHolder.register(id, name, args);
-    }
-
-    public void withMonitor() {
-        monitor = new Monitor();
     }
 
     // ##################################################
@@ -242,7 +225,7 @@ public final class BaseClient {
                 baseInboundProcessor(data);
                 closingProcessor(data);
             } else if (isClosing()) {
-                closingProcessor(data);
+                shutdown();
             }
 
         }
@@ -269,7 +252,7 @@ public final class BaseClient {
             InboundMessageConverter.convert(rootNode, truncatedDate);
         } catch (final SocketTimeoutException ignored) {
         } catch (final Exception e) {
-            log.debug("Unable to receive message", e);
+            log.debug(String.format("%s unable to receive message", this.messageBrokerName), e);
         }
 
         return accessor;
@@ -280,11 +263,11 @@ public final class BaseClient {
             return;
         }
 
-        this.connectionErrorCode = data.getConnectionErrorCode();
-        if (this.connectionErrorCode.equals(InboundMessageAccessor.ConnectionErrorCode.OK)) {
-            state = State.LIFE;
+        final InboundMessageAccessor.ConnectionErrorCode connectionErrorCode = data.getConnectionErrorCode();
+        if (connectionErrorCode.equals(InboundMessageAccessor.ConnectionErrorCode.OK)) {
+            setState(State.LIFE);
         } else {
-            state = State.CLOSED;
+            setState(State.CLOSED);
         }
     }
 
@@ -302,14 +285,14 @@ public final class BaseClient {
                         continue;
                     }
 
-                    pushInboundRel(relAccessor);
-                    inboundRelHolder.getNearestAwaiting().forEach(this::pushInboundRel);
+                    receiveRel(relAccessor);
+                    inboundRelHolder.getNearestAwaiting().forEach(this::receiveRel);
                 }
                 break;
             case MESSAGE_TYPE_OBJECT_DATA:
                 for (InboundMessageAccessor.ObjectDataAccessor objectDataAccessor : data.getObjectData()) {
                     objectDataHolder.registerObjectData(objectDataAccessor);
-                    pushObjectData(objectDataAccessor);
+                    objectDataReceiver.accept(objectDataAccessor);
                 }
                 break;
             case MESSAGE_TYPE_ACKNOWLEDGE:
@@ -318,10 +301,33 @@ public final class BaseClient {
         }
     }
 
+    private void receiveRel(final InboundMessageAccessor.RelAccessor relAccessor) {
+        final RelType relType = relAccessor.getRelType();
+        if (!Objects.equals(relType, RelType.REL_MESSAGE_FRAGMENT)) {
+            relReceiver.accept(relAccessor);
+            return;
+        }
+
+        final boolean result = relFragmentAssembly.append(relAccessor);
+        if (result) {
+            final InboundMessageAccessor.RelAccessor relFragmentComposition = new InboundMessageAccessor.RelAccessor(objectMapper.createObjectNode());
+            final byte[] data = relFragmentAssembly.convert(relFragmentComposition);
+            relReceiver.accept(relFragmentComposition);
+            if (monitor != null) {
+                monitor.sendInbound(data, data.length);
+            }
+        }
+    }
+
     private void closingProcessor(final InboundMessageAccessor data) {
         if (Objects.equals(data.getType(), MessageType.MESSAGE_TYPE_CLOSE)) {
-            state = State.CLOSED;
+            shutdown();
         }
+    }
+
+    private void shutdown() {
+        setState(State.CLOSED);
+        socket.close();
     }
 
     // ##################################################
@@ -374,7 +380,7 @@ public final class BaseClient {
         final DataWriter writer = new DataWriter();
         writer.adduint8(MessageType.MESSAGE_TYPE_SESSION.getValue());
         writer.adduint16(2);
-        writer.addString("Hafen");
+        writer.addString(BROKER_NAME);
         writer.adduint16(PROTOCOL_VERSION);
         writer.addString(username);
         writer.adduint16(cookie.length);
@@ -454,14 +460,6 @@ public final class BaseClient {
         try {
             Thread.sleep(timeout);
         } catch (InterruptedException ignored) {}
-    }
-
-    private enum State {
-        INIT,
-        CONNECTION,
-        LIFE,
-        CLOSING,
-        CLOSED
     }
 
 }
