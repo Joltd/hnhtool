@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.baseclient;
 
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 
 /**
  * <p></p>
@@ -11,6 +11,6 @@ import com.evgenltd.hnhtools.message.InboundMessageAccessor;
  */
 public interface ObjectDataQueue {
 
-    void push(InboundMessageAccessor.ObjectDataAccessor objectDataAccessor);
+    void push(Message.ObjectData objectData);
 
 }

@@ -16,16 +16,16 @@ public class RelFragmentAssembly {
 
     private Builder builder = new Builder();
 
-    public boolean append(final InboundMessageAccessor.RelAccessor data) {
+    public boolean append(final Message.Rel data) {
         final DataReader reader = data.getFragment();
         return builder.build(reader);
     }
 
-    public byte[] convert(final InboundMessageAccessor.RelAccessor relAccessor) {
+    public byte[] convert(final Message.Rel rel) {
         final int type = builder.getType();
         final byte[] data = builder.getData();
         builder.clear();
-        InboundMessageConverter.convertRel((ObjectNode) relAccessor.getData(), type, new DataReader(data));
+        InboundMessageConverter.convertRel((ObjectNode) rel.getData(), type, new DataReader(data));
 
         final DataWriter writer = new DataWriter();
         writer.adduint8(MessageType.MESSAGE_TYPE_REL.getValue());

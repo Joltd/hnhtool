@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ final class ObjectDataHolder {
     private Map<Long,ObjectDataEntry> objectDataAcknowledge = new HashMap<>();
 
     @InboundThread
-    synchronized void registerObjectData(final InboundMessageAccessor.ObjectDataAccessor objectDataAccessor) {
+    synchronized void registerObjectData(final Message.ObjectData objectDataAccessor) {
         final long objectId = objectDataAccessor.getId();
         final ObjectDataEntry objectData = objectDataAcknowledge.getOrDefault(objectId, new ObjectDataEntry());
         objectDataAcknowledge.put(objectId, objectData);

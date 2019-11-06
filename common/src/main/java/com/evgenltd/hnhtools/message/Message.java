@@ -19,11 +19,11 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 10-03-2019 16:14</p>
  */
-public class InboundMessageAccessor {
+public class Message {
 
     private ObjectNode data;
 
-    public InboundMessageAccessor(final ObjectNode data) {
+    public Message(final ObjectNode data) {
         this.data = data;
     }
 
@@ -83,15 +83,15 @@ public class InboundMessageAccessor {
     // #                                                #
     // ##################################################
 
-    public List<RelAccessor> getRel() {
+    public List<Rel> getRel() {
         final JsonNode relListNode = data.get(MessageFields.RELS);
         if (relListNode == null || relListNode.isNull()) {
             return Collections.emptyList();
         }
 
-        final List<RelAccessor> result = new ArrayList<>();
+        final List<Rel> result = new ArrayList<>();
         for (final JsonNode relNode : relListNode) {
-            result.add(new RelAccessor(relNode));
+            result.add(new Rel(relNode));
         }
 
         return result;
@@ -107,24 +107,24 @@ public class InboundMessageAccessor {
     // #                                                #
     // ##################################################
 
-    public List<ObjectDataAccessor> getObjectData() {
+    public List<ObjectData> getObjectData() {
         final JsonNode objectDataListNode = data.get(MessageFields.OBJECT_DATA);
         if (objectDataListNode == null || objectDataListNode.isNull()) {
             return Collections.emptyList();
         }
 
-        final List<ObjectDataAccessor> result = new ArrayList<>();
+        final List<ObjectData> result = new ArrayList<>();
         for (final JsonNode objectDataNode : objectDataListNode) {
-            result.add(new ObjectDataAccessor(objectDataNode));
+            result.add(new ObjectData(objectDataNode));
         }
 
         return result;
     }
 
-    public static final class ObjectDataAccessor {
+    public static final class ObjectData {
         private JsonNode data;
 
-        ObjectDataAccessor(final JsonNode data) {
+        ObjectData(final JsonNode data) {
             this.data = data;
         }
 
@@ -140,63 +140,62 @@ public class InboundMessageAccessor {
             return data.get(MessageFields.FRAME).asInt();
         }
 
-        public List<ObjectDataDeltaAccessor> getDeltas() {
+        public List<Delta> getDeltas() {
             final JsonNode objectDataDeltaListNode = data.get(MessageFields.DELTAS);
             if (objectDataDeltaListNode == null || objectDataDeltaListNode.isNull()) {
                 return Collections.emptyList();
             }
 
-            final List<ObjectDataDeltaAccessor> result = new ArrayList<>();
+            final List<Delta> result = new ArrayList<>();
             for (final JsonNode objectDataDeltaNode : objectDataDeltaListNode) {
-                result.add(new ObjectDataDeltaAccessor(objectDataDeltaNode));
+                result.add(new Delta(objectDataDeltaNode));
             }
 
             return result;
         }
 
-    }
+        public static final class Delta {
+            private JsonNode data;
 
-    public static final class ObjectDataDeltaAccessor {
-        private JsonNode data;
-
-        ObjectDataDeltaAccessor(final JsonNode data) {
-            this.data = data;
-        }
-
-        public JsonNode getData() {
-            return data;
-        }
-
-        public ObjectDeltaType getType() {
-            final JsonNode deltaTypeNode = data.get(MessageFields.DELTA_TYPE);
-            if (deltaTypeNode == null || deltaTypeNode.isNull()) {
-                return null;
+            Delta(final JsonNode data) {
+                this.data = data;
             }
-            return ObjectDeltaType.valueOf(deltaTypeNode.asText());
-        }
 
-        public int getX() {
-            return data.get(MessageFields.X).asInt();
-        }
+            public JsonNode getData() {
+                return data;
+            }
 
-        public int getY() {
-            return data.get(MessageFields.Y).asInt();
-        }
+            public ObjectDeltaType getType() {
+                final JsonNode deltaTypeNode = data.get(MessageFields.DELTA_TYPE);
+                if (deltaTypeNode == null || deltaTypeNode.isNull()) {
+                    return null;
+                }
+                return ObjectDeltaType.valueOf(deltaTypeNode.asText());
+            }
 
-        public int getW() {
-            return data.get(MessageFields.W).asInt();
-        }
+            public int getX() {
+                return data.get(MessageFields.X).asInt();
+            }
 
-        public long getResourceId() {
-            return data.get(MessageFields.RESOURCE_ID).asLong();
-        }
+            public int getY() {
+                return data.get(MessageFields.Y).asInt();
+            }
 
+            public int getW() {
+                return data.get(MessageFields.W).asInt();
+            }
+
+            public long getResourceId() {
+                return data.get(MessageFields.RESOURCE_ID).asLong();
+            }
+
+        }
     }
 
-    public static final class RelAccessor {
+    public static final class Rel {
         private JsonNode data;
 
-        public RelAccessor(final JsonNode data) {
+        public Rel(final JsonNode data) {
             this.data = data;
         }
 
@@ -271,49 +270,48 @@ public class InboundMessageAccessor {
             return getArgs(MessageFields.WIDGET_C_ARGS);
         }
 
-    }
+        public static final class RelArgsAccessor {
 
-    public static final class RelArgsAccessor {
+            private Iterator<JsonNode> iterator;
 
-        private Iterator<JsonNode> iterator;
+            RelArgsAccessor(final JsonNode data) {
+                iterator = data.iterator();
+            }
 
-        RelArgsAccessor(final JsonNode data) {
-            iterator = data.iterator();
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            public void skip() {
+                iterator.next();
+            }
+
+            public Integer nextInt() {
+                final JsonNode next = iterator.next();
+                return next.asInt();
+            }
+
+            public Long nextLong() {
+                return iterator.next().asLong();
+            }
+
+            public String nextString() {
+                return iterator.next().asText();
+            }
+
+            public IntPoint nextPoint() {
+                final JsonNode nodePoint = iterator.next();
+                return new IntPoint(
+                        nodePoint.get("x").asInt(),
+                        nodePoint.get("y").asInt()
+                );
+            }
+
+            public JsonNode nextNode() {
+                return iterator.next();
+            }
+
         }
-
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        public void skip() {
-            iterator.next();
-        }
-
-        public Integer nextInt() {
-            final JsonNode next = iterator.next();
-            return next.asInt();
-        }
-
-        public Long nextLong() {
-            return iterator.next().asLong();
-        }
-
-        public String nextString() {
-            return iterator.next().asText();
-        }
-
-        public IntPoint nextPoint() {
-            final JsonNode nodePoint = iterator.next();
-            return new IntPoint(
-                    nodePoint.get("x").asInt(),
-                    nodePoint.get("y").asInt()
-            );
-        }
-
-        public JsonNode nextNode() {
-            return iterator.next();
-        }
-
     }
 
 }

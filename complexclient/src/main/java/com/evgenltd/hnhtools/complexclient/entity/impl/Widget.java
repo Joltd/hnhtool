@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.complexclient.entity.impl;
 
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 
 import java.util.function.Consumer;
 
@@ -13,7 +13,7 @@ public class Widget {
     private Integer id;
     private String type;
 
-    private Consumer<InboundMessageAccessor.RelAccessor> handleMessage;
+    private Consumer<Message.Rel> handleMessage;
     private Runnable destroy;
 
     public Widget(final Integer id, final String type) {
@@ -29,7 +29,7 @@ public class Widget {
         return type;
     }
 
-    public void setHandleMessage(final Consumer<InboundMessageAccessor.RelAccessor> handleMessage) {
+    public void setHandleMessage(final Consumer<Message.Rel> handleMessage) {
         this.handleMessage = handleMessage;
     }
 
@@ -37,7 +37,7 @@ public class Widget {
         this.destroy = destroy;
     }
 
-    public void handleMessage(final InboundMessageAccessor.RelAccessor accessor) {
+    public void handleMessage(final Message.Rel accessor) {
         if (handleMessage != null) {
             handleMessage.accept(accessor);
         }

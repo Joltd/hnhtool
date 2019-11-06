@@ -3,7 +3,7 @@ package com.evgenltd.hnhtools.complexclient;
 import com.evgenltd.hnhtools.complexclient.entity.ContextMenu;
 import com.evgenltd.hnhtools.complexclient.entity.impl.*;
 import com.evgenltd.hnhtools.entity.IntPoint;
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 import com.evgenltd.hnhtools.message.RelType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +45,7 @@ final class RelMessageHandler {
         this.client = client;
     }
 
-    void handleRelMessage(final InboundMessageAccessor.RelAccessor accessor) {
+    void handleRelMessage(final Message.Rel accessor) {
         final RelType type = accessor.getRelType();
         if (type == null) {
             return;
@@ -79,7 +79,7 @@ final class RelMessageHandler {
         }
     }
 
-    private void handleNewWidget(final Widget widget, final InboundMessageAccessor.RelAccessor accessor) {
+    private void handleNewWidget(final Widget widget, final Message.Rel accessor) {
         final String type = widget.getType();
         final CharacterImpl character = client.getCharacter();
         switch (type) {
@@ -89,7 +89,7 @@ final class RelMessageHandler {
                 break;
             case MAP_VIEW_WIDGET:
                 client.setMapViewId(widget.getId());
-                final InboundMessageAccessor.RelArgsAccessor mapViewArgs = accessor.getCArgs();
+                final Message.Rel.RelArgsAccessor mapViewArgs = accessor.getCArgs();
                 mapViewArgs.skip();
                 mapViewArgs.skip();
                 character.setId(mapViewArgs.nextLong());
@@ -156,7 +156,7 @@ final class RelMessageHandler {
                 worldItem.setResource(() -> client.getResourceProvider().getResourceName(resourceId));
 
                 if (Objects.equals(itemParentId, client.getGameUiId())) {
-                    final InboundMessageAccessor.RelArgsAccessor pArgs = accessor.getPArgs();
+                    final Message.Rel.RelArgsAccessor pArgs = accessor.getPArgs();
                     pArgs.nextString();
                     worldItem.setPosition(pArgs.nextPoint());
                     client.setHand(worldItem);
@@ -181,7 +181,7 @@ final class RelMessageHandler {
                 }
                 worldStack.setParentObjectId(stackParentId.longValue());
 
-                final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getCArgs();
+                final Message.Rel.RelArgsAccessor stackArgs = accessor.getCArgs();
                 stackArgs.skip();
                 worldStack.setCount(stackArgs.nextInt());
                 worldStack.setMax(stackArgs.nextInt());
@@ -190,7 +190,7 @@ final class RelMessageHandler {
                 widget.setDestroy(() -> client.getStackIndex().removeStack(worldStack.getId()));
                 break;
             case CONTEXT_MENU:
-                final InboundMessageAccessor.RelArgsAccessor contextMenuArgs = accessor.getCArgs();
+                final Message.Rel.RelArgsAccessor contextMenuArgs = accessor.getCArgs();
                 final ContextMenu contextMenu = new ContextMenu(widget.getId());
                 while (contextMenuArgs.hasNext()) {
                     contextMenu.addCommand(contextMenuArgs.nextString());
@@ -219,7 +219,7 @@ final class RelMessageHandler {
     }
 
     private void handleInventoryMessage(
-            final InboundMessageAccessor.RelAccessor accessor,
+            final Message.Rel accessor,
             final WorldInventoryImpl inventory
     ) {
         if (!Objects.equals(accessor.getWidgetMessageName(), SZ_MESSAGE_NAME)) {
@@ -231,7 +231,7 @@ final class RelMessageHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private void handleItemMessage(final InboundMessageAccessor.RelAccessor accessor, final WorldItemImpl worldItem) {
+    private void handleItemMessage(final Message.Rel accessor, final WorldItemImpl worldItem) {
         if (!Objects.equals(accessor.getWidgetMessageName(), LABEL_MESSAGE_NAME)) {
             return;
         }
@@ -244,12 +244,12 @@ final class RelMessageHandler {
         }
     }
 
-    private void handleStackMessage(final InboundMessageAccessor.RelAccessor accessor, final WorldStackImpl worldStack) {
+    private void handleStackMessage(final Message.Rel accessor, final WorldStackImpl worldStack) {
         if (!Objects.equals(accessor.getWidgetMessageName(), CHANGE_NUM_MESSAGE_NAME)) {
             return;
         }
 
-        final InboundMessageAccessor.RelArgsAccessor stackArgs = accessor.getArgs();
+        final Message.Rel.RelArgsAccessor stackArgs = accessor.getArgs();
         worldStack.setCount(stackArgs.nextInt());
         worldStack.setMax(stackArgs.nextInt());
     }

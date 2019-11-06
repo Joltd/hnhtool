@@ -2,7 +2,7 @@ package com.evgenltd.hnhtools.complexclient;
 
 import com.evgenltd.hnhtools.complexclient.entity.impl.WorldObjectImpl;
 import com.evgenltd.hnhtools.entity.IntPoint;
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 
 /**
  * <p></p>
@@ -19,7 +19,7 @@ final class ObjectDataHandler {
         this.client = client;
     }
 
-    void handleObjectData(final InboundMessageAccessor.ObjectDataAccessor accessor) {
+    void handleObjectData(final Message.ObjectData accessor) {
         final Long objectId = accessor.getId();
         final WorldObjectImpl object = client.getObjectIndex().getObject(objectId);
 
@@ -30,7 +30,7 @@ final class ObjectDataHandler {
 
         object.setFrame(frame);
 
-        for (final InboundMessageAccessor.ObjectDataDeltaAccessor delta : accessor.getDeltas()) {
+        for (final Message.ObjectData.Delta delta : accessor.getDeltas()) {
             if (delta.getType() == null) {
                 continue;
             }

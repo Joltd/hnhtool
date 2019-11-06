@@ -1,10 +1,5 @@
 package com.evgenltd.hnhtools.messagebroker;
 
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
 
 /**
  * <p></p>
@@ -15,21 +10,6 @@ import java.util.function.Consumer;
  */
 public interface MessageBroker {
 
-    void setObjectMapper(@NotNull ObjectMapper objectMapper);
-
-    /**
-     * @throws MessageBrokerException if server have incorrect format
-     */
-    void setServer(@NotNull String host, int port);
-
-    void setCredentials(@NotNull String username, @NotNull byte[] cookie);
-
-    void setRelReceiver(@NotNull Consumer<InboundMessageAccessor.RelAccessor> rel);
-
-    void setObjectDataReceiver(@NotNull Consumer<InboundMessageAccessor.ObjectDataAccessor> objectData);
-
-    void withMonitoring();
-
     // ##################################################
     // #                                                #
     // #  Lifecycle                                     #
@@ -38,6 +18,7 @@ public interface MessageBroker {
 
     /**
      * @throws MessageBrokerException if broker not in initial state or socket unable to be opened
+     * or if server have incorrect format
      */
     void connect();
 

@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.message.InboundMessageAccessor;
+import com.evgenltd.hnhtools.message.Message;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.*;
@@ -16,7 +16,7 @@ final class InboundRelHolder {
 
     private Integer acknowledgeSequence = null;
     private Integer nextSequence = 0;
-    private Map<Integer, InboundMessageAccessor.RelAccessor> awaiting = new HashMap<>();
+    private Map<Integer, Message.Rel> awaiting = new HashMap<>();
 
     /**
      * <p>Passed REL will be registered if REL sequence number:
@@ -31,7 +31,7 @@ final class InboundRelHolder {
      * @return passed REL if its sequence number matches with expected sequence number, <code>null</code> otherwise
      */
     @InboundThread
-    synchronized InboundMessageAccessor.RelAccessor register(final InboundMessageAccessor.RelAccessor data) {
+    synchronized Message.Rel register(final Message.Rel data) {
         final Integer relSequence = data.getSequence();
         if (Objects.equals(relSequence, nextSequence)) {
             incrementNextSequence();
@@ -53,11 +53,11 @@ final class InboundRelHolder {
     }
 
     @InboundThread
-    synchronized List<InboundMessageAccessor.RelAccessor> getNearestAwaiting() {
-        final List<InboundMessageAccessor.RelAccessor> nextRelList = new ArrayList<>();
+    synchronized List<Message.Rel> getNearestAwaiting() {
+        final List<Message.Rel> nextRelList = new ArrayList<>();
         final boolean hasNextRel = awaiting.containsKey(nextSequence);
         if (hasNextRel) {
-            final InboundMessageAccessor.RelAccessor nextRel = awaiting.remove(nextSequence);
+            final Message.Rel nextRel = awaiting.remove(nextSequence);
             nextRelList.add(nextRel);
             incrementNextSequence();
         }

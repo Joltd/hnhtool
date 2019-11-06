@@ -36,7 +36,7 @@ public final class BaseClient {
     private static final int LIFE_TIMEOUT = 100;
 
     private State state = State.INIT;
-    private InboundMessageAccessor.ConnectionErrorCode connectionErrorCode;
+    private Message.ConnectionErrorCode connectionErrorCode;
 
     // dependencies
     private final ObjectMapper objectMapper;
@@ -187,16 +187,16 @@ public final class BaseClient {
         state = State.CLOSING;
     }
 
-    private void pushInboundRel(final InboundMessageAccessor.RelAccessor relAccessor) {
-        final RelType relType = relAccessor.getRelType();
+    private void pushInboundRel(final Message.Rel rel) {
+        final RelType relType = rel.getRelType();
         if (!Objects.equals(relType, RelType.REL_MESSAGE_FRAGMENT)) {
-            relQueue.push(relAccessor);
+            relQueue.push(rel);
             return;
         }
 
-        final boolean result = relFragmentAssembly.append(relAccessor);
+        final boolean result = relFragmentAssembly.append(rel);
         if (result) {
-            final InboundMessageAccessor.RelAccessor relFragmentComposition = new InboundMessageAccessor.RelAccessor(objectMapper.createObjectNode());
+            final Message.Rel relFragmentComposition = new Message.Rel(objectMapper.createObjectNode());
             final byte[] data = relFragmentAssembly.convert(relFragmentComposition);
             relQueue.push(relFragmentComposition);
             if (monitor != null) {
@@ -205,8 +205,8 @@ public final class BaseClient {
         }
     }
 
-    private void pushObjectData(final InboundMessageAccessor.ObjectDataAccessor objectDataAccessor) {
-        objectDataQueue.push(objectDataAccessor);
+    private void pushObjectData(final Message.ObjectData objectData) {
+        objectDataQueue.push(objectData);
     }
 
     public void pushOutboundRel(final int id, final String name, final Object... args) {
@@ -234,7 +234,7 @@ public final class BaseClient {
                 continue;
             }
 
-            final InboundMessageAccessor data = receive();
+            final Message data = receive();
 
             if (isConnection()) {
                 authProcessor(data);
@@ -248,10 +248,10 @@ public final class BaseClient {
         }
     }
 
-    private InboundMessageAccessor receive() {
+    private Message receive() {
         final DatagramPacket packet = new DatagramPacket(new byte[ByteUtil.WORD], ByteUtil.WORD);
         final ObjectNode rootNode = objectMapper.createObjectNode();
-        final InboundMessageAccessor accessor = new InboundMessageAccessor(rootNode);
+        final Message accessor = new Message(rootNode);
         try {
             socket.receive(packet);
             if (!packet.getSocketAddress().equals(server)) {
@@ -275,20 +275,20 @@ public final class BaseClient {
         return accessor;
     }
 
-    private void authProcessor(final InboundMessageAccessor data) {
+    private void authProcessor(final Message data) {
         if (!Objects.equals(data.getType(), MessageType.MESSAGE_TYPE_SESSION)) {
             return;
         }
 
         this.connectionErrorCode = data.getConnectionErrorCode();
-        if (this.connectionErrorCode.equals(InboundMessageAccessor.ConnectionErrorCode.OK)) {
+        if (this.connectionErrorCode.equals(Message.ConnectionErrorCode.OK)) {
             state = State.LIFE;
         } else {
             state = State.CLOSED;
         }
     }
 
-    private void baseInboundProcessor(final InboundMessageAccessor data) {
+    private void baseInboundProcessor(final Message data) {
         final MessageType type = data.getType();
         if (type == null) {
             return;
@@ -296,20 +296,20 @@ public final class BaseClient {
 
         switch (type) {
             case MESSAGE_TYPE_REL:
-                for (InboundMessageAccessor.RelAccessor relAccessor : data.getRel()) {
-                    final InboundMessageAccessor.RelAccessor actualRelAccessor = inboundRelHolder.register(relAccessor);
-                    if (actualRelAccessor == null) {
+                for (Message.Rel rel : data.getRel()) {
+                    final Message.Rel actualRel = inboundRelHolder.register(rel);
+                    if (actualRel == null) {
                         continue;
                     }
 
-                    pushInboundRel(relAccessor);
+                    pushInboundRel(rel);
                     inboundRelHolder.getNearestAwaiting().forEach(this::pushInboundRel);
                 }
                 break;
             case MESSAGE_TYPE_OBJECT_DATA:
-                for (InboundMessageAccessor.ObjectDataAccessor objectDataAccessor : data.getObjectData()) {
-                    objectDataHolder.registerObjectData(objectDataAccessor);
-                    pushObjectData(objectDataAccessor);
+                for (Message.ObjectData objectData : data.getObjectData()) {
+                    objectDataHolder.registerObjectData(objectData);
+                    pushObjectData(objectData);
                 }
                 break;
             case MESSAGE_TYPE_ACKNOWLEDGE:
@@ -318,7 +318,7 @@ public final class BaseClient {
         }
     }
 
-    private void closingProcessor(final InboundMessageAccessor data) {
+    private void closingProcessor(final Message data) {
         if (Objects.equals(data.getType(), MessageType.MESSAGE_TYPE_CLOSE)) {
             state = State.CLOSED;
         }
