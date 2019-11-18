@@ -185,7 +185,7 @@ public final class MessageBrokerImpl implements MessageBroker {
     // ##################################################
 
     @Override
-    public void sendRel(final int id, final String name, final Object... args) {
+    public void sendRel(final int id, final String name, final Object... args) throws InterruptedException {
         outboundRelHolder.register(id, name, args);
     }
 

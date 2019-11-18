@@ -5,7 +5,7 @@ import com.evgenltd.hnhtools.message.MessageType;
 import com.evgenltd.hnhtools.message.RelType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * <p></p>
@@ -22,22 +22,25 @@ final class RelRequest {
     private Object[] args;
     private long lastAttemptTime = System.currentTimeMillis();
     private int attemptCount = 0;
-    private CompletableFuture<Void> future;
+    private CountDownLatch latch = new CountDownLatch(1);
 
     RelRequest(final int id, final int sequence, final String name, final Object[] args) {
         this.id = id;
         this.sequence = sequence;
         this.name = name;
         this.args = args;
-        this.future = new CompletableFuture<>();
     }
 
     int getSequence() {
         return sequence;
     }
 
-    CompletableFuture<Void> getFuture() {
-        return future;
+    void await() throws InterruptedException {
+        latch.await();
+    }
+
+    void acknowledge() {
+        latch.countDown();
     }
 
     DataWriter toWriter() {

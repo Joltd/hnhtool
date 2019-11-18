@@ -45,7 +45,7 @@ public interface MessageBroker {
     // #                                                #
     // ##################################################
 
-    void sendRel(int id, String name, Object... args);
+    void sendRel(int id, String name, Object... args) throws InterruptedException;
 
     enum State {
         INIT,
