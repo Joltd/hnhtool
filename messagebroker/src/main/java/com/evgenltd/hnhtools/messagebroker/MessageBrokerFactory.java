@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  */
 public class MessageBrokerFactory {
 
-    public static MessageBroker buildMessaeBroker(
+    public static MessageBroker buildMessageBroker(
             @NotNull final ObjectMapper objectMapper,
             @NotNull final String host,
             final int port,

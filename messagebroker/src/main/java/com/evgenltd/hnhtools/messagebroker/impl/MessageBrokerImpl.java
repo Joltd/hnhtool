@@ -185,7 +185,7 @@ public final class MessageBrokerImpl implements MessageBroker {
     // ##################################################
 
     @Override
-    public void sendRel(final int id, final String name, final Object... args) throws InterruptedException {
+    public void sendRel(final int id, final String name, final Object... args) {
         outboundRelHolder.register(id, name, args);
     }
 
@@ -198,7 +198,12 @@ public final class MessageBrokerImpl implements MessageBroker {
     private void inboundLoop() {
         while (true) {
 
-            if (Thread.currentThread().isInterrupted() || isClosed()) {
+            if (Thread.currentThread().isInterrupted()) {
+                shutdown();
+                return;
+            }
+
+            if (isClosed()) {
                 return;
             }
 

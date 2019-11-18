@@ -1,11 +1,14 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
+import com.evgenltd.hnhtools.common.ExecutionException;
+import com.evgenltd.hnhtools.common.TimeoutException;
 import com.evgenltd.hnhtools.message.DataWriter;
 import com.evgenltd.hnhtools.message.MessageType;
 import com.evgenltd.hnhtools.message.RelType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p></p>
@@ -15,6 +18,8 @@ import java.util.concurrent.CountDownLatch;
  * <p>Created: 12-03-2019 23:14</p>
  */
 final class RelRequest {
+
+    private static final long TIMEOUT = 1000;
 
     private int id;
     private int sequence;
@@ -35,8 +40,16 @@ final class RelRequest {
         return sequence;
     }
 
-    void await() throws InterruptedException {
-        latch.await();
+    void await() {
+        try {
+            final boolean done = latch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+            if (done) {
+                return;
+            }
+            throw new TimeoutException();
+        } catch (final InterruptedException e) {
+            throw new ExecutionException(e);
+        }
     }
 
     void acknowledge() {

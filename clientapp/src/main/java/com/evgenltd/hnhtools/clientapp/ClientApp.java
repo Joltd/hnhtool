@@ -1,5 +1,8 @@
 package com.evgenltd.hnhtools.clientapp;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 /**
  * <p></p>
  * <br/>
@@ -9,8 +12,38 @@ package com.evgenltd.hnhtools.clientapp;
  */
 public interface ClientApp {
 
-    // method for waiting for particular state
+    List<Widget> getWidgets();
 
-    // many methods for interacting with world
+    List<WorldObject> getWorldObjects();
+
+    void await(Supplier<Boolean> condition) throws InterruptedException;
+
+    // ##################################################
+    // #                                                #
+    // #  Commands                                      #
+    // #                                                #
+    // ##################################################
+
+    void play();
+
+    void click();
+
+    void take();
+
+    void drop();
+
+    void itemAct();
+
+    void itemActShort();
+
+    void transfer();
+
+    void transferExt();
+
+    void place();
+
+    void close();
+
+    void contextMenu();
 
 }
