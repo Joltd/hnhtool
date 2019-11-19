@@ -11,6 +11,12 @@ import com.evgenltd.hnhtools.message.Message;
  */
 final class WorldObjectState {
 
+    private ResourceState resourceState;
+
+    WorldObjectState(final ResourceState resourceState) {
+        this.resourceState = resourceState;
+    }
+
     void receiveObjectData(final Message.ObjectData objectData) {
 
     }

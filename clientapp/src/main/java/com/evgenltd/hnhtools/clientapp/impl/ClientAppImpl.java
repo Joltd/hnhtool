@@ -38,6 +38,7 @@ public final class ClientAppImpl implements ClientApp {
     private static final String CLOSE_COMMAND = "close";
     private static final String CONTEXT_MENU_COMMAND = "cl";
 
+    private ResourceState resourceState;
     private WidgetState widgetState;
     private WorldObjectState worldObjectState;
     private MessageBroker messageBroker;
@@ -51,8 +52,9 @@ public final class ClientAppImpl implements ClientApp {
             @NotNull final String username,
             @NotNull final byte[] cookie
     ) {
-        this.widgetState = new WidgetState();
-        this.worldObjectState = new WorldObjectState();
+        this.resourceState = new ResourceState();
+        this.widgetState = new WidgetState(resourceState);
+        this.worldObjectState = new WorldObjectState(resourceState);
         this.messageBroker = MessageBrokerFactory.buildMessageBroker(
                 objectMapper,
                 host,
