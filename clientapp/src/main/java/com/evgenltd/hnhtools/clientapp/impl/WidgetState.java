@@ -1,7 +1,8 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
-import com.evgenltd.hnhtools.message.Message;
-import com.evgenltd.hnhtools.message.RelType;
+import com.evgenltd.hnhtools.messagebroker.RelType;
+import com.evgenltd.hnhtools.util.JsonUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,33 +24,54 @@ final class WidgetState {
         this.resourceState = resourceState;
     }
 
-    void receiveRel(final Message.Rel rel) {
+    void receiveRel(final JsonNode relNode) {
+        final RelAccessor rel = new RelAccessor(relNode);
         final RelType type = rel.getRelType();
         if (type == null) {
             return;
         }
 
-        Integer widgetId;
+        final Integer widgetId = rel.getWidgetId();
 
         switch (type) {
             case REL_MESSAGE_NEW_WIDGET:
             case REL_MESSAGE_ADD_WIDGET:
-                final WidgetImpl widget = new WidgetImpl(rel);
-                index.put(widget.getId(), widget);
+                index.put(widgetId, null);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
-                widgetId = WidgetImpl.getId(rel.getData());
 
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
-                widgetId = WidgetImpl.getId(rel.getData());
                 index.remove(widgetId);
                 break;
             case REL_MESSAGE_RESOURCE_ID:
-                resourceState.putResource(rel.getData());
+                resourceState.putResource(relNode);
                 break;
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
                 break;
+        }
+    }
+
+    private static final class RelAccessor {
+        private static final String REL_TYPE = "relType";
+        private static final String WIDGET_ID = "id";
+        private static final String WIDGET_TYPE = "type";
+        private JsonNode data;
+
+        RelAccessor(final JsonNode data) {
+            this.data = data;
+        }
+
+        RelType getRelType() {
+            return JsonUtil.asCustomFromText(data, REL_TYPE, RelType::valueOf);
+        }
+
+        Integer getWidgetId() {
+            return JsonUtil.asInt(data, WIDGET_ID);
+        }
+
+        String getWidgetType() {
+            return JsonUtil.asText(data, WIDGET_TYPE);
         }
     }
 

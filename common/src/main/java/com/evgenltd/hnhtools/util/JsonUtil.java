@@ -3,6 +3,7 @@ package com.evgenltd.hnhtools.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -33,10 +34,26 @@ public class JsonUtil {
         return as(node, field, JsonNode::asDouble);
     }
 
+    public static <T> T asCustomFromText(@NotNull final JsonNode node, @NotNull final String field, @NotNull final Function<String, T> converter) {
+        return Optional.ofNullable(node.get(field))
+                .map(JsonNode::asText)
+                .map(converter)
+                .orElse(null);
+    }
+
     private static <T> T as(@NotNull final JsonNode node, @NotNull final String field, @NotNull final Function<JsonNode,T> getter) {
         return Optional.ofNullable(node.get(field))
                 .map(getter)
                 .orElse(null);
+    }
+
+    public static Iterable<JsonNode> asIterable(@NotNull final JsonNode node, @NotNull final String field) {
+        final JsonNode collectionNode = node.get(field);
+        if (collectionNode == null) {
+            return Collections.emptyList();
+        }
+
+        return collectionNode;
     }
 
 }

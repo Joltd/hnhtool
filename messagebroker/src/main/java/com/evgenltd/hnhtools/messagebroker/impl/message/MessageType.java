@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.message;
+package com.evgenltd.hnhtools.messagebroker.impl.message;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
  * <p>Author:  lebed</p>
  * <p>Created: 24-02-2019 02:04</p>
  */
-@Deprecated
 public enum MessageType {
     MESSAGE_TYPE_SESSION(0),
     MESSAGE_TYPE_REL(1),

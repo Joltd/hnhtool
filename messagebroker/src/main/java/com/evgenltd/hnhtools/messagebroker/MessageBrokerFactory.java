@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtools.messagebroker;
 
-import com.evgenltd.hnhtools.message.Message;
 import com.evgenltd.hnhtools.messagebroker.impl.MessageBrokerImpl;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,8 +22,8 @@ public class MessageBrokerFactory {
             final int port,
             @NotNull final String username,
             @NotNull final byte[] cookie,
-            @NotNull final Consumer<Message.Rel> relReceiver,
-            @NotNull final Consumer<Message.ObjectData> objectDataReceiver,
+            @NotNull final Consumer<JsonNode> relReceiver,
+            @NotNull final Consumer<JsonNode> objectDataReceiver,
             boolean withMonitoring
     ) {
         return new MessageBrokerImpl(

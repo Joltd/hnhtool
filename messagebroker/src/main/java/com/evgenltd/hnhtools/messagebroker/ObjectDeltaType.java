@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtools.message;
+package com.evgenltd.hnhtools.messagebroker;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
 
@@ -9,7 +9,6 @@ import com.evgenltd.hnhtools.common.ApplicationException;
  * <p>Author:  lebed</p>
  * <p>Created: 24-02-2019 23:52</p>
  */
-@Deprecated
 public enum ObjectDeltaType {
     OD_REM(0),
     OD_MOVE(1),

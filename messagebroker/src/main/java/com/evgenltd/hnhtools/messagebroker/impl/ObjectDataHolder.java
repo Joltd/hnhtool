@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.message.Message;
+import com.evgenltd.hnhtools.messagebroker.impl.message.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;

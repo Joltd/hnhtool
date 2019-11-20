@@ -19,6 +19,7 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 10-03-2019 16:14</p>
  */
+@Deprecated
 public class Message {
 
     private ObjectNode data;
@@ -35,6 +36,10 @@ public class Message {
         }
 
         return MessageType.of(messageTypeNode.asText());
+    }
+
+    public ObjectNode getData() {
+        return data;
     }
 
     // ##################################################

@@ -1,7 +1,11 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
-import com.evgenltd.hnhtools.message.*;
+import com.evgenltd.hnhtools.message.DataReader;
+import com.evgenltd.hnhtools.message.DataWriter;
+import com.evgenltd.hnhtools.messagebroker.impl.message.InboundMessageConverter;
+import com.evgenltd.hnhtools.messagebroker.impl.message.Message;
+import com.evgenltd.hnhtools.messagebroker.impl.message.MessageType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -21,11 +25,11 @@ final class RelFragmentAssembly {
         return builder.build(reader);
     }
 
-    byte[] convert(final Message.Rel rel) {
+    byte[] convert(final ObjectNode rel) {
         final int type = builder.getType();
         final byte[] data = builder.getData();
         builder.clear();
-        InboundMessageConverter.convertRel((ObjectNode) rel.getData(), type, new DataReader(data));
+        InboundMessageConverter.convertRel(rel, type, new DataReader(data));
 
         final DataWriter writer = new DataWriter();
         writer.adduint8(MessageType.MESSAGE_TYPE_REL.getValue());

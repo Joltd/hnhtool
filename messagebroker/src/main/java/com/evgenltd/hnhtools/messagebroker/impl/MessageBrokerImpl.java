@@ -1,9 +1,14 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.message.*;
+import com.evgenltd.hnhtools.message.DataWriter;
 import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 import com.evgenltd.hnhtools.messagebroker.MessageBrokerException;
+import com.evgenltd.hnhtools.messagebroker.RelType;
+import com.evgenltd.hnhtools.messagebroker.impl.message.InboundMessageConverter;
+import com.evgenltd.hnhtools.messagebroker.impl.message.Message;
+import com.evgenltd.hnhtools.messagebroker.impl.message.MessageType;
 import com.evgenltd.hnhtools.util.ByteUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.magenta.hnhtool.gate.Monitor;
@@ -38,8 +43,8 @@ public final class MessageBrokerImpl implements MessageBroker {
 
     // configurable
     private final ObjectMapper objectMapper;
-    private final Consumer<Message.Rel> relReceiver;
-    private final Consumer<Message.ObjectData> objectDataReceiver;
+    private final Consumer<JsonNode> relReceiver;
+    private final Consumer<JsonNode> objectDataReceiver;
     private final String host;
     private final int port;
     private final String username;
@@ -68,8 +73,8 @@ public final class MessageBrokerImpl implements MessageBroker {
             final int port,
             @NotNull final String username,
             @NotNull final byte[] cookie,
-            @NotNull final Consumer<Message.Rel> relReceiver,
-            @NotNull final Consumer<Message.ObjectData> objectDataReceiver,
+            @NotNull final Consumer<JsonNode> relReceiver,
+            @NotNull final Consumer<JsonNode> objectDataReceiver,
             boolean withMonitoring
     ) {
         Objects.requireNonNull(objectMapper, "[ObjectMapper] should not be empty");
@@ -228,11 +233,11 @@ public final class MessageBrokerImpl implements MessageBroker {
     private Message receive() {
         final DatagramPacket packet = new DatagramPacket(new byte[ByteUtil.WORD], ByteUtil.WORD);
         final ObjectNode rootNode = objectMapper.createObjectNode();
-        final Message accessor = new Message(rootNode);
+        final Message message = new Message(rootNode);
         try {
             socket.receive(packet);
             if (!packet.getSocketAddress().equals(server)) {
-                return accessor;
+                return message;
             }
 
             final byte[] data = packet.getData();
@@ -249,31 +254,30 @@ public final class MessageBrokerImpl implements MessageBroker {
             log.debug(String.format("%s unable to receive message", this.messageBrokerName), e);
         }
 
-        return accessor;
+        return message;
     }
 
-    private void authProcessor(final Message data) {
-        if (!Objects.equals(data.getType(), MessageType.MESSAGE_TYPE_SESSION)) {
+    private void authProcessor(final Message message) {
+        if (!message.isSessionMessage()) {
             return;
         }
 
-        final Message.ConnectionErrorCode connectionErrorCode = data.getConnectionErrorCode();
-        if (connectionErrorCode.equals(Message.ConnectionErrorCode.OK)) {
+        if (message.isConnectionErrorCodeOk()) {
             setState(State.LIFE);
         } else {
             setState(State.CLOSED);
         }
     }
 
-    private void baseInboundProcessor(final Message data) {
-        final MessageType type = data.getType();
+    private void baseInboundProcessor(final Message message) {
+        final MessageType type = message.getType();
         if (type == null) {
             return;
         }
 
         switch (type) {
             case MESSAGE_TYPE_REL:
-                for (Message.Rel rel : data.getRel()) {
+                for (final Message.Rel rel : message.getRel()) {
                     final Message.Rel actualRel = inboundRelHolder.register(rel);
                     if (actualRel == null) {
                         continue;
@@ -284,13 +288,13 @@ public final class MessageBrokerImpl implements MessageBroker {
                 }
                 break;
             case MESSAGE_TYPE_OBJECT_DATA:
-                for (Message.ObjectData objectData : data.getObjectData()) {
+                for (final Message.ObjectData objectData : message.getObjectData()) {
                     objectDataHolder.registerObjectData(objectData);
-                    objectDataReceiver.accept(objectData);
+                    objectDataReceiver.accept(objectData.getData());
                 }
                 break;
             case MESSAGE_TYPE_ACKNOWLEDGE:
-                outboundRelHolder.acknowledge(data.getRelAcknowledge());
+                outboundRelHolder.acknowledge(message.getRelAcknowledge());
                 break;
         }
     }
@@ -298,13 +302,13 @@ public final class MessageBrokerImpl implements MessageBroker {
     private void receiveRel(final Message.Rel rel) {
         final RelType relType = rel.getRelType();
         if (!Objects.equals(relType, RelType.REL_MESSAGE_FRAGMENT)) {
-            relReceiver.accept(rel);
+            relReceiver.accept(rel.getData());
             return;
         }
 
         final boolean result = relFragmentAssembly.append(rel);
         if (result) {
-            final Message.Rel relFragmentComposition = new Message.Rel(objectMapper.createObjectNode());
+            final ObjectNode relFragmentComposition = objectMapper.createObjectNode();
             final byte[] data = relFragmentAssembly.convert(relFragmentComposition);
             relReceiver.accept(relFragmentComposition);
             if (monitor != null) {
@@ -313,8 +317,8 @@ public final class MessageBrokerImpl implements MessageBroker {
         }
     }
 
-    private void closingProcessor(final Message data) {
-        if (Objects.equals(data.getType(), MessageType.MESSAGE_TYPE_CLOSE)) {
+    private void closingProcessor(final Message message) {
+        if (Objects.equals(message.getType(), MessageType.MESSAGE_TYPE_CLOSE)) {
             shutdown();
         }
     }

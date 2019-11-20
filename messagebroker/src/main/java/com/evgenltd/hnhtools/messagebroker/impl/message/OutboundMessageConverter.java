@@ -1,5 +1,6 @@
-package com.evgenltd.hnhtools.message;
+package com.evgenltd.hnhtools.messagebroker.impl.message;
 
+import com.evgenltd.hnhtools.message.DataReader;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -10,8 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * <p>Author:  lebed</p>
  * <p>Created: 24-02-2019 23:25</p>
  */
-@Deprecated
-public class OutboundMessageConverter {
+public final class OutboundMessageConverter {
 
     public OutboundMessageConverter() {}
 

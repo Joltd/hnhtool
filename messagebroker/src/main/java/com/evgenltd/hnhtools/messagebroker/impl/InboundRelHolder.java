@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.messagebroker.impl;
 
-import com.evgenltd.hnhtools.message.Message;
+import com.evgenltd.hnhtools.messagebroker.impl.message.Message;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.*;
@@ -25,22 +25,22 @@ final class InboundRelHolder {
      *     <li>is a number from the future (but no more than half-WORD</li>
      * </ul></p>
      * <p>In first case REL is an actual which should be handled (pushed to a queue) immediately</p>
-     * <p>In second case REL is an portion ok data which received too early, so we should to store it
+     * <p>In second case REL is an portion ok rel which received too early, so we should to store it
      * and handle when expected sequence number will matches with it</p>
-     * @param data target REL
+     * @param rel target REL
      * @return passed REL if its sequence number matches with expected sequence number, <code>null</code> otherwise
      */
     @InboundThread
-    synchronized Message.Rel register(final Message.Rel data) {
-        final Integer relSequence = data.getSequence();
+    synchronized Message.Rel register(final Message.Rel rel) {
+        final Integer relSequence = rel.getSequence();
         if (Objects.equals(relSequence, nextSequence)) {
             incrementNextSequence();
-            return data;
+            return rel;
         }
 
         final boolean isFutureRel = ByteUtil.toShort(relSequence - nextSequence) < ByteUtil.WORD / 2;
         if (isFutureRel) {
-            awaiting.put(relSequence, data);
+            awaiting.put(relSequence, rel);
         }
 
         return null;
