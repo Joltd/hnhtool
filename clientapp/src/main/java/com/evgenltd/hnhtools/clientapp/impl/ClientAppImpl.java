@@ -1,8 +1,8 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
 import com.evgenltd.hnhtools.clientapp.ClientApp;
-import com.evgenltd.hnhtools.clientapp.Widget;
 import com.evgenltd.hnhtools.clientapp.WorldObject;
+import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ExecutionException;
 import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 import com.evgenltd.hnhtools.messagebroker.MessageBrokerFactory;
@@ -111,7 +111,7 @@ public final class ClientAppImpl implements ClientApp {
         try {
             messageBroker.connect();
             await(messageBroker::isLife);
-            messageBroker.sendRel(3, PLACE_COMMAND);
+            messageBroker.sendRel(3, PLAY_COMMAND);
         } catch (final ExecutionException e) {
             messageBroker.disconnect();
             throw e;

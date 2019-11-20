@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.clientapp;
 
+import com.evgenltd.hnhtools.clientapp.widgets.Widget;
+
 import java.util.List;
 import java.util.function.Supplier;
 

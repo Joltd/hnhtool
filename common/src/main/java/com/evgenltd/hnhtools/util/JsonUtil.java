@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtools.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -54,6 +56,12 @@ public class JsonUtil {
         }
 
         return collectionNode;
+    }
+
+    public static ArrayNode asArrayNode(@NotNull final JsonNode node, @NotNull final String field) {
+        return Optional.ofNullable(node.get(field))
+                .map(n -> (ArrayNode) n)
+                .orElse(JsonNodeFactory.instance.arrayNode());
     }
 
 }

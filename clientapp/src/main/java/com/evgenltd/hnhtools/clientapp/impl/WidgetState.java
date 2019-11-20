@@ -1,8 +1,11 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
+import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetFactory;
+import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetImpl;
 import com.evgenltd.hnhtools.messagebroker.RelType;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,14 +38,17 @@ final class WidgetState {
 
         switch (type) {
             case REL_MESSAGE_NEW_WIDGET:
-            case REL_MESSAGE_ADD_WIDGET:
-                index.put(widgetId, null);
+                final WidgetImpl newWidget = WidgetFactory.build(widgetId, rel.getWidgetType(), rel.getChildArgs());
+                index.put(widgetId, newWidget);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
-
+                final WidgetImpl existedWidget = index.get(widgetId);
+                existedWidget.handleMessage(relNode);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
                 index.remove(widgetId);
+                break;
+            case REL_MESSAGE_ADD_WIDGET:
                 break;
             case REL_MESSAGE_RESOURCE_ID:
                 resourceState.putResource(relNode);
@@ -56,6 +62,8 @@ final class WidgetState {
         private static final String REL_TYPE = "relType";
         private static final String WIDGET_ID = "id";
         private static final String WIDGET_TYPE = "type";
+        private static final String CHILD_ARGS = "cArgs";
+        private static final String PARENT_ARGS = "pArgs";
         private JsonNode data;
 
         RelAccessor(final JsonNode data) {
@@ -72,6 +80,14 @@ final class WidgetState {
 
         String getWidgetType() {
             return JsonUtil.asText(data, WIDGET_TYPE);
+        }
+
+        ArrayNode getChildArgs() {
+            return JsonUtil.asArrayNode(data, CHILD_ARGS);
+        }
+
+        ArrayNode getParentArgs() {
+            return JsonUtil.asArrayNode(data, PARENT_ARGS);
         }
     }
 
