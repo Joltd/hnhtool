@@ -21,6 +21,7 @@
         <module>analyzer</module>
         <module>harvester</module>
         <module>waypointer</module>
+        <module>agent</module>
     </modules>
 
     <build>
