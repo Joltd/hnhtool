@@ -11,4 +11,6 @@ public interface Widget {
     Integer getId();
 
     String getType();
+
+    Integer getParentId();
 }

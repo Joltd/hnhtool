@@ -118,6 +118,11 @@ public final class ClientAppImpl implements ClientApp {
         }
     }
 
+    @Override
+    public void logout() {
+        messageBroker.disconnect();
+    }
+
     private void sendRel(final int id, final String name, final Object... args) {
         try {
             messageBroker.sendRel(id, name, args);

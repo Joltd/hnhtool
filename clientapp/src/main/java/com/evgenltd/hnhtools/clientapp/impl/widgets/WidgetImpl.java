@@ -13,6 +13,7 @@ public class WidgetImpl implements Widget {
 
     private Integer id;
     private String type;
+    private Integer parentId;
     private ArrayNode args;
 
     WidgetImpl(final Integer id, final String type, final ArrayNode args) {
@@ -29,6 +30,15 @@ public class WidgetImpl implements Widget {
     @Override
     public String getType() {
         return type;
+    }
+
+    public void setParentId(final Integer parentId) {
+        this.parentId = parentId;
+    }
+
+    @Override
+    public Integer getParentId() {
+        return parentId;
     }
 
     public void handleMessage(final JsonNode message) {}

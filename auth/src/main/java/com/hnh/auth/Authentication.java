@@ -194,7 +194,7 @@ public final class Authentication implements AutoCloseable {
 			writerWithLength.addbytes(data);
 
 			connectionSocket.getOutputStream().write(writerWithLength.bytes());
-		}catch (IOException e) {
+		} catch (IOException e) {
 			throw new AuthenticationException("Sending message error", e);
 		}
 	}
@@ -205,7 +205,7 @@ public final class Authentication implements AutoCloseable {
 			final int messageLength = (lengthHeader.uint8() << 8)
                     | lengthHeader.uint8();
 			return read(messageLength);
-		}catch (IOException e) {
+		} catch (IOException e) {
 			throw new AuthenticationException("Reading message error", e);
 		}
 	}

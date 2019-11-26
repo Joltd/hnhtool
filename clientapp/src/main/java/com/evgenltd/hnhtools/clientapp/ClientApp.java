@@ -28,6 +28,8 @@ public interface ClientApp {
 
     void play();
 
+    void logout();
+
     void click();
 
     void take();
