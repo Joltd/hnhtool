@@ -8,10 +8,10 @@ import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -41,7 +41,12 @@ final class WidgetState {
 
         switch (type) {
             case REL_MESSAGE_NEW_WIDGET:
-                final WidgetImpl newWidget = WidgetFactory.build(widgetId, rel.getWidgetType(), rel.getChildArgs());
+                final WidgetImpl newWidget = WidgetFactory.build(
+                        widgetId,
+                        rel.getWidgetType(),
+                        rel.getChildArgs(),
+                        rel.getParentArgs()
+                );
                 index.put(widgetId, newWidget);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
@@ -66,7 +71,10 @@ final class WidgetState {
     }
 
     synchronized List<Widget> getWidgets() {
-        return new ArrayList<>(index.values());
+        return index.values()
+                .stream()
+                .map(WidgetImpl::copy)
+                .collect(Collectors.toList());
     }
 
     private static final class RelAccessor {

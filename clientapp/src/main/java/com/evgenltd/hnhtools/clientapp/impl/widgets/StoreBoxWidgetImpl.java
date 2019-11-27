@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.clientapp.impl.widgets;
 
-import com.evgenltd.hnhtools.clientapp.widgets.Box;
+import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
@@ -10,14 +10,26 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  * <p>Author:  lebed</p>
  * <p>Created: 20-11-2019 21:40</p>
  */
-public final class BoxImpl extends WidgetImpl implements Box {
+public final class StoreBoxWidgetImpl extends WidgetImpl implements StoreBoxWidget {
 
     private Integer first;
     private Integer second;
     private Integer third;
 
-    public BoxImpl(final Integer id, final String type, final ArrayNode args) {
+    private StoreBoxWidgetImpl(final StoreBoxWidgetImpl storeBoxWidget) {
+        super(storeBoxWidget);
+        this.first = storeBoxWidget.first;
+        this.second = storeBoxWidget.second;
+        this.third = storeBoxWidget.third;
+    }
+
+    StoreBoxWidgetImpl(final Integer id, final String type, final ArrayNode args) {
         super(id, type, args);
+    }
+
+    @Override
+    public StoreBoxWidgetImpl copy() {
+        return new StoreBoxWidgetImpl(this);
     }
 
     @Override

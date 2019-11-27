@@ -5,7 +5,7 @@ package com.evgenltd.hnhtools.clientapp.widgets;
  * <br/>
  * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 20-11-2019 23:17</p>
+ * <p>Created: 20-11-2019 23:15</p>
  */
-public interface Item extends Widget {
+public interface InventoryWidget extends Widget {
 }

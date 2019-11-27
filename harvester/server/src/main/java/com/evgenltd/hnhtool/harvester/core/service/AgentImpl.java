@@ -2,14 +2,14 @@ package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.Agent;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
-import com.evgenltd.hnhtools.clientapp.WorldObject;
+import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import com.google.common.collect.BiMap;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,12 +42,24 @@ public class AgentImpl implements Agent {
 
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
-    private ClientApp clientApp;
+    private MatchingService matchingService;
 
-    private Map<Long,Long> knownObjectToWorldObjectIndex = new HashMap<>();
+    private ClientApp clientApp;
 
     private Integer mapViewId;
     private Integer gameUiId;
+
+    private Map<Long,Prop> propIndex;
+    private Map<Integer,Widget> inventoryIndex;
+    private Map<Integer,Widget> storeBoxIndex;
+    private Map<Integer,Widget> itemIndex;
+    private Map<Integer,Integer> widgetToParentIndex;
+
+    private BiMap<Long, Long> knownObjectToPropIndex;
+
+    public AgentImpl(final MatchingService matchingService) {
+        this.matchingService = matchingService;
+    }
 
     public void setClientApp(final ClientApp clientApp) {
         this.clientApp = clientApp;
@@ -66,18 +78,18 @@ public class AgentImpl implements Agent {
 
     @Override
     public void openContainer(final Long knownObjectId) {
-        final WorldObject worldObject = getWorldObject(knownObjectId);
+        final Prop prop = getProp(knownObjectId);
 
         clientApp.sendWidgetCommand(
                 mapViewId,
                 CLICK_COMMAND,
                 SCREEN_POSITION,
-                worldObject.getPosition(),
+                prop.getPosition(),
                 Mouse.RMB.code,
                 KeyModifier.NO.code,
                 UNKNOWN_FLAG,
-                worldObject.getId(),
-                worldObject.getPosition(),
+                prop.getId(),
+                prop.getPosition(),
                 UNKNOWN_FLAG,
                 SKIP_FLAG
         );
@@ -99,15 +111,20 @@ public class AgentImpl implements Agent {
     // ##################################################
 
     private void scan() {
+        propIndex.clear();
+        inventoryIndex.clear();
+        itemIndex.clear();
+        storeBoxIndex.clear();
+        widgetToParentIndex.clear();
 
-        final List<Widget> widgets = clientApp.getWidgets();
-        widgets.stream().filter(widget -> widget.getType().equals("gameui")).findFirst().ifPresent(widget -> gameUiId = widget.getId());
-        widgets.stream().filter(widget -> widget.getType().equals("mapview")).findFirst().ifPresent(widget -> mapViewId = widget.getId());
+        final List<Prop> props = clientApp.getProps();
 
+        knownObjectToPropIndex = matchingService.matchObjects(props);
     }
 
-    private WorldObject getWorldObject(final Long knownObjectId) {
-        return knownObjectToWorldObjectIndex.get(knownObjectId);
+    private Prop getProp(final Long knownObjectId) {
+        final Long propId = knownObjectToPropIndex.get(knownObjectId);
+        return propIndex.get(propId);
     }
 
     private Widget getInventory() {

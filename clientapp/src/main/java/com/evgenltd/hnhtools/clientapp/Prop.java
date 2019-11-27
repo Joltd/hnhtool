@@ -9,12 +9,12 @@ import com.evgenltd.hnhtools.entity.IntPoint;
  * <p>Author:  lebed</p>
  * <p>Created: 19-11-2019 00:17</p>
  */
-public interface WorldObject {
+public interface Prop {
     Long getId();
 
     IntPoint getPosition();
 
     boolean isMoving();
 
-    Long getResourceId();
+    String getResource();
 }

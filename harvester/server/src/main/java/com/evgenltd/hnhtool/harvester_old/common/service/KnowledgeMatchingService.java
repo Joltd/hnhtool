@@ -259,7 +259,7 @@ public class KnowledgeMatchingService {
     }
 
     private Result<KnownObject> findReferencePoint(final WorldObject firstObject, final WorldObject secondObject) {
-        final List<KnownObject> spaceCandidates = knownObjectRepository.findSpaceByPattern(
+        final List<KnownObject> spaceCandidates = knownObjectRepository.findObjectByPattern(
                 firstObject.getResource(),
                 firstObject.getPosition().getX(),
                 firstObject.getPosition().getY(),

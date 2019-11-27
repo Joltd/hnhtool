@@ -1,12 +1,16 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
-import com.evgenltd.hnhtools.clientapp.WorldObject;
+import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.messagebroker.ObjectDeltaType;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -15,19 +19,19 @@ import java.util.*;
  * <p>Author:  lebed</p>
  * <p>Created: 19-11-2019 00:28</p>
  */
-final class WorldObjectState {
+final class PropState {
 
-    private final Map<Long, WorldObjectImpl> index = new HashMap<>();
+    private final Map<Long, PropImpl> index = new HashMap<>();
 
     private ResourceState resourceState;
 
-    WorldObjectState(final ResourceState resourceState) {
+    PropState(final ResourceState resourceState) {
         this.resourceState = resourceState;
     }
 
     synchronized void receiveObjectData(final JsonNode objectDataNode) {
         final ObjectDataAccessor objectData = new ObjectDataAccessor(objectDataNode);
-        final WorldObjectImpl object = index.computeIfAbsent(objectData.getId(), WorldObjectImpl::new);
+        final PropImpl object = index.computeIfAbsent(objectData.getId(), PropImpl::new);
 
         final Integer frame = objectData.getFrame();
         if (object.getFrame() >= frame) {
@@ -63,14 +67,18 @@ final class WorldObjectState {
         }
     }
 
-    synchronized IntPoint getObjectPosition(final Long id) {
+    synchronized IntPoint getPropPosition(final Long id) {
         return Optional.ofNullable(index.get(id))
-                .map(WorldObjectImpl::getPosition)
+                .map(PropImpl::getPosition)
                 .orElse(null);
     }
 
-    synchronized List<WorldObject> getWorldObjects() {
-        return new ArrayList<>(index.values());
+    synchronized List<Prop> getProps() {
+        return index.values()
+                .stream()
+                .map(PropImpl::copy)
+                .peek(prop -> prop.setResource(resourceState.getResource(prop.getResourceId())))
+                .collect(Collectors.toList());
     }
 
     private static final class ObjectDataAccessor {

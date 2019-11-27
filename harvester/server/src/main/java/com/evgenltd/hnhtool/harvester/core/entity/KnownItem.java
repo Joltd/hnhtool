@@ -99,6 +99,13 @@ public class KnownItem {
         this.actual = actual;
     }
 
+    public Boolean getLost() {
+        return lost;
+    }
+    public void setLost(final Boolean lost) {
+        this.lost = lost;
+    }
+
     public String getName() {
         return name;
     }

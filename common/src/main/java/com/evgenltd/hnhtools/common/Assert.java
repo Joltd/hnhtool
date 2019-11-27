@@ -12,6 +12,10 @@ import org.jetbrains.annotations.Contract;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Assert {
 
+    public static boolean isNotEmpty(final Object value) {
+        return !isEmpty(value);
+    }
+
     public static boolean isEmpty(final Object value) {
         return value == null
                 || (value instanceof String && ((String) value).isEmpty());

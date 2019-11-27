@@ -16,10 +16,21 @@ public class WidgetImpl implements Widget {
     private Integer parentId;
     private ArrayNode args;
 
+    WidgetImpl(final WidgetImpl widget) {
+        this.id = widget.id;
+        this.type = widget.type;
+        this.parentId = widget.parentId;
+        this.args = widget.args;
+    }
+
     WidgetImpl(final Integer id, final String type, final ArrayNode args) {
         this.id = id;
         this.type = type;
         this.args = args;
+    }
+
+    public WidgetImpl copy() {
+        return new WidgetImpl(this);
     }
 
     @Override
@@ -42,5 +53,4 @@ public class WidgetImpl implements Widget {
     }
 
     public void handleMessage(final JsonNode message) {}
-
 }

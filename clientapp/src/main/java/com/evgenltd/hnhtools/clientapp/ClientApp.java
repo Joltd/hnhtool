@@ -16,7 +16,7 @@ public interface ClientApp {
 
     List<Widget> getWidgets();
 
-    List<WorldObject> getWorldObjects();
+    List<Prop> getProps();
 
     void await(Supplier<Boolean> condition);
 

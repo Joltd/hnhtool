@@ -32,7 +32,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
 
     @Query(value = "select f from KnownObject f, KnownObject s where f.resource = ?1 and s.resource = ?4 " +
             "and (s.x - f.x) = (?5 - ?2) and (s.y - f.y) = (?6 - ?3)")
-    List<KnownObject> findSpaceByPattern(
+    List<KnownObject> findObjectByPattern(
             final String firstResource,
             final Integer firstX,
             final Integer firstY,

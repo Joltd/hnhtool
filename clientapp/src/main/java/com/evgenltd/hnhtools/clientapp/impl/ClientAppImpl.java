@@ -1,7 +1,8 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
 import com.evgenltd.hnhtools.clientapp.ClientApp;
-import com.evgenltd.hnhtools.clientapp.WorldObject;
+import com.evgenltd.hnhtools.clientapp.Prop;
+import com.evgenltd.hnhtools.clientapp.exception.UnknownWidgetException;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ExecutionException;
 import com.evgenltd.hnhtools.entity.IntPoint;
@@ -50,9 +51,10 @@ public final class ClientAppImpl implements ClientApp {
 
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
+    private ObjectMapper objectMapper;
     private ResourceState resourceState;
     private WidgetState widgetState;
-    private WorldObjectState worldObjectState;
+    private PropState propState;
     private MessageBroker messageBroker;
     private Lock lock = new ReentrantLock();
     private Condition waitForReceive = lock.newCondition();
@@ -64,9 +66,10 @@ public final class ClientAppImpl implements ClientApp {
             @NotNull final String username,
             @NotNull final byte[] cookie
     ) {
+        this.objectMapper = objectMapper;
         this.resourceState = new ResourceState();
         this.widgetState = new WidgetState(resourceState);
-        this.worldObjectState = new WorldObjectState(resourceState);
+        this.propState = new PropState(resourceState);
         this.messageBroker = MessageBrokerFactory.buildMessageBroker(
                 objectMapper,
                 host,
@@ -78,7 +81,7 @@ public final class ClientAppImpl implements ClientApp {
                     signal();
                 },
                 objectData -> {
-                    this.worldObjectState.receiveObjectData(objectData);
+                    this.propState.receiveObjectData(objectData);
                     signal();
                 },
                 true
@@ -87,14 +90,12 @@ public final class ClientAppImpl implements ClientApp {
 
     @Override
     public List<Widget> getWidgets() {
-        // todo should contains copy of all objects
         return widgetState.getWidgets();
     }
 
     @Override
-    public List<WorldObject> getWorldObjects() {
-        // todo should contains copy of all objects
-        return worldObjectState.getWorldObjects();
+    public List<Prop> getProps() {
+        return propState.getProps();
     }
 
     @Override
@@ -158,7 +159,7 @@ public final class ClientAppImpl implements ClientApp {
     private void checkWidgetId(final Integer widgetId) {
         final boolean hasWidget = widgetState.hasWidget(widgetId);
         if (!hasWidget) {
-            throw new ;
+            throw new UnknownWidgetException(widgetId);
         }
     }
 

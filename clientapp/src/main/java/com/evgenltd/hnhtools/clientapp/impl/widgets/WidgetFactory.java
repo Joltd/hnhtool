@@ -11,31 +11,36 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  */
 public class WidgetFactory {
 
-    public static WidgetImpl build(final Integer id, final String type, final ArrayNode args) {
+    public static WidgetImpl build(
+            final Integer id,
+            final String type,
+            final ArrayNode childArgs,
+            final ArrayNode parentArgs
+    ) {
         switch (type) {
             case "inv":
-                return new InventoryImpl(id, type, args);
+                return new InventoryWidgetImpl(id, type, childArgs);
             case "item":
-                return new ItemImpl(id, type, args);
+                return new ItemWidgetImpl(id, type, childArgs, parentArgs);
             case "isbox":
-                return new BoxImpl(id, type, args);
+                return new StoreBoxWidgetImpl(id, type, childArgs);
 
             case "gameui":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "mapview":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "epry":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "chr":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "speedget":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "scm":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             case "sm":
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
             default:
-                return new WidgetImpl(id, type, args);
+                return new WidgetImpl(id, type, childArgs);
         }
     }
 

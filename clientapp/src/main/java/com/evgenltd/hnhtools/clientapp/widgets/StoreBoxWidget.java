@@ -7,7 +7,7 @@ package com.evgenltd.hnhtools.clientapp.widgets;
  * <p>Author:  lebed</p>
  * <p>Created: 20-11-2019 23:15</p>
  */
-public interface Box {
+public interface StoreBoxWidget extends Widget {
     Integer getFirst();
 
     Integer getSecond();

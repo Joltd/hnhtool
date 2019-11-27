@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
-import com.evgenltd.hnhtools.clientapp.WorldObject;
+import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 /**
@@ -8,16 +8,25 @@ import com.evgenltd.hnhtools.entity.IntPoint;
  * Author:  Lebedev
  * Created: 19-11-2019 17:18
  */
-final class WorldObjectImpl implements WorldObject {
+final class PropImpl implements Prop {
 
     private Long id;
     private Integer frame;
     private IntPoint position;
     private boolean moving;
     private Long resourceId;
+    private String resource;
 
-    WorldObjectImpl(final Long id) {
+    PropImpl(final Long id) {
         this.id = id;
+    }
+
+    PropImpl copy() {
+        final PropImpl prop = new PropImpl(id);
+        prop.position = position;
+        prop.moving = moving;
+        prop.resourceId = resourceId;
+        return prop;
     }
 
     @Override
@@ -48,11 +57,19 @@ final class WorldObjectImpl implements WorldObject {
         this.moving = moving;
     }
 
-    @Override
     public Long getResourceId() {
         return resourceId;
     }
     void setResourceId(final Long resourceId) {
         this.resourceId = resourceId;
     }
+
+    @Override
+    public String getResource() {
+        return resource;
+    }
+    public void setResource(final String resource) {
+        this.resource = resource;
+    }
+
 }
