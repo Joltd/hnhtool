@@ -2,12 +2,15 @@ package com.evgenltd.hnhtools.clientapp.impl;
 
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetFactory;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetImpl;
+import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.messagebroker.RelType;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,7 +30,7 @@ final class WidgetState {
         this.resourceState = resourceState;
     }
 
-    void receiveRel(final JsonNode relNode) {
+    synchronized void receiveRel(final JsonNode relNode) {
         final RelAccessor rel = new RelAccessor(relNode);
         final RelType type = rel.getRelType();
         if (type == null) {
@@ -56,6 +59,14 @@ final class WidgetState {
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
                 break;
         }
+    }
+
+    synchronized boolean hasWidget(final Integer id) {
+        return index.containsKey(id);
+    }
+
+    synchronized List<Widget> getWidgets() {
+        return new ArrayList<>(index.values());
     }
 
     private static final class RelAccessor {

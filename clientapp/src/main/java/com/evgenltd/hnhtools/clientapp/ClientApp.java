@@ -18,7 +18,7 @@ public interface ClientApp {
 
     List<WorldObject> getWorldObjects();
 
-    void await(Supplier<Boolean> condition) throws InterruptedException;
+    void await(Supplier<Boolean> condition);
 
     // ##################################################
     // #                                                #
@@ -30,24 +30,6 @@ public interface ClientApp {
 
     void logout();
 
-    void click();
-
-    void take();
-
-    void drop();
-
-    void itemAct();
-
-    void itemActShort();
-
-    void transfer();
-
-    void transferExt();
-
-    void place();
-
-    void close();
-
-    void contextMenu();
+    void sendWidgetCommand(int id, String name, Object... args);
 
 }

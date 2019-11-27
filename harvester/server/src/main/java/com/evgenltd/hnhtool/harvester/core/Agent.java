@@ -9,8 +9,40 @@ import com.evgenltd.hnhtools.entity.IntPoint;
  */
 public interface Agent {
 
+    // ##################################################
+    // #                                                #
+    // #  Commands                                      #
+    // #                                                #
+    // ##################################################
+
     void move(final IntPoint position);
 
-    void openContainer(final Long objectId);
+    void openContainer(final Long knownObjectId);
+
+    void takeItemInHand(final Long knownItemId);
+
+    void takeItemInHandFromHeap();
+
+    void dropItemFromHandInInventory(final Long knownObjectId, final IntPoint position);
+
+    void dropItemFromHandInHeap();
+
+    void dropItemFromHandInWorld();
+
+    void dropItemFromHandInEquip();
+
+    void dropItemFromInventoryInWorld();
+
+    void transferItem();
+
+    void transferItemFromHeap();
+
+    void closeWidget();
+
+    void applyItemInHandOnObject();
+
+    void applyItemInHandOnItem();
+
+    void performContextMenuCommand();
 
 }

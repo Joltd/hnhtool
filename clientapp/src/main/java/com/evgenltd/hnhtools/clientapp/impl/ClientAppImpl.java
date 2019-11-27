@@ -4,6 +4,7 @@ import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.WorldObject;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ExecutionException;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 import com.evgenltd.hnhtools.messagebroker.MessageBrokerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,17 @@ public final class ClientAppImpl implements ClientApp {
     private static final String PLACE_COMMAND = "place";
     private static final String CLOSE_COMMAND = "close";
     private static final String CONTEXT_MENU_COMMAND = "cl";
+
+    private static final int NO_KEYBOARD_MODIFIER = 0;
+    private static final int LEFT_MOUSE_BUTTON = 1;
+    private static final int MIDDLE_MOUSE_BUTTON = 2;
+    private static final int RIGHT_MOUSE_BUTTON = 3;
+
+    private static final int SKIP_FLAG = -1;
+
+    private static final int UNKNOWN_FLAG = 0;
+
+    private static final IntPoint SCREEN_POSITION = new IntPoint();
 
     private ResourceState resourceState;
     private WidgetState widgetState;
@@ -75,12 +87,14 @@ public final class ClientAppImpl implements ClientApp {
 
     @Override
     public List<Widget> getWidgets() {
-        return null;
+        // todo should contains copy of all objects
+        return widgetState.getWidgets();
     }
 
     @Override
     public List<WorldObject> getWorldObjects() {
-        return null;
+        // todo should contains copy of all objects
+        return worldObjectState.getWorldObjects();
     }
 
     @Override
@@ -97,21 +111,13 @@ public final class ClientAppImpl implements ClientApp {
         }
     }
 
-    private void signal() {
-        lock.lock();
-        try {
-            waitForReceive.signal();
-        } finally {
-            lock.unlock();
-        }
-    }
-
     @Override
     public void play() {
         try {
             messageBroker.connect();
             await(messageBroker::isLife);
             messageBroker.sendRel(3, PLAY_COMMAND);
+            // todo await full login
         } catch (final ExecutionException e) {
             messageBroker.disconnect();
             throw e;
@@ -123,7 +129,9 @@ public final class ClientAppImpl implements ClientApp {
         messageBroker.disconnect();
     }
 
-    private void sendRel(final int id, final String name, final Object... args) {
+    @Override
+    public void sendWidgetCommand(final int id, final String name, final Object... args) {
+        checkWidgetId(id);
         try {
             messageBroker.sendRel(id, name, args);
         } catch (final ExecutionException e) {
@@ -132,93 +140,26 @@ public final class ClientAppImpl implements ClientApp {
         }
     }
 
-    @Override
-    public void click() {
-//        baseClient.pushOutboundRel(
-//                mapViewId,
-//                CLICK_COMMAND,
-//                new IntPoint(), // cursor position on screen, server ignore it
-//                position,
-//                LEFT_MOUSE_BUTTON,
-//                NO_KEYBOARD_MODIFIER
-//        );
-//        baseClient.pushOutboundRel(
-//                mapViewId.getValue(),
-//                CLICK_COMMAND,
-//                new IntPoint(), // cursor position on screen, server ignore it
-//                worldObject.getValue().getPosition(), // here is should pe point in world, where use click RMB, but we use object position instead
-//                RIGHT_MOUSE_BUTTON,
-//                NO_KEYBOARD_MODIFIER,
-//                UNKNOWN_FLAG,
-//                objectId,
-//                worldObject.getValue().getPosition(),
-//                UNKNOWN_FLAG,
-//                objectElement
-//        );
-//        baseClient.pushOutboundRel(stackId, CLICK_COMMAND);
-
-        // widget id (map view id)
-        // CLICK
-        // position on screen
-        // position in world
-        // mouse button
-        // keyboard modifier
-        // -
-        // object id in world
-        // position
-        // -
-        // object element
-    }
-
-    @Override
-    public void take() {
-
-    }
-
-    @Override
-    public void drop() {
-
-    }
-
-    @Override
-    public void itemAct() {
-
-    }
-
-    @Override
-    public void itemActShort() {
-
-    }
-
-    @Override
-    public void transfer() {
-
-    }
-
-    @Override
-    public void transferExt() {
-
-    }
-
-    @Override
-    public void place() {
-
-    }
-
-    @Override
-    public void close() {
-
-    }
-
-    @Override
-    public void contextMenu() {
-
-    }
-
     // ##################################################
     // #                                                #
     // #  Private                                       #
     // #                                                #
     // ##################################################
+
+    private void signal() {
+        lock.lock();
+        try {
+            waitForReceive.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void checkWidgetId(final Integer widgetId) {
+        final boolean hasWidget = widgetState.hasWidget(widgetId);
+        if (!hasWidget) {
+            throw new ;
+        }
+    }
 
 }

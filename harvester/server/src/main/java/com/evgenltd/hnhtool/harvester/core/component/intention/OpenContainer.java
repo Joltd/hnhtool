@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester.core.component;
+package com.evgenltd.hnhtool.harvester.core.component.intention;
 
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 

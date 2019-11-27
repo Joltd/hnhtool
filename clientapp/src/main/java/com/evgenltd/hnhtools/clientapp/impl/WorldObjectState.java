@@ -1,12 +1,12 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
+import com.evgenltd.hnhtools.clientapp.WorldObject;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.messagebroker.ObjectDeltaType;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p></p>
@@ -61,6 +61,16 @@ final class WorldObjectState {
                     break;
             }
         }
+    }
+
+    synchronized IntPoint getObjectPosition(final Long id) {
+        return Optional.ofNullable(index.get(id))
+                .map(WorldObjectImpl::getPosition)
+                .orElse(null);
+    }
+
+    synchronized List<WorldObject> getWorldObjects() {
+        return new ArrayList<>(index.values());
     }
 
     private static final class ObjectDataAccessor {
