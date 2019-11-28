@@ -11,7 +11,7 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 final class PropImpl implements Prop {
 
     private Long id;
-    private Integer frame;
+    private Integer frame = 0;
     private IntPoint position;
     private boolean moving;
     private Long resourceId;

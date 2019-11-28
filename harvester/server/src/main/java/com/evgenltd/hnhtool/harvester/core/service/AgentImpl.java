@@ -1,18 +1,24 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.Agent;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
+import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
+import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
+import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
-import com.google.common.collect.BiMap;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -47,16 +53,21 @@ public class AgentImpl implements Agent {
 
     private ClientApp clientApp;
 
-    private Integer mapViewId;
-    private Integer gameUiId;
-
     private Map<Long,Prop> propIndex;
-    private Map<Integer,Widget> inventoryIndex;
-    private Map<Integer,Widget> storeBoxIndex;
-    private Map<Integer,Widget> itemIndex;
-    private Map<Integer,Integer> widgetToParentIndex;
+    private Map<Integer,Widget> widgetIndex;
 
-    private BiMap<Long, Long> knownObjectToPropIndex;
+    private Widget mapView;
+    private Widget gameUi;
+    private Character character = new Character();
+    private Hand hand = new Hand();
+    private Inventory currentInventory;
+    private Heap currentHeap;
+    private final Set<Integer> forClose = new HashSet<>();
+
+    private Map<Long, Long> knownObjectToPropIndex;
+    private Map<Long, Integer> knownObjectToWidgetndex;
+    private Map<Long, Integer> knownItemToItemWidgetIndex;
+    private Map<Long, Long> knownItemToPropIndex;
 
     public AgentImpl(final MatchingService matchingService) {
         this.matchingService = matchingService;
@@ -73,6 +84,14 @@ public class AgentImpl implements Agent {
     // ##################################################
 
     @Override
+    public void await() {
+        clientApp.await(() -> {
+            System.out.println();
+            return false;
+        });
+    }
+
+    @Override
     public void move(final IntPoint position) {
 
     }
@@ -83,7 +102,7 @@ public class AgentImpl implements Agent {
         final Prop prop = getPropById(propId);
 
         clientApp.sendWidgetCommand(
-                mapViewId,
+                mapView.getId(),
                 CLICK_COMMAND,
                 SCREEN_POSITION,
                 prop.getPosition(),
@@ -97,13 +116,193 @@ public class AgentImpl implements Agent {
         );
 
         clientApp.await(() -> {
-            final Widget inventory = getInventory();
-            if (inventory == null) {
+            scan();
+            if (currentInventory == null) {
                 return false;
             }
-            storeKnownObjectToWidget(knownObjectId, inventory.getId());
+            storeKnownObjectToWidget(knownObjectId, currentInventory.getWidget().getId());
             return true;
         });
+    }
+
+    @Override
+    public void openHeap(final Long knownObjectId) {
+
+    }
+
+    @Override
+    public void takeItemInHand(final Long knownItemId) {
+
+    }
+
+    @Override
+    public void takeItemInHandFromCurrentHeap() {
+
+    }
+
+    @Override
+    public void dropItemFromHandInCurrentInventory(final IntPoint position) {
+
+    }
+
+    @Override
+    public void dropItemFromHandInMainInventory(final IntPoint position) {
+
+    }
+
+    @Override
+    public void dropItemFromHandInStudyInventory(final IntPoint position) {
+
+    }
+
+    @Override
+    public void dropItemFromHandInCurrentHeap() {
+
+    }
+
+    @Override
+    public void dropItemFromHandInWorld() {
+
+    }
+
+    @Override
+    public void dropItemFromHandInEquip(final Integer position) {
+
+    }
+
+    @Override
+    public void dropItemFromInventoryInWorld(final Long knownItemId) {
+
+    }
+
+    @Override
+    public void transferItem(final Long knownItemId) {
+
+    }
+
+    @Override
+    public void transferItemFromCurrentHeap() {
+
+    }
+
+    @Override
+    public void applyItemInHandOnObject(final Long knownObjectId) {
+
+    }
+
+    @Override
+    public void applyItemInHandOnItem(final Long knownItemId) {
+
+    }
+
+    private void closeWidget(final Integer widgetId) {
+
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Scan                                          #
+    // #                                                #
+    // ##################################################
+
+    private void scan() {
+        propIndex.clear();
+        widgetIndex.clear();
+
+        final List<Prop> props = clientApp.getProps();
+        propIndex = props.stream().collect(Collectors.toMap(Prop::getId, prop -> prop));
+
+        final List<Widget> widgets = clientApp.getWidgets();
+        widgetIndex = widgets.stream().collect(Collectors.toMap(Widget::getId, widget -> widget));
+
+        for (final Widget widget : widgets) {
+            switch (widget.getType()) {
+                case "gameui":
+                    gameUi = widget;
+                    break;
+                case "mapview":
+                    mapView = widget;
+                    break;
+                case "inv":
+                    prepareInventory((InventoryWidget) widget);
+                    break;
+                case "item":
+                    prepareItem((ItemWidget) widget);
+                    break;
+                case "isbox":
+                    prepareHeap((StoreBoxWidget) widget);
+                    break;
+            }
+        }
+
+    }
+
+    private void prepareInventory(final InventoryWidget inventoryWidget) {
+        final Integer parentId = inventoryWidget.getParentId();
+        final Widget parent = widgetIndex.get(parentId);
+        final Inventory inventory = new Inventory();
+        inventory.setWidget(inventoryWidget);
+
+        if (Objects.equals(parentId, gameUi.getId())) {
+            character.setMainInventory(inventory);
+            return;
+        }
+
+        if (Objects.equals(parent.getType(), "chr")) {
+            character.setStudyInventory(inventory);
+            return;
+        }
+
+        if (currentInventory == null) {
+            currentInventory = inventory;
+            return;
+        }
+
+        if (!Objects.equals(currentInventory.getWidget(), inventoryWidget)) {
+            forClose.add(inventoryWidget.getId());
+        }
+    }
+
+    private void prepareItem(final ItemWidget itemWidget) {
+        final Integer parentId = itemWidget.getParentId();
+        final Widget parent = widgetIndex.get(parentId);
+
+        if (Objects.equals(parentId, gameUi.getId())) {
+            hand.setItem(itemWidget);
+            return;
+        }
+
+        if (Objects.equals(parent, character.getMainInventory().getWidget())) {
+            character.getMainInventory()
+                    .getItems()
+                    .add(itemWidget);
+            return;
+        }
+
+        if (Objects.equals(parent, character.getStudyInventory().getWidget())) {
+            character.getStudyInventory()
+                    .getItems()
+                    .add(itemWidget);
+            return;
+        }
+
+        if (Objects.equals(parent, currentInventory.getWidget())) {
+            currentInventory.getItems().add(itemWidget);
+        }
+    }
+
+    private void prepareHeap(final StoreBoxWidget storeBoxWidget) {
+        final Heap heap = new Heap();
+        heap.setStoreBox(storeBoxWidget);
+
+        if (currentHeap == null) {
+            currentHeap = heap;
+            return;
+        }
+
+        if (!Objects.equals(currentHeap.getStoreBox(), storeBoxWidget)) {
+            forClose.add(storeBoxWidget.getId());
+        }
     }
 
     // ##################################################
@@ -112,17 +311,6 @@ public class AgentImpl implements Agent {
     // #                                                #
     // ##################################################
 
-    private void scan() {
-        propIndex.clear();
-        inventoryIndex.clear();
-        itemIndex.clear();
-        storeBoxIndex.clear();
-        widgetToParentIndex.clear();
-
-        final List<Prop> props = clientApp.getProps();
-
-        knownObjectToPropIndex = matchingService.matchObjects(props);
-    }
 
     private Widget getInventory() {
         return null;

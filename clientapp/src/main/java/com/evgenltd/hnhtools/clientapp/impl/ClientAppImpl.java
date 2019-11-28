@@ -76,6 +76,9 @@ public final class ClientAppImpl implements ClientApp {
         lock.lock();
         try {
             while (!condition.get()) {
+                if (messageBroker.isClosed()) {
+                    throw new ExecutionException("Connection to server closed");
+                }
                 waitForReceive.await();
             }
         } catch (final InterruptedException e) {
@@ -86,11 +89,11 @@ public final class ClientAppImpl implements ClientApp {
     }
 
     @Override
-    public void play() {
+    public void play(final String characterName) {
         try {
             messageBroker.connect();
             await(messageBroker::isLife);
-            messageBroker.sendRel(3, PLAY_COMMAND);
+            messageBroker.sendRel(3, PLAY_COMMAND, characterName);
             await(() -> widgetState.hasWidgets() && propState.hasProps());
         } catch (final ExecutionException e) {
             messageBroker.disconnect();

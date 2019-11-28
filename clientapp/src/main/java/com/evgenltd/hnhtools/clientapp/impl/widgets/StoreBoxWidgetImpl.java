@@ -23,8 +23,8 @@ public final class StoreBoxWidgetImpl extends WidgetImpl implements StoreBoxWidg
         this.third = storeBoxWidget.third;
     }
 
-    StoreBoxWidgetImpl(final Integer id, final String type, final ArrayNode args) {
-        super(id, type, args);
+    StoreBoxWidgetImpl(final Integer id, final String type, final Integer parentId, final ArrayNode args) {
+        super(id, type, parentId, args);
     }
 
     @Override

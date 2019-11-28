@@ -42,16 +42,14 @@ public final class WidgetState {
 
         switch (type) {
             case REL_MESSAGE_NEW_WIDGET:
-                final WidgetImpl newWidget = WidgetFactory.build(
-                        widgetId,
-                        rel.getWidgetType(),
-                        rel.getChildArgs(),
-                        rel.getParentArgs()
-                );
+                final WidgetImpl newWidget = WidgetFactory.build(rel);
                 index.put(widgetId, newWidget);
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
                 final WidgetImpl existedWidget = index.get(widgetId);
+                if (existedWidget == null) {
+                    break;
+                }
                 existedWidget.handleMessage(rel);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
@@ -86,7 +84,11 @@ public final class WidgetState {
     private void fillResource(final WidgetImpl widget) {
         if (widget instanceof ItemWidgetImpl) {
             final ItemWidgetImpl item = (ItemWidgetImpl) widget;
-            item.setResource(resourceState.getResource(item.getResourceId()));
+            final Long resourceId = item.getResourceId();
+            if (resourceId == null) {
+                return;
+            }
+            item.setResource(resourceState.getResource(resourceId));
         }
     }
 
@@ -94,6 +96,7 @@ public final class WidgetState {
         private static final String REL_TYPE = "relType";
         private static final String WIDGET_ID = "id";
         private static final String WIDGET_TYPE = "type";
+        private static final String WIDGET_PARENT_ID = "parent";
         private static final String WIDGET_MESSAGE_NAME = "name";
         private static final String CHILD_ARGS = "cArgs";
         private static final String PARENT_ARGS = "pArgs";
@@ -108,23 +111,27 @@ public final class WidgetState {
             return JsonUtil.asCustomFromText(data, REL_TYPE, RelType::valueOf);
         }
 
-        Integer getWidgetId() {
+        public Integer getWidgetId() {
             return JsonUtil.asInt(data, WIDGET_ID);
         }
 
-        String getWidgetType() {
+        public String getWidgetType() {
             return JsonUtil.asText(data, WIDGET_TYPE);
+        }
+
+        public Integer getWidgetParentId() {
+            return JsonUtil.asInt(data, WIDGET_PARENT_ID);
         }
 
         public String getWidgetMessageName() {
             return JsonUtil.asText(data, WIDGET_MESSAGE_NAME);
         }
 
-        ArrayNode getChildArgs() {
+        public ArrayNode getChildArgs() {
             return JsonUtil.asArrayNode(data, CHILD_ARGS);
         }
 
-        ArrayNode getParentArgs() {
+        public ArrayNode getParentArgs() {
             return JsonUtil.asArrayNode(data, PARENT_ARGS);
         }
 

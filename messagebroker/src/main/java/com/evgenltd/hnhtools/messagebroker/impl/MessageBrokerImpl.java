@@ -33,7 +33,7 @@ public final class MessageBrokerImpl implements MessageBroker {
 
     private static final Logger log = LogManager.getLogger(MessageBroker.class);
 
-    private static final int PROTOCOL_VERSION = 17;
+    private static final int PROTOCOL_VERSION = 22;
     private static final String BROKER_NAME = "Hafen";
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;
@@ -361,8 +361,8 @@ public final class MessageBrokerImpl implements MessageBroker {
             long now = System.currentTimeMillis();
             long timeElapsed = now - previousTime;
             boolean skipBeat = relProcessor();
-            skipBeat = skipBeat || objectDataAcknowledgeProcessor();
-            skipBeat = skipBeat || relAcknowledgeProcessor();
+            skipBeat = objectDataAcknowledgeProcessor() || skipBeat;
+            skipBeat = relAcknowledgeProcessor() || skipBeat;
 
             if (!skipBeat && timeElapsed > BEAT_TIMEOUT) {
                 final DataWriter beat = new DataWriter();

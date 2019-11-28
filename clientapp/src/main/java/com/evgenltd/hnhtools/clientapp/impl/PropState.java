@@ -81,8 +81,16 @@ final class PropState {
         return index.values()
                 .stream()
                 .map(PropImpl::copy)
-                .peek(prop -> prop.setResource(resourceState.getResource(prop.getResourceId())))
+                .peek(this::fillResource)
                 .collect(Collectors.toList());
+    }
+
+    private void fillResource(final PropImpl prop) {
+        final Long resourceId = prop.getResourceId();
+        if (resourceId == null) {
+            return;
+        }
+        prop.setResource(resourceState.getResource(resourceId));
     }
 
     private static final class ObjectDataAccessor {

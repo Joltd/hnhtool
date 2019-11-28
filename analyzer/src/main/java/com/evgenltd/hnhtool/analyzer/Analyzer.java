@@ -28,6 +28,7 @@ public class Analyzer extends Application {
     public void start(final Stage primaryStage) {
         primaryStage.setTitle("HnH communication analyzer");
         primaryStage.setScene(new Scene(C.load(MainScreen.class), 800, 600));
+        primaryStage.setAlwaysOnTop(true);
         primaryStage.show();
     }
 

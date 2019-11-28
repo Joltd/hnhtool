@@ -1,7 +1,15 @@
 package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester.Application;
+import com.evgenltd.hnhtool.harvester.core.AgentService;
+import com.evgenltd.hnhtool.harvester.core.component.TestScript;
+import com.evgenltd.hnhtool.harvester.core.entity.Account;
+import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
+import com.evgenltd.hnhtool.harvester.core.service.AccountService;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -15,36 +23,34 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
 public class BaseBehaviorTest {
-//
-//    private static final Logger log = LogManager.getLogger(BaseBehaviorTest.class);
-//
-//    @Autowired
-//    private AgentService agentService;
-//
-//    @Autowired
-//    private KnownObjectRepository knownObjectRepository;
-//
-//    @Autowired
-//    private KnownItemRepository knownItemRepository;
-//
-//    @Test
-//    public void addAccount() {
-//        final Result<Void> result = agentService.registerAgent("Grafbredbery", "15051953", "Surname");
-//        Assert.assertTrue(result.isSuccess());
-//    }
-//
-//    @Test
-//    public void commonTest() throws InterruptedException {
-//        agentService.offerWork(() -> {
-//
-//            try {
-//                Thread.sleep(10_000L);
-//            } catch (InterruptedException ignored) {
-//            }
-//
-//            return Result.ok();
-//        });
-//        Thread.sleep(60 * 60 * 1000L);
-//    }
+
+    @Autowired
+    private AccountService accountService;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private AgentService agentService;
+
+    @Autowired
+    private ObjectFactory<TestScript> testScriptFactory;
+
+    @Test
+    public void addAccount() {
+//        accountService.registerAccount("Grafbredbery", "15051953", "botixo");
+
+        Account account = new Account();
+        account.setUsername("Grafbredbery");
+        account.setToken(new byte[] {120,119,-56,68,-14,108,123,-89,110,-105,-59,-73,58,34,-90,-77,63,-69,109,-2,35,39,-5,-1,-119,68,-52,-62,109,50,52,-7});
+        account.setCharacterName("botixo");
+        accountRepository.save(account);
+    }
+
+    @Test
+    public void commonTest() {
+        final TestScript script = testScriptFactory.getObject();
+        agentService.scheduleScriptExecution(script);
+    }
 
 }

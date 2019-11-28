@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 final class RelRequest {
 
-    private static final long TIMEOUT = 1000;
+    private static final long TIMEOUT = 10000;
 
     private int id;
     private int sequence;

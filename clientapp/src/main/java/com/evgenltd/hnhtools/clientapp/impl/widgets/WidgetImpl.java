@@ -23,9 +23,10 @@ public class WidgetImpl implements Widget {
         this.args = widget.args;
     }
 
-    WidgetImpl(final Integer id, final String type, final ArrayNode args) {
+    WidgetImpl(final Integer id, final String type, final Integer parentId, final ArrayNode args) {
         this.id = id;
         this.type = type;
+        this.parentId = parentId;
         this.args = args;
     }
 
@@ -41,10 +42,6 @@ public class WidgetImpl implements Widget {
     @Override
     public String getType() {
         return type;
-    }
-
-    public void setParentId(final Integer parentId) {
-        this.parentId = parentId;
     }
 
     @Override

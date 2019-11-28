@@ -33,10 +33,11 @@ public final class ItemWidgetImpl extends WidgetImpl implements ItemWidget {
     ItemWidgetImpl(
             final Integer id,
             final String type,
+            final Integer parentId,
             final ArrayNode childArgs,
             final ArrayNode parentArgs
     ) {
-        super(id, type, childArgs);
+        super(id, type, parentId, childArgs);
         position = JsonUtil.asPoint(parentArgs.get(0));
         resourceId = JsonUtil.asLong(childArgs.get(0));
     }

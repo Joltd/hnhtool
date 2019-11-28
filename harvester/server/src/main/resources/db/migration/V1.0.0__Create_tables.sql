@@ -19,35 +19,25 @@ create table known_objects (
 	x int,
 	y int,
 	actual datetime,
+	lost tinyint,
 	researched tinyint,
 	player tinyint,
 	doorway tinyint,
 	item tinyint,
 	container tinyint,
-	stack tinyint,
-	count int,
-	max int
+	stack tinyint
 );
 
 create table accounts (
 	id numeric(19,0) identity(1,1) primary key,
 	username varchar(255),
 	token varbinary(64),
-	default_character varchar(255),
-	character_object_id numeric(19,0) foreign key references known_objects(id)
-);
-
-create table paths (
-	id numeric(19,0) identity(1,1) primary key,
-	from_id numeric(19,0) foreign key references known_objects(id),
-	to_id numeric(19,0) foreign key references known_objects(id),
-	distance float
+	character_name varchar(255)
 );
 
 create table known_items (
 	id numeric(19,0) identity(1,1) primary key,
 	owner_id numeric(19,0) foreign key references known_objects(id),
-	parent_id numeric(19,0) foreign key references known_items(id),
 	resource varchar(255),
 	x int,
 	y int,

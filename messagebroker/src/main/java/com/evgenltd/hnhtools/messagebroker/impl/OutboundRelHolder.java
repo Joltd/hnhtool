@@ -20,10 +20,12 @@ final class OutboundRelHolder {
     private List<RelRequest> awaiting = new ArrayList<>();
 
     @UserThread
-    synchronized void register(final int id, final String name, final Object... args) {
+    void register(final int id, final String name, final Object... args) {
         final RelRequest relRequest = new RelRequest(id, acknowledgeSequence, name, args);
         acknowledgeSequence = ByteUtil.toShort(acknowledgeSequence + 1);
-        awaiting.add(relRequest);
+        synchronized (this) {
+            awaiting.add(relRequest);
+        }
         relRequest.await();
     }
 

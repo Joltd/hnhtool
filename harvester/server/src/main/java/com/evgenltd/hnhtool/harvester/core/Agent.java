@@ -15,34 +15,40 @@ public interface Agent {
     // #                                                #
     // ##################################################
 
-    void move(final IntPoint position);
+    void await();
 
-    void openContainer(final Long knownObjectId);
+    void move(IntPoint position);
 
-//    void takeItemInHand(final Long knownItemId);
-//
-//    void takeItemInHandFromHeap();
-//
-//    void dropItemFromHandInInventory(final Long knownObjectId, final IntPoint position);
-//
-//    void dropItemFromHandInHeap();
-//
-//    void dropItemFromHandInWorld();
-//
-//    void dropItemFromHandInEquip();
-//
-//    void dropItemFromInventoryInWorld();
-//
-//    void transferItem();
-//
-//    void transferItemFromHeap();
-//
-//    void closeWidget();
-//
-//    void applyItemInHandOnObject();
-//
-//    void applyItemInHandOnItem();
-//
+    void openContainer(Long knownObjectId);
+
+    void openHeap(Long knownObjectId);
+
+    void takeItemInHand(Long knownItemId);
+
+    void takeItemInHandFromCurrentHeap();
+
+    void dropItemFromHandInCurrentInventory(IntPoint position);
+
+    void dropItemFromHandInMainInventory(IntPoint position);
+
+    void dropItemFromHandInStudyInventory(IntPoint position);
+
+    void dropItemFromHandInCurrentHeap();
+
+    void dropItemFromHandInWorld();
+
+    void dropItemFromHandInEquip(Integer position);
+
+    void dropItemFromInventoryInWorld(Long knownItemId);
+
+    void transferItem(Long knownItemId);
+
+    void transferItemFromCurrentHeap();
+
+    void applyItemInHandOnObject(Long knownObjectId);
+
+    void applyItemInHandOnItem(Long knownItemId);
+
 //    void performContextMenuCommand();
 
 }

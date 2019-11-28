@@ -1,10 +1,12 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
+import com.evgenltd.hnhtool.harvester.core.AgentService;
 import com.evgenltd.hnhtool.harvester.core.component.Script;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Service;
  * <p>Created: 25-11-2019 23:08</p>
  */
 @Service
-public class AgentServiceImpl {
+public class AgentServiceImpl implements AgentService {
 
     @Value("${hafen.server}")
     private String server;
@@ -38,7 +40,9 @@ public class AgentServiceImpl {
         this.agentFactory = agentFactory;
     }
 
-    public void executeScript(final ObjectFactory<? extends Script> scriptFactory) {
+    @Override
+    @NotNull
+    public Long scheduleScriptExecution(@NotNull final Script script) {
         final Account account = accountService.randomAccount();
         final byte[] cookie = accountService.loginByAccount(account.getUsername(), account.getToken());
         final ClientApp clientApp = ClientAppFactory.buildClientApp(
@@ -49,18 +53,25 @@ public class AgentServiceImpl {
                 cookie
         );
 
-        clientApp.play();
+        clientApp.play(account.getCharacterName());
 
         final AgentImpl agent = agentFactory.getObject();
         agent.setClientApp(clientApp);
 
-        final Script script = scriptFactory.getObject();
         script.setAgent(agent);
         try {
             script.execute();
         } finally {
             clientApp.logout();
         }
+
+        return 0L;
+    }
+
+    @Override
+    @NotNull
+    public ExecutionStatus getScriptExecutionStatus(@NotNull final Long scheduleId) {
+        return ExecutionStatus.NOT_FOUND;
     }
 
 }

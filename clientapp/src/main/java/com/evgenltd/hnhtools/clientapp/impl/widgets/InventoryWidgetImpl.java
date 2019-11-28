@@ -23,8 +23,9 @@ final class InventoryWidgetImpl extends WidgetImpl implements InventoryWidget {
         super(inventoryWidget);
     }
 
-    InventoryWidgetImpl(final Integer id, final String type, final ArrayNode args) {
-        super(id, type, args);
+    InventoryWidgetImpl(final Integer id, final String type, final Integer parentId, final ArrayNode args) {
+        super(id, type, parentId, args);
+        size = JsonUtil.asPoint(args.get(0));
     }
 
     @Override
