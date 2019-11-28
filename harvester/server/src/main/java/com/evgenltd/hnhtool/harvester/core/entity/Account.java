@@ -23,14 +23,6 @@ public class Account {
 
     private String characterName;
 
-    @Deprecated
-    private String defaultCharacter;
-
-    @ManyToOne
-    @JoinColumn(name = "character_object_id")
-    @Deprecated
-    private KnownObject characterObject;
-
     public Long getId() {
         return id;
     }
@@ -59,17 +51,4 @@ public class Account {
         this.characterName = characterName;
     }
 
-    public String getDefaultCharacter() {
-        return defaultCharacter;
-    }
-    public void setDefaultCharacter(final String defaultCharacter) {
-        this.defaultCharacter = defaultCharacter;
-    }
-
-    public KnownObject getCharacterObject() {
-        return characterObject;
-    }
-    public void setCharacterObject(final KnownObject characterObject) {
-        this.characterObject = characterObject;
-    }
 }

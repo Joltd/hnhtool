@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester_old.common.service;
+package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtools.entity.IntPoint;
 import es.usc.citius.hipster.algorithm.Algorithm;

@@ -22,6 +22,11 @@
             <artifactId>gate</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.evgenltd.hnhtool</groupId>
+            <artifactId>messagebroker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -3,8 +3,8 @@ package com.evgenltd.hnhtools.messagebroker.impl;
 import com.evgenltd.hnhtools.common.ExecutionException;
 import com.evgenltd.hnhtools.common.TimeoutException;
 import com.evgenltd.hnhtools.message.DataWriter;
-import com.evgenltd.hnhtools.message.MessageType;
-import com.evgenltd.hnhtools.message.RelType;
+import com.evgenltd.hnhtools.messagebroker.RelType;
+import com.evgenltd.hnhtools.messagebroker.impl.message.MessageType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.concurrent.CountDownLatch;

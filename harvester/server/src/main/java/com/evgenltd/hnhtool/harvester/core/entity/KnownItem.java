@@ -24,10 +24,6 @@ public class KnownItem {
     @JoinColumn(name = "owner_id")
     private KnownObject owner;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private KnownItem parent;
-
     private String resource;
 
     private Integer x;
@@ -60,13 +56,6 @@ public class KnownItem {
     }
     public void setOwner(final KnownObject owner) {
         this.owner = owner;
-    }
-
-    public KnownItem getParent() {
-        return parent;
-    }
-    public void setParent(final KnownItem parent) {
-        this.parent = parent;
     }
 
     public String getResource() {

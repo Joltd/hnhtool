@@ -46,10 +46,6 @@ public class KnownObject {
 
     private Boolean stack = false;
 
-    private Integer count;
-
-    private Integer max;
-
     public Long getId() {
         return id;
     }
@@ -143,20 +139,6 @@ public class KnownObject {
     }
     public void setStack(final Boolean stack) {
         this.stack = stack;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-    public void setCount(final Integer count) {
-        this.count = count;
-    }
-
-    public Integer getMax() {
-        return max;
-    }
-    public void setMax(final Integer max) {
-        this.max = max;
     }
 
     @Override

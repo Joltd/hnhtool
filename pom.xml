@@ -15,12 +15,9 @@
 
         <module>messagebroker</module>
         <module>clientapp</module>
-        <module>baseclient</module>
-        <module>complexclient</module>
 
         <module>analyzer</module>
         <module>harvester</module>
-        <module>waypointer</module>
     </modules>
 
     <build>

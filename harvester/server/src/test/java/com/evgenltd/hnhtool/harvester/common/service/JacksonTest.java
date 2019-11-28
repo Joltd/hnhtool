@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester_old.common.service;
+package com.evgenltd.hnhtool.harvester.common.service;
 
 import com.evgenltd.hnhtool.harvester_old.common.ResourceConstants;
 import com.fasterxml.jackson.databind.JsonNode;
