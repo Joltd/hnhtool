@@ -1,7 +1,6 @@
 package com.evgenltd.hnhtool.harvester.security.service;
 
 import com.evgenltd.hnhtool.harvester.security.entity.User;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,7 +27,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                Collections.<GrantedAuthority>emptyList()
+                Collections.emptyList()
         );
     }
 

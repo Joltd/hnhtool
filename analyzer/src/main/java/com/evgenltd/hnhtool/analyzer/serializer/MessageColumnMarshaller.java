@@ -4,7 +4,6 @@ import com.evgenltd.hnhtool.analyzer.model.MessageColumn;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,7 +39,7 @@ public class MessageColumnMarshaller {
         @Override
         public MessageColumn deserialize(
                 final JsonParser jsonParser, final DeserializationContext deserializationContext
-        ) throws IOException, JsonProcessingException {
+        ) throws IOException {
             final MessageColumn messageColumn = new MessageColumn();
             final JsonNode root = jsonParser.getCodec().readTree(jsonParser);
             messageColumn.setEnabled(root.get("enabled").asBoolean());

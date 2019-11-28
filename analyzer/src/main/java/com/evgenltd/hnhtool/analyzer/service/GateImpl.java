@@ -54,7 +54,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
     }
 
     @Override
-    public void inbound(final byte[] data, final int length) throws RemoteException {
+    public void inbound(final byte[] data, final int length) {
         if (!isEnabled()) {
             return;
         }
@@ -75,7 +75,7 @@ public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
     }
 
     @Override
-    public void outbound(final byte[] data, final int length) throws RemoteException {
+    public void outbound(final byte[] data, final int length) {
         if (!isEnabled()) {
             return;
         }

@@ -54,9 +54,7 @@ public class MessageFilter {
     //
 
     private boolean hideNonFragment(final ObjectNode root) {
-        if (!root.get("messageType").asText().equals("MESSAGE_TYPE_REL")) {
-            return true;
-        }
+        return !root.get("messageType").asText().equals("MESSAGE_TYPE_REL");
 
 //        final JsonNode rels = root.get("rels");
 //        for (final JsonNode rel : rels) {
@@ -65,7 +63,6 @@ public class MessageFilter {
 //            }
 //        }
 
-        return false;
     }
 
     private boolean hideGlut(final ObjectNode root) {
