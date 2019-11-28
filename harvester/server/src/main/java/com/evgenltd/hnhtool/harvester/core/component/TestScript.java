@@ -20,10 +20,10 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().openContainer(10L);
         // list of all items
-        getAgent().takeItemInHand(100L);
+//        getAgent().takeItemInHand(100L);
         // determine free space
         // get character id
-        getAgent().dropItemFromHandInInventory(1L, new IntPoint(1,1));
+//        getAgent().dropItemFromHandInInventory(1L, new IntPoint(1,1));
 
         getAgent().move(new IntPoint(10,10));
     }

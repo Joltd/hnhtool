@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtools.clientapp.impl.widgets;
 
+import com.evgenltd.hnhtools.clientapp.impl.WidgetState;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
@@ -52,5 +52,5 @@ public class WidgetImpl implements Widget {
         return parentId;
     }
 
-    public void handleMessage(final JsonNode message) {}
+    public void handleMessage(final WidgetState.RelAccessor message) {}
 }

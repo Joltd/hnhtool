@@ -57,7 +57,7 @@ final class PropImpl implements Prop {
         this.moving = moving;
     }
 
-    public Long getResourceId() {
+    Long getResourceId() {
         return resourceId;
     }
     void setResourceId(final Long resourceId) {
@@ -68,7 +68,7 @@ final class PropImpl implements Prop {
     public String getResource() {
         return resource;
     }
-    public void setResource(final String resource) {
+    void setResource(final String resource) {
         this.resource = resource;
     }
 

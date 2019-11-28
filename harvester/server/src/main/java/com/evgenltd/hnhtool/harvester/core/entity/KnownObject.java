@@ -32,6 +32,8 @@ public class KnownObject {
 
     private LocalDateTime actual;
 
+    private Boolean lost = false;
+
     private Boolean researched = false;
 
     private Boolean player = false;
@@ -92,6 +94,13 @@ public class KnownObject {
     }
     public void setActual(final LocalDateTime actual) {
         this.actual = actual;
+    }
+
+    public Boolean getLost() {
+        return lost;
+    }
+    public void setLost(final Boolean lost) {
+        this.lost = lost;
     }
 
     public Boolean getResearched() {

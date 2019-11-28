@@ -4,6 +4,7 @@ import com.evgenltd.hnhtool.harvester.core.Agent;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.google.common.collect.BiMap;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -61,7 +62,7 @@ public class AgentImpl implements Agent {
         this.matchingService = matchingService;
     }
 
-    public void setClientApp(final ClientApp clientApp) {
+    void setClientApp(final ClientApp clientApp) {
         this.clientApp = clientApp;
     }
 
@@ -78,7 +79,8 @@ public class AgentImpl implements Agent {
 
     @Override
     public void openContainer(final Long knownObjectId) {
-        final Prop prop = getProp(knownObjectId);
+        final Long propId = getPropIdByKnownObjectId(knownObjectId);
+        final Prop prop = getPropById(propId);
 
         clientApp.sendWidgetCommand(
                 mapViewId,
@@ -122,11 +124,6 @@ public class AgentImpl implements Agent {
         knownObjectToPropIndex = matchingService.matchObjects(props);
     }
 
-    private Prop getProp(final Long knownObjectId) {
-        final Long propId = knownObjectToPropIndex.get(knownObjectId);
-        return propIndex.get(propId);
-    }
-
     private Widget getInventory() {
         return null;
     }
@@ -134,6 +131,22 @@ public class AgentImpl implements Agent {
     private void storeKnownObjectToWidget(final Long knownObjectId, final Integer widgetId) {
         // make record in index
         // scan items of inventory
+    }
+
+    private Long getPropIdByKnownObjectId(final Long knownObjectId) {
+        final Long propId = knownObjectToPropIndex.get(knownObjectId);
+        if (propId == null) {
+            throw new ApplicationException("No match for KnownObject=[%s]", knownObjectId);
+        }
+        return propId;
+    }
+
+    private Prop getPropById(final Long propId) {
+        final Prop prop = propIndex.get(propId);
+        if (prop == null) {
+            throw new ApplicationException("No Prop by Id=[%s]", propId);
+        }
+        return prop;
     }
 
     enum Mouse {

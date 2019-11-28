@@ -73,6 +73,10 @@ final class PropState {
                 .orElse(null);
     }
 
+    synchronized boolean hasProps() {
+        return !index.isEmpty();
+    }
+
     synchronized List<Prop> getProps() {
         return index.values()
                 .stream()

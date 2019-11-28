@@ -31,7 +31,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     List<KnownObject> findUnknownContainers();
 
     @Query(value = "select f from KnownObject f, KnownObject s where f.resource = ?1 and s.resource = ?4 " +
-            "and (s.x - f.x) = (?5 - ?2) and (s.y - f.y) = (?6 - ?3)")
+            "and (s.x - f.x) = (?5 - ?2) and (s.y - f.y) = (?6 - ?3) and f.lost = false and s.lost = false")
     List<KnownObject> findObjectByPattern(
             final String firstResource,
             final Integer firstX,

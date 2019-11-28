@@ -36,6 +36,8 @@ public class KnownItem {
 
     private LocalDateTime actual;
 
+    private Boolean lost;
+
     private String name;
 
     private Double quality;

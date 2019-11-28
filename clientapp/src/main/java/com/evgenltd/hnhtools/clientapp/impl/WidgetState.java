@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
+import com.evgenltd.hnhtools.clientapp.impl.widgets.ItemWidgetImpl;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetFactory;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetImpl;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
  * <p>Author:  lebed</p>
  * <p>Created: 19-11-2019 00:28</p>
  */
-final class WidgetState {
+public final class WidgetState {
 
     private final Map<Integer, WidgetImpl> index = new HashMap<>();
 
@@ -51,7 +52,7 @@ final class WidgetState {
                 break;
             case REL_MESSAGE_WIDGET_MESSAGE:
                 final WidgetImpl existedWidget = index.get(widgetId);
-                existedWidget.handleMessage(relNode);
+                existedWidget.handleMessage(rel);
                 break;
             case REL_MESSAGE_DESTROY_WIDGET:
                 index.remove(widgetId);
@@ -66,6 +67,10 @@ final class WidgetState {
         }
     }
 
+    synchronized boolean hasWidgets() {
+        return !index.isEmpty();
+    }
+
     synchronized boolean hasWidget(final Integer id) {
         return index.containsKey(id);
     }
@@ -73,16 +78,26 @@ final class WidgetState {
     synchronized List<Widget> getWidgets() {
         return index.values()
                 .stream()
+                .peek(this::fillResource)
                 .map(WidgetImpl::copy)
                 .collect(Collectors.toList());
     }
 
-    private static final class RelAccessor {
+    private void fillResource(final WidgetImpl widget) {
+        if (widget instanceof ItemWidgetImpl) {
+            final ItemWidgetImpl item = (ItemWidgetImpl) widget;
+            item.setResource(resourceState.getResource(item.getResourceId()));
+        }
+    }
+
+    public static final class RelAccessor {
         private static final String REL_TYPE = "relType";
         private static final String WIDGET_ID = "id";
         private static final String WIDGET_TYPE = "type";
+        private static final String WIDGET_MESSAGE_NAME = "name";
         private static final String CHILD_ARGS = "cArgs";
         private static final String PARENT_ARGS = "pArgs";
+        private static final String ARGS = "args";
         private JsonNode data;
 
         RelAccessor(final JsonNode data) {
@@ -101,12 +116,20 @@ final class WidgetState {
             return JsonUtil.asText(data, WIDGET_TYPE);
         }
 
+        public String getWidgetMessageName() {
+            return JsonUtil.asText(data, WIDGET_MESSAGE_NAME);
+        }
+
         ArrayNode getChildArgs() {
             return JsonUtil.asArrayNode(data, CHILD_ARGS);
         }
 
         ArrayNode getParentArgs() {
             return JsonUtil.asArrayNode(data, PARENT_ARGS);
+        }
+
+        public ArrayNode getArgs() {
+            return JsonUtil.asArrayNode(data, ARGS);
         }
     }
 
