@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core;
 
-import com.evgenltd.hnhtool.harvester.core.component.Script;
+import com.evgenltd.hnhtool.harvester.core.component.script.Script;
 import org.jetbrains.annotations.NotNull;
 
 /**

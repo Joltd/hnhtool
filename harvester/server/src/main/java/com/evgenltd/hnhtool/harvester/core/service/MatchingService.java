@@ -106,8 +106,8 @@ public class MatchingService {
             if (matchedKnownItems.isEmpty()) {
                 matchedKnownItem = storeNewKnownItem(item, owner, place);
             } else {
-                matchedKnownItem = matchedKnownItems.get(0);
-                matchedKnownItems.forEach(knownObjectRepository::delete);
+                matchedKnownItem = matchedKnownItems.remove(0);
+//                matchedKnownItems.forEach(knownObjectRepository::delete);
             }
 
             matchedKnownItem.setActual(LocalDateTime.now());
@@ -267,7 +267,7 @@ public class MatchingService {
                 matchedKnownObject = storeNewKnownObject(prop, adjustedPosition, offset.getSpace());
             } else {
                 matchedKnownObject = matchedKnownObjects.remove(0);
-                matchedKnownObjects.forEach(knownObjectRepository::delete);
+//                matchedKnownObjects.forEach(knownObjectRepository::delete);
             }
 
             matchedKnownObject.setActual(LocalDateTime.now());

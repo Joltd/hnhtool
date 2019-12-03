@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.AgentService;
-import com.evgenltd.hnhtool.harvester.core.component.Script;
+import com.evgenltd.hnhtool.harvester.core.component.script.Script;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.ClientAppFactory;

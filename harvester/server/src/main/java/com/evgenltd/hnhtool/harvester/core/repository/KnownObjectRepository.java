@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.core.repository;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,10 @@ import java.util.Optional;
  */
 @Repository
 public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> {
+
+    default KnownObject findByIdOrThrow(Long id) {
+        return findById(id).orElseThrow(() -> new ApplicationException("There is no KnownObject with id=[%s]", id));
+    }
 
     @Query("select ko from KnownObject ko where ko.space = ?1 and ko.x >= ?2 and ko.y >= ?3 and ko.x <= ?4 and ko.y <= ?5 and ko.resource.prop = true")
     List<KnownObject> findObjectsInArea(final Space space, final Integer x1, final Integer y1, final Integer x2, final Integer y2);

@@ -5,6 +5,7 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
@@ -71,7 +72,7 @@ public class AgentImpl implements Agent {
 
     private BiMap<Long, Long> knownObjectToPropIndex = HashBiMap.create();
     private Map<Long, Integer> knownObjectToWidgetndex;
-    private Map<Long, Integer> knownItemToItemWidgetIndex = HashBiMap.create();
+    private BiMap<Long, Integer> knownItemToItemWidgetIndex = HashBiMap.create();
     private Map<Long, Long> knownItemToPropIndex;
 
     public AgentImpl(
@@ -84,6 +85,8 @@ public class AgentImpl implements Agent {
 
     void setClientApp(final ClientApp clientApp) {
         this.clientApp = clientApp;
+        scanObjects();
+        scanCharacter();
     }
 
     // ##################################################
@@ -118,7 +121,7 @@ public class AgentImpl implements Agent {
         );
 
         clientApp.await(() -> {
-            scan();
+            scanObjects();
             if (currentInventory == null) {
                 return false;
             }
@@ -127,6 +130,7 @@ public class AgentImpl implements Agent {
                     null,
                     currentInventory.getItems()
             );
+            mergeKnownItemToItemWidgetIndexes(knownItemToItemWidget);
             return true;
         });
     }
@@ -148,13 +152,13 @@ public class AgentImpl implements Agent {
         );
 
         clientApp.await(() -> {
-            scan();
+            scanObjects();
             final ItemWidget newWidget = hand.getItem();
             if (newWidget == null) {
                 return false;
             }
             knownItemToItemWidgetIndex.put(knownItemId, newWidget.getId());
-            //
+            knownObjectService.moveToHand(knownItemId);
             return true;
         });
     }
@@ -186,7 +190,26 @@ public class AgentImpl implements Agent {
 
     @Override
     public void dropItemFromHandInWorld() {
+        final ItemWidget itemInHand = hand.getItem();
+        final Long knownItemId = knownItemToItemWidgetIndex.inverse().get(itemInHand.getId());
 
+        clientApp.sendWidgetCommand(
+                mapView.getId(),
+                DROP_COMMAND,
+                new IntPoint(),
+                character.getProp().getPosition(),
+                KeyModifier.NO.code
+        );
+
+        clientApp.await(() -> {
+            if (hand.getItem() != null) {
+                return false;
+            }
+
+
+
+            return true;
+        });
     }
 
     @Override
@@ -231,7 +254,7 @@ public class AgentImpl implements Agent {
 
     @Transactional
     @Override
-    public void scan() {
+    public void scanObjects() {
         knownObjectToPropIndex.clear();
 
         final List<Prop> props = clientApp.getProps();
@@ -247,9 +270,9 @@ public class AgentImpl implements Agent {
                     gameUi = widget;
                     final String characterName = JsonUtil.asText(gameUi.getArgs().get(0));
                     character.setCharacterName(characterName);
-                    final Long playerId = JsonUtil.asLong(gameUi.getArgs().get(1));
-                    final Prop prop = propIndex.get(playerId);
-                    character.setPlayer(prop);
+                    final Long characterObjectId = JsonUtil.asLong(gameUi.getArgs().get(1));
+                    final Prop prop = propIndex.get(characterObjectId);
+                    character.setProp(prop);
                     break;
                 case "mapview":
                     mapView = widget;
@@ -266,7 +289,7 @@ public class AgentImpl implements Agent {
             }
         }
 
-        knownObjectToPropIndex.putAll(matchingService.matchObjects(props, character.getCharacterName(), character.getPlayer()));
+        knownObjectToPropIndex.putAll(matchingService.matchObjects(props, character.getCharacterName(), character.getProp()));
 
     }
 
@@ -338,6 +361,12 @@ public class AgentImpl implements Agent {
         }
     }
 
+    private void scanCharacter() {
+        final Long characterObjectId = knownObjectToPropIndex.inverse().get(character.getProp().getId());
+        matchingService.matchItems(characterObjectId, KnownObject.Place.MAIN_INVENTORY, character.getMainInventory().getItems());
+        matchingService.matchItems(characterObjectId, KnownObject.Place.HAND, character.getMainInventory().getItems());
+    }
+
     // ##################################################
     // #                                                #
     // #  Private                                       #
@@ -351,7 +380,7 @@ public class AgentImpl implements Agent {
 
     private void storeKnownObjectToWidget(final Long knownObjectId, final Integer widgetId) {
         // make record in index
-        // scan items of inventory
+        // scanObjects items of inventory
     }
 
     private Long getPropIdByKnownObjectId(final Long knownObjectId) {
@@ -384,6 +413,13 @@ public class AgentImpl implements Agent {
             throw new ApplicationException("No Widget with Id=[%s]", widgetId);
         }
         return widget;
+    }
+
+    private void mergeKnownItemToItemWidgetIndexes(final BiMap<Long, Integer> knownItemToItemWidgetIndex) {
+        knownItemToItemWidgetIndex.forEach((knownItemId, itemWidgetId) -> {
+            this.knownItemToItemWidgetIndex.remove(knownItemId);
+            this.knownItemToItemWidgetIndex.inverse().remove(itemWidgetId);
+        });
     }
 
     enum Mouse {

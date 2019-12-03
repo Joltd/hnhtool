@@ -12,7 +12,7 @@ import com.evgenltd.hnhtools.clientapp.Prop;
 public class Character {
 
     private String characterName;
-    private Prop player;
+    private Prop prop;
     private Inventory mainInventory;
     private Inventory studyInventory;
 
@@ -23,11 +23,11 @@ public class Character {
         this.characterName = characterName;
     }
 
-    public Prop getPlayer() {
-        return player;
+    public Prop getProp() {
+        return prop;
     }
-    public void setPlayer(final Prop player) {
-        this.player = player;
+    public void setProp(final Prop prop) {
+        this.prop = prop;
     }
 
     public Inventory getMainInventory() {

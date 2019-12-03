@@ -24,7 +24,7 @@ public class KnownObject {
     @JoinColumn(name = "space_id")
     private Space space;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne
     @JoinColumn(name = "parent_id")
     private KnownObject parent;
 

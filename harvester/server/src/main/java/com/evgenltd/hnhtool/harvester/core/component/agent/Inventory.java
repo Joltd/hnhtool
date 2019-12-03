@@ -15,6 +15,7 @@ import java.util.List;
  */
 public class Inventory {
 
+
     private InventoryWidget widget;
     private List<ItemWidget> items = new ArrayList<>();
 

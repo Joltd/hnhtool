@@ -47,7 +47,7 @@ public interface Agent {
 
     void applyItemInHandOnItem(Long knownItemId);
 
-    void scan();
+    void scanObjects();
 
 //    void performContextMenuCommand();
 

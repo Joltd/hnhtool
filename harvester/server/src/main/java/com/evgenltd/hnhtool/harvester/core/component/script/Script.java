@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester.core.component;
+package com.evgenltd.hnhtool.harvester.core.component.script;
 
 import com.evgenltd.hnhtool.harvester.core.Agent;
 

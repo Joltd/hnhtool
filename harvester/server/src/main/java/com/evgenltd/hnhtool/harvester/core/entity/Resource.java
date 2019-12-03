@@ -17,6 +17,10 @@ public class Resource {
     @Id
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private ResourceGroup group;
+
     private String name;
 
     private Boolean unknown = false;
@@ -34,6 +38,13 @@ public class Resource {
     }
     public void setId(final Long id) {
         this.id = id;
+    }
+
+    public ResourceGroup getGroup() {
+        return group;
+    }
+    public void setGroup(final ResourceGroup group) {
+        this.group = group;
     }
 
     public String getName() {

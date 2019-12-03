@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -14,5 +16,19 @@ import javax.transaction.Transactional;
 @Service
 @Transactional
 public class KnownObjectService {
+
+    private KnownObjectRepository knownObjectRepository;
+
+    public KnownObjectService(final KnownObjectRepository knownObjectRepository) {
+        this.knownObjectRepository = knownObjectRepository;
+    }
+
+    public void moveToHand(final Long knownItemId) {
+        final KnownObject knownItem = knownObjectRepository.findByIdOrThrow(knownItemId);
+        knownItem.setPlace(KnownObject.Place.HAND);
+        knownItem.setX(null);
+        knownItem.setY(null);
+        knownItem.setParent(null);
+    }
 
 }
