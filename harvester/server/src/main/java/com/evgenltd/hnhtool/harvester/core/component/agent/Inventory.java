@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.core.component.agent;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
 public class Inventory {
 
     private InventoryWidget widget;
-    private List<ItemWidget> items;
+    private List<ItemWidget> items = new ArrayList<>();
 
     public InventoryWidget getWidget() {
         return widget;

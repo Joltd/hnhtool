@@ -24,7 +24,9 @@ public class KnownObject {
     @JoinColumn(name = "owner_id")
     private Space owner;
 
-    private String resource;
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
 
     private Integer x;
 
@@ -33,18 +35,6 @@ public class KnownObject {
     private LocalDateTime actual;
 
     private Boolean lost = false;
-
-    private Boolean researched = false;
-
-    private Boolean player = false;
-
-    private Boolean doorway = false;
-
-    private Boolean item = false;
-
-    private Boolean container = false;
-
-    private Boolean stack = false;
 
     public Long getId() {
         return id;
@@ -60,10 +50,10 @@ public class KnownObject {
         this.owner = owner;
     }
 
-    public String getResource() {
+    public Resource getResource() {
         return resource;
     }
-    public void setResource(final String resource) {
+    public void setResource(final Resource resource) {
         this.resource = resource;
     }
 
@@ -97,48 +87,6 @@ public class KnownObject {
     }
     public void setLost(final Boolean lost) {
         this.lost = lost;
-    }
-
-    public Boolean getResearched() {
-        return researched;
-    }
-    public void setResearched(final Boolean researched) {
-        this.researched = researched;
-    }
-
-    public Boolean getPlayer() {
-        return player;
-    }
-    public void setPlayer(final Boolean player) {
-        this.player = player;
-    }
-
-    public Boolean getDoorway() {
-        return doorway;
-    }
-    public void setDoorway(final Boolean doorway) {
-        this.doorway = doorway;
-    }
-
-    public Boolean getItem() {
-        return item;
-    }
-    public void setItem(final Boolean item) {
-        this.item = item;
-    }
-
-    public Boolean getContainer() {
-        return container;
-    }
-    public void setContainer(final Boolean container) {
-        this.container = container;
-    }
-
-    public Boolean getStack() {
-        return stack;
-    }
-    public void setStack(final Boolean stack) {
-        this.stack = stack;
     }
 
     @Override

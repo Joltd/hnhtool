@@ -24,7 +24,12 @@ public class KnownItem {
     @JoinColumn(name = "owner_id")
     private KnownObject owner;
 
-    private String resource;
+    @Enumerated(EnumType.STRING)
+    private Place place;
+
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
 
     private Integer x;
 
@@ -32,17 +37,11 @@ public class KnownItem {
 
     private LocalDateTime actual;
 
-    private Boolean lost;
+    private Boolean lost = false;
 
     private String name;
 
     private Double quality;
-
-    private Boolean food;
-
-    private Boolean weapon;
-
-    private Boolean curiosity;
 
     public Long getId() {
         return id;
@@ -58,10 +57,17 @@ public class KnownItem {
         this.owner = owner;
     }
 
-    public String getResource() {
+    public Place getPlace() {
+        return place;
+    }
+    public void setPlace(final Place place) {
+        this.place = place;
+    }
+
+    public Resource getResource() {
         return resource;
     }
-    public void setResource(final String resource) {
+    public void setResource(final Resource resource) {
         this.resource = resource;
     }
 
@@ -111,25 +117,11 @@ public class KnownItem {
         this.quality = quality;
     }
 
-    public Boolean getFood() {
-        return food;
-    }
-    public void setFood(final Boolean food) {
-        this.food = food;
-    }
-
-    public Boolean getWeapon() {
-        return weapon;
-    }
-    public void setWeapon(final Boolean weapon) {
-        this.weapon = weapon;
-    }
-
-    public Boolean getCuriosity() {
-        return curiosity;
-    }
-    public void setCuriosity(final Boolean curiosity) {
-        this.curiosity = curiosity;
+    public enum Place {
+        MAIN_INVENTORY,
+        STUDY_INVENTORY,
+        EQUIP,
+        HAND
     }
 
 }

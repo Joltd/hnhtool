@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.clientapp.widgets;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 /**
  * <p></p>
  * <br/>
@@ -13,4 +15,6 @@ public interface Widget {
     String getType();
 
     Integer getParentId();
+
+    ArrayNode getArgs();
 }

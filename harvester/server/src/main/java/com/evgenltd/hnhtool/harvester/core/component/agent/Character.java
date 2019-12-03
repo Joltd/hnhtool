@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.component.agent;
 
+import com.evgenltd.hnhtools.clientapp.Prop;
+
 /**
  * <p></p>
  * <br/>
@@ -9,8 +11,16 @@ package com.evgenltd.hnhtool.harvester.core.component.agent;
  */
 public class Character {
 
+    private Prop player;
     private Inventory mainInventory;
     private Inventory studyInventory;
+
+    public Prop getPlayer() {
+        return player;
+    }
+    public void setPlayer(final Prop player) {
+        this.player = player;
+    }
 
     public Inventory getMainInventory() {
         return mainInventory;

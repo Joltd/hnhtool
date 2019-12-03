@@ -16,6 +16,8 @@ import java.util.List;
 @Repository
 public interface KnownItemRepository extends JpaRepository<KnownItem, Long> {
 
-    List<KnownItem> findByOwnerId(final Long ownerId);
+    void deleteByOwnerId(final Long ownerId);
+
+    List<KnownItem> findByOwnerIdAndPlace(final Long ownerId, final KnownItem.Place place);
 
 }

@@ -6,26 +6,16 @@ create table users (
 
 insert into users (username, password) values ('root', '$2a$10$xFtCg53fRadQvBiLZ962TORMZzf/AFFgEVj3BweUJ5Q9LTPmLw9my');
 
-create table spaces (
+create table resources (
 	id numeric(19,0) identity(1,1) primary key,
 	name varchar(255),
-	type varchar(255)
-);
-
-create table known_objects (
-	id numeric(19,0) identity(1,1) primary key,
-	owner_id numeric(19,0) foreign key references spaces(id),
-	resource varchar(255),
-	x int,
-	y int,
-	actual datetime,
-	lost tinyint,
-	researched tinyint,
+	unknown tinyint,
 	player tinyint,
-	doorway tinyint,
-	item tinyint,
-	container tinyint,
-	stack tinyint
+    object tinyint,
+    doorway tinyint,
+    container tinyint,
+    heap tinyint,
+    item tinyint
 );
 
 create table accounts (
@@ -35,16 +25,31 @@ create table accounts (
 	character_name varchar(255)
 );
 
-create table known_items (
+create table spaces (
 	id numeric(19,0) identity(1,1) primary key,
-	owner_id numeric(19,0) foreign key references known_objects(id),
-	resource varchar(255),
+	name varchar(255),
+	type varchar(255)
+);
+
+create table known_objects (
+	id numeric(19,0) identity(1,1) primary key,
+	owner_id numeric(19,0) foreign key references spaces(id),
+	place varchar(255),
+	resource_id numeric(19,0) foreign key references resources(id),
 	x int,
 	y int,
 	actual datetime,
+	lost tinyint
+);
+
+create table known_items (
+	id numeric(19,0) identity(1,1) primary key,
+	owner_id numeric(19,0) foreign key references known_objects(id),
+	resource_id numeric(19,0) foreign key references resources(id),
+	x int,
+	y int,
+	actual datetime,
+	lost tinyint,
 	name varchar(255),
-	quality float,
-	food tinyint,
-	weapon tinyint,
-	curiosity tinyint
+	quality float
 );

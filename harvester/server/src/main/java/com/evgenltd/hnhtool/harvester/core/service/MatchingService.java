@@ -2,9 +2,12 @@ package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownItem;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownItemRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
+import com.evgenltd.hnhtool.harvester.core.repository.ResourceRepository;
+import com.evgenltd.hnhtool.harvester.core.repository.SpaceRepository;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
@@ -17,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.IntBinaryOperator;
@@ -35,14 +39,25 @@ public class MatchingService {
 
     private static final Logger log = LogManager.getLogger(MatchingService.class);
 
+    private ResourceRepository resourceRepository;
+    private SpaceRepository spaceRepository;
     private KnownObjectRepository knownObjectRepository;
     private KnownItemRepository knownItemRepository;
 
-    public MatchingService(final KnownObjectRepository knownObjectRepository) {
+    public MatchingService(
+            final ResourceRepository resourceRepository,
+            final SpaceRepository spaceRepository,
+            final KnownObjectRepository knownObjectRepository,
+            final KnownItemRepository knownItemRepository
+    ) {
+        this.resourceRepository = resourceRepository;
+        this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
+        this.knownItemRepository = knownItemRepository;
     }
 
-    BiMap<Long, Long> matchObjects(final List<Prop> props) {
+    @Transactional(Transactional.TxType.MANDATORY)
+    public BiMap<Long, Long> matchObjects(final List<Prop> props) {
 
         final List<Prop> filteredProps = filterProps(props);
         if (filteredProps.isEmpty()) {
@@ -50,16 +65,17 @@ public class MatchingService {
             return HashBiMap.create();
         }
 
-        final KnownObject offset = new OffsetSeeker(filteredProps).seek();
+        KnownObject offset = new OffsetSeeker(filteredProps).seek();
         if (offset == null) {
-            return HashBiMap.create();
+            offset = storeNewSpace();
         }
 
         return matchObjects(filteredProps, offset);
 
     }
 
-    public BiMap<Long, Integer> matchItems(final Long knownObjectId, final List<ItemWidget> items) {
+    @Transactional(Transactional.TxType.MANDATORY)
+    public BiMap<Long, Integer> matchItems(final Long knownObjectId, final KnownItem.Place place, final List<ItemWidget> items) {
 
         if (items.isEmpty()) {
             log.info("No items to match");
@@ -72,11 +88,14 @@ public class MatchingService {
         }
 
         final KnownObject owner = ownerHolder.get();
-        final Map<IntPoint, List<KnownItem>> knownItemIndex = loadKnownItemsByOwnerId(knownObjectId);
+        final Map<IntPoint, List<KnownItem>> knownItemIndex = loadKnownItemsByOwnerId(knownObjectId, place);
         final HashBiMap<Long, Integer> resultIndex = HashBiMap.create();
 
         for (final ItemWidget item : items) {
-            final List<KnownItem> matchedKnownItems = knownItemIndex.remove(item.getPosition());
+            List<KnownItem> matchedKnownItems = knownItemIndex.remove(item.getPosition());
+            if (matchedKnownItems == null) {
+                matchedKnownItems = new ArrayList<>();
+            }
             matchedKnownItems.sort(
                     Comparator.comparing(KnownItem::getLost)
                             .reversed()
@@ -86,7 +105,7 @@ public class MatchingService {
 
             KnownItem matchedKnownItem;
             if (matchedKnownItems.isEmpty()) {
-                matchedKnownItem = storeNewKnownItem(item, owner);
+                matchedKnownItem = storeNewKnownItem(item, owner, place);
             } else {
                 matchedKnownItem = matchedKnownItems.get(0);
                 matchedKnownItems.forEach(knownItemRepository::delete);
@@ -105,17 +124,32 @@ public class MatchingService {
         return resultIndex;
     }
 
+    private List<Prop> filterProps(final List<Prop> props) {
+        return props.stream()
+                .filter(prop -> Assert.isNotEmpty(prop.getResource()))
+                .collect(Collectors.toList());
+    }
+
+    private KnownObject storeNewSpace() {
+        final Space space = new Space();
+        space.setType(Space.Type.SURFACE);
+        space.setName("Ground");
+        spaceRepository.save(space);
+
+        final KnownObject dummy = new KnownObject();
+        dummy.setOwner(space);
+        dummy.setX(0);
+        dummy.setY(0);
+        return dummy;
+    }
+
     // ##################################################
     // #                                                #
     // #  Offset Seeker                                 #
     // #                                                #
     // ##################################################
 
-    private List<Prop> filterProps(final List<Prop> props) {
-        return props;
-    }
-
-    class OffsetSeeker {
+    private class OffsetSeeker {
 
         private final List<Prop> props;
         private final List<String> excludedResources = new ArrayList<>();
@@ -207,7 +241,10 @@ public class MatchingService {
 
         for (final Prop prop : props) {
             final IntPoint adjustedPosition = prop.getPosition().add(offset.getPosition());
-            final List<KnownObject> matchedKnownObjects = knownObjectIndex.remove(adjustedPosition + " " + prop.getResource());
+            List<KnownObject> matchedKnownObjects = knownObjectIndex.remove(adjustedPosition + " " + prop.getResource());
+            if (matchedKnownObjects == null) {
+                matchedKnownObjects = new ArrayList<>();
+            }
             matchedKnownObjects.sort(
                     Comparator.comparing(KnownObject::getLost)
                             .reversed()
@@ -220,7 +257,10 @@ public class MatchingService {
                 matchedKnownObject = storeNewKnownObject(prop, adjustedPosition, offset.getOwner());
             } else {
                 matchedKnownObject = matchedKnownObjects.remove(0);
-                matchedKnownObjects.forEach(knownObjectRepository::delete);
+                matchedKnownObjects.forEach(knownObject -> {
+                    knownItemRepository.deleteByOwnerId(knownObject.getId());
+                    knownObjectRepository.delete(knownObject);
+                });
             }
 
             matchedKnownObject.setActual(LocalDateTime.now());
@@ -253,7 +293,13 @@ public class MatchingService {
                 lowerRight.getX(),
                 lowerRight.getY()
         ).stream()
-                .collect(Collectors.groupingBy(knownObject -> knownObject.getPosition() + " " + knownObject.getResource()));
+                .collect(Collectors.groupingBy(knownObject -> {
+                    if (knownObject.getResource().getPlayer()) {
+                        return " " + knownObject.getResource().getName();
+                    } else {
+                        return knownObject.getPosition() + " " + knownObject.getResource().getName();
+                    }
+                }));
     }
 
     private int reduceProps(final List<Prop> props, final ToIntFunction<IntPoint> pointToInt, final IntBinaryOperator reducer) {
@@ -269,12 +315,12 @@ public class MatchingService {
             final IntPoint adjustedPosition,
             final Space space
     ) {
+        final Resource resource = resourceRepository.findAndCreateIfNecessary(prop.getResource());
         final KnownObject knownObject = new KnownObject();
         knownObject.setOwner(space);
-        knownObject.setResource(prop.getResource());
+        knownObject.setResource(resource);
         knownObject.setX(adjustedPosition.getX());
-        knownObject.setX(adjustedPosition.getY());
-        // classification
+        knownObject.setY(adjustedPosition.getY());
         return knownObjectRepository.save(knownObject);
     }
 
@@ -284,20 +330,24 @@ public class MatchingService {
     // #                                                #
     // ##################################################
 
-    private Map<IntPoint, List<KnownItem>> loadKnownItemsByOwnerId(final Long ownerId) {
-        return knownItemRepository.findByOwnerId(ownerId)
+    private Map<IntPoint, List<KnownItem>> loadKnownItemsByOwnerId(
+            final Long ownerId,
+            final KnownItem.Place place
+    ) {
+        return knownItemRepository.findByOwnerIdAndPlace(ownerId, place)
                 .stream()
                 .collect(Collectors.groupingBy(KnownItem::getPosition));
     }
 
-    private KnownItem storeNewKnownItem(final ItemWidget item, final KnownObject owner) {
+    private KnownItem storeNewKnownItem(final ItemWidget item, final KnownObject owner, final KnownItem.Place place) {
+        final Resource resource = resourceRepository.findAndCreateIfNecessary(item.getResource());
         final KnownItem knownItem = new KnownItem();
         knownItem.setOwner(owner);
-        knownItem.setResource(item.getResource());
+        knownItem.setPlace(place);
+        knownItem.setResource(resource);
         knownItem.setX(item.getPosition().getX());
         knownItem.setY(item.getPosition().getY());
-        // sort of classification
-        return knownItem;
+        return knownItemRepository.save(knownItem);
     }
 
 }

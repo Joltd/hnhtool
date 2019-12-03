@@ -49,5 +49,10 @@ public class WidgetImpl implements Widget {
         return parentId;
     }
 
+    @Override
+    public ArrayNode getArgs() {
+        return args;
+    }
+
     public void handleMessage(final WidgetState.RelAccessor message) {}
 }

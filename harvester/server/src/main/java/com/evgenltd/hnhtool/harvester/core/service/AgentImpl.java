@@ -5,6 +5,8 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
@@ -13,10 +15,14 @@ import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.util.JsonUtil;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +56,7 @@ public class AgentImpl implements Agent {
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
     private MatchingService matchingService;
+    private KnownObjectRepository knownObjectRepository;
 
     private ClientApp clientApp;
 
@@ -64,13 +71,17 @@ public class AgentImpl implements Agent {
     private Heap currentHeap;
     private final Set<Integer> forClose = new HashSet<>();
 
-    private Map<Long, Long> knownObjectToPropIndex;
+    private BiMap<Long, Long> knownObjectToPropIndex = HashBiMap.create();
     private Map<Long, Integer> knownObjectToWidgetndex;
-    private Map<Long, Integer> knownItemToItemWidgetIndex;
+    private Map<Long, Integer> knownItemToItemWidgetIndex = HashBiMap.create();
     private Map<Long, Long> knownItemToPropIndex;
 
-    public AgentImpl(final MatchingService matchingService) {
+    public AgentImpl(
+            final MatchingService matchingService,
+            final KnownObjectRepository knownObjectRepository
+    ) {
         this.matchingService = matchingService;
+        this.knownObjectRepository = knownObjectRepository;
     }
 
     void setClientApp(final ClientApp clientApp) {
@@ -84,18 +95,11 @@ public class AgentImpl implements Agent {
     // ##################################################
 
     @Override
-    public void await() {
-        clientApp.await(() -> {
-            System.out.println();
-            return false;
-        });
-    }
-
-    @Override
     public void move(final IntPoint position) {
 
     }
 
+    @Transactional
     @Override
     public void openContainer(final Long knownObjectId) {
         final Long propId = getPropIdByKnownObjectId(knownObjectId);
@@ -120,7 +124,11 @@ public class AgentImpl implements Agent {
             if (currentInventory == null) {
                 return false;
             }
-            storeKnownObjectToWidget(knownObjectId, currentInventory.getWidget().getId());
+            final BiMap<Long, Integer> knownItemToItemWidget = matchingService.matchItems(
+                    knownObjectId,
+                    null,
+                    currentInventory.getItems()
+            );
             return true;
         });
     }
@@ -132,7 +140,25 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHand(final Long knownItemId) {
+        final Integer widgetId = getWidgetIdByKnownItemId(knownItemId);
+        final Widget widget = getWidgetById(widgetId);
 
+        clientApp.sendWidgetCommand(
+                widget.getId(),
+                TAKE_COMMAND,
+                SCREEN_POSITION
+        );
+
+        clientApp.await(() -> {
+            scan();
+            final ItemWidget newWidget = hand.getItem();
+            if (newWidget == null) {
+                return false;
+            }
+            knownItemToItemWidgetIndex.put(knownItemId, newWidget.getId());
+            //
+            return true;
+        });
     }
 
     @Override
@@ -205,20 +231,23 @@ public class AgentImpl implements Agent {
     // #                                                #
     // ##################################################
 
-    private void scan() {
-        propIndex.clear();
-        widgetIndex.clear();
+    @Transactional(Transactional.TxType.MANDATORY)
+    @Override
+    public void scan() {
+        knownObjectToPropIndex.clear();
 
         final List<Prop> props = clientApp.getProps();
         propIndex = props.stream().collect(Collectors.toMap(Prop::getId, prop -> prop));
 
         final List<Widget> widgets = clientApp.getWidgets();
+        widgets.sort(Comparator.comparing(Widget::getType));
         widgetIndex = widgets.stream().collect(Collectors.toMap(Widget::getId, widget -> widget));
 
         for (final Widget widget : widgets) {
             switch (widget.getType()) {
                 case "gameui":
                     gameUi = widget;
+                    prepareGameUi();
                     break;
                 case "mapview":
                     mapView = widget;
@@ -235,6 +264,22 @@ public class AgentImpl implements Agent {
             }
         }
 
+        knownObjectToPropIndex.putAll(matchingService.matchObjects(props));
+
+    }
+
+    private void prepareGameUi() {
+        final String playerName = JsonUtil.asText(gameUi.getArgs().get(0));
+        final Long playerId = JsonUtil.asLong(gameUi.getArgs().get(1));
+
+        final Prop prop = propIndex.get(playerId);
+
+        final KnownObject playerObject = knownObjectRepository.findByResourceName(playerName);
+        playerObject.setX(prop.getPosition().getX());
+        playerObject.setY(prop.getPosition().getY());
+
+        character.setPlayer(prop);
+        knownObjectToPropIndex.put(playerObject.getId(), prop.getId());
     }
 
     private void prepareInventory(final InventoryWidget inventoryWidget) {
@@ -286,7 +331,7 @@ public class AgentImpl implements Agent {
             return;
         }
 
-        if (Objects.equals(parent, currentInventory.getWidget())) {
+        if (currentInventory != null && Objects.equals(parent, currentInventory.getWidget())) {
             currentInventory.getItems().add(itemWidget);
         }
     }
@@ -332,9 +377,25 @@ public class AgentImpl implements Agent {
     private Prop getPropById(final Long propId) {
         final Prop prop = propIndex.get(propId);
         if (prop == null) {
-            throw new ApplicationException("No Prop by Id=[%s]", propId);
+            throw new ApplicationException("No Prop with Id=[%s]", propId);
         }
         return prop;
+    }
+
+    private Integer getWidgetIdByKnownItemId(final Long knownItemId) {
+        final Integer widgetId = knownItemToItemWidgetIndex.get(knownItemId);
+        if (widgetId == null) {
+            throw new ApplicationException("No match for KnownItem=[%s]", knownItemId);
+        }
+        return widgetId;
+    }
+
+    private Widget getWidgetById(final Integer widgetId) {
+        final Widget widget = widgetIndex.get(widgetId);
+        if (widget == null) {
+            throw new ApplicationException("No Widget with Id=[%s]", widgetId);
+        }
+        return widget;
     }
 
     enum Mouse {
@@ -359,4 +420,33 @@ public class AgentImpl implements Agent {
         }
     }
 
+    private static final class PropPlayerWrapper implements Prop {
+        private Prop prop;
+        private String resource;
+
+        public PropPlayerWrapper(final Prop prop, final String resource) {
+            this.prop = prop;
+            this.resource = resource;
+        }
+
+        @Override
+        public Long getId() {
+            return prop.getId();
+        }
+
+        @Override
+        public IntPoint getPosition() {
+            return prop.getPosition();
+        }
+
+        @Override
+        public boolean isMoving() {
+            return prop.isMoving();
+        }
+
+        @Override
+        public String getResource() {
+            return resource;
+        }
+    }
 }

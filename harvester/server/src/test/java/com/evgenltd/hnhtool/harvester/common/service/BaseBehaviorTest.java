@@ -3,8 +3,10 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.core.AgentService;
 import com.evgenltd.hnhtool.harvester.core.component.TestScript;
-import com.evgenltd.hnhtool.harvester.core.entity.Account;
+import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
+import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
+import com.evgenltd.hnhtool.harvester.core.repository.ResourceRepository;
 import com.evgenltd.hnhtool.harvester.core.service.AccountService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +27,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class BaseBehaviorTest {
 
     @Autowired
+    private ResourceRepository resourceRepository;
+
+    @Autowired
     private AccountService accountService;
 
     @Autowired
@@ -36,15 +41,17 @@ public class BaseBehaviorTest {
     @Autowired
     private ObjectFactory<TestScript> testScriptFactory;
 
+    @Autowired
+    private KnownObjectRepository knownObjectRepository;
+
     @Test
     public void addAccount() {
-//        accountService.registerAccount("Grafbredbery", "15051953", "botixo");
+        accountService.registerAccount("Grafbredbery", "15051953", "botixo");
 
-        Account account = new Account();
-        account.setUsername("Grafbredbery");
-        account.setToken(new byte[] {120,119,-56,68,-14,108,123,-89,110,-105,-59,-73,58,34,-90,-77,63,-69,109,-2,35,39,-5,-1,-119,68,-52,-62,109,50,52,-7});
-        account.setCharacterName("botixo");
-        accountRepository.save(account);
+        Resource resource = new Resource();
+        resource.setName("botixo");
+        resource.setPlayer(true);
+        resourceRepository.save(resource);
     }
 
     @Test

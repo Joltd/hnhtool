@@ -15,8 +15,6 @@ public interface Agent {
     // #                                                #
     // ##################################################
 
-    void await();
-
     void move(IntPoint position);
 
     void openContainer(Long knownObjectId);
@@ -48,6 +46,8 @@ public interface Agent {
     void applyItemInHandOnObject(Long knownObjectId);
 
     void applyItemInHandOnItem(Long knownItemId);
+
+    void scan();
 
 //    void performContextMenuCommand();
 

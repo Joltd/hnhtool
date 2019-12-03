@@ -98,9 +98,11 @@ public class JsonUtil {
         if (node == null) {
             return null;
         }
+        final Integer x = JsonUtil.asInt(node, "x");
+        final Integer y = JsonUtil.asInt(node, "y");
         return new IntPoint(
-                JsonUtil.asInt(node, "x"),
-                JsonUtil.asInt(node, "y")
+                x != null ? x : 0,
+                y != null ? y : 0
         );
     }
 
