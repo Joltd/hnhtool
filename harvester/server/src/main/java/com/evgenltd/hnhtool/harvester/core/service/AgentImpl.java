@@ -5,8 +5,6 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
-import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
@@ -56,7 +54,7 @@ public class AgentImpl implements Agent {
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
     private MatchingService matchingService;
-    private KnownObjectRepository knownObjectRepository;
+    private KnownObjectService knownObjectService;
 
     private ClientApp clientApp;
 
@@ -78,10 +76,10 @@ public class AgentImpl implements Agent {
 
     public AgentImpl(
             final MatchingService matchingService,
-            final KnownObjectRepository knownObjectRepository
+            final KnownObjectService knownObjectService
     ) {
         this.matchingService = matchingService;
-        this.knownObjectRepository = knownObjectRepository;
+        this.knownObjectService = knownObjectService;
     }
 
     void setClientApp(final ClientApp clientApp) {
@@ -231,7 +229,7 @@ public class AgentImpl implements Agent {
     // #                                                #
     // ##################################################
 
-    @Transactional(Transactional.TxType.MANDATORY)
+    @Transactional
     @Override
     public void scan() {
         knownObjectToPropIndex.clear();
@@ -247,7 +245,11 @@ public class AgentImpl implements Agent {
             switch (widget.getType()) {
                 case "gameui":
                     gameUi = widget;
-                    prepareGameUi();
+                    final String characterName = JsonUtil.asText(gameUi.getArgs().get(0));
+                    character.setCharacterName(characterName);
+                    final Long playerId = JsonUtil.asLong(gameUi.getArgs().get(1));
+                    final Prop prop = propIndex.get(playerId);
+                    character.setPlayer(prop);
                     break;
                 case "mapview":
                     mapView = widget;
@@ -264,22 +266,8 @@ public class AgentImpl implements Agent {
             }
         }
 
-        knownObjectToPropIndex.putAll(matchingService.matchObjects(props));
+        knownObjectToPropIndex.putAll(matchingService.matchObjects(props, character.getCharacterName(), character.getPlayer()));
 
-    }
-
-    private void prepareGameUi() {
-        final String playerName = JsonUtil.asText(gameUi.getArgs().get(0));
-        final Long playerId = JsonUtil.asLong(gameUi.getArgs().get(1));
-
-        final Prop prop = propIndex.get(playerId);
-
-        final KnownObject playerObject = knownObjectRepository.findByResourceName(playerName);
-        playerObject.setX(prop.getPosition().getX());
-        playerObject.setY(prop.getPosition().getY());
-
-        character.setPlayer(prop);
-        knownObjectToPropIndex.put(playerObject.getId(), prop.getId());
     }
 
     private void prepareInventory(final InventoryWidget inventoryWidget) {

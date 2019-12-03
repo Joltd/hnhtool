@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.core.AgentService;
 import com.evgenltd.hnhtool.harvester.core.component.TestScript;
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
@@ -52,6 +53,9 @@ public class BaseBehaviorTest {
         resource.setName("botixo");
         resource.setPlayer(true);
         resourceRepository.save(resource);
+
+        KnownObject knownObject = new KnownObject();
+        knownObject.setResource(resource);
     }
 
     @Test

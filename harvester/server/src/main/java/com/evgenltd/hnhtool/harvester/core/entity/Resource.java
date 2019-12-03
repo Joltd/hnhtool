@@ -21,17 +21,13 @@ public class Resource {
 
     private Boolean unknown = false;
 
-    private Boolean player = false;
+    private boolean player = false;
 
-    private Boolean object = false;
+    private boolean prop = false;
 
-    private Boolean doorway = false;
+    private boolean container = false;
 
-    private Boolean container = false;
-
-    private Boolean heap = false;
-
-    private Boolean item = false;
+    private boolean item = false;
 
     public Long getId() {
         return id;
@@ -54,45 +50,31 @@ public class Resource {
         this.unknown = unknown;
     }
 
-    public Boolean getPlayer() {
+    public boolean isPlayer() {
         return player;
     }
-    public void setPlayer(final Boolean player) {
+    public void setPlayer(final boolean player) {
         this.player = player;
     }
 
-    public Boolean getObject() {
-        return object;
+    public boolean isProp() {
+        return prop;
     }
-    public void setObject(final Boolean object) {
-        this.object = object;
-    }
-
-    public Boolean getDoorway() {
-        return doorway;
-    }
-    public void setDoorway(final Boolean doorway) {
-        this.doorway = doorway;
+    public void setProp(final boolean prop) {
+        this.prop = prop;
     }
 
-    public Boolean getContainer() {
+    public boolean isContainer() {
         return container;
     }
-    public void setContainer(final Boolean container) {
+    public void setContainer(final boolean container) {
         this.container = container;
     }
 
-    public Boolean getHeap() {
-        return heap;
-    }
-    public void setHeap(final Boolean heap) {
-        this.heap = heap;
-    }
-
-    public Boolean getItem() {
+    public boolean isItem() {
         return item;
     }
-    public void setItem(final Boolean item) {
+    public void setItem(final boolean item) {
         this.item = item;
     }
 }

@@ -1,12 +1,9 @@
 package com.evgenltd.hnhtool.harvester.core.component;
 
-import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * <p></p>
@@ -28,7 +25,7 @@ public class TestScript extends Script {
     @Override
     public void execute() {
         getAgent().scan();
-
+/*
         final List<KnownObject> containers = knownObjectRepository.findContainers();
         if (containers.isEmpty()) {
             System.out.println("Containers not found");
@@ -37,7 +34,7 @@ public class TestScript extends Script {
 
         final KnownObject container = containers.get(0);
         getAgent().openContainer(container.getId());
-
+*/
         // list of all items
 //        getAgent().takeItemInHand(100L);
         // determine free space

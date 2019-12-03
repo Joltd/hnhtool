@@ -11,9 +11,17 @@ import com.evgenltd.hnhtools.clientapp.Prop;
  */
 public class Character {
 
+    private String characterName;
     private Prop player;
     private Inventory mainInventory;
     private Inventory studyInventory;
+
+    public String getCharacterName() {
+        return characterName;
+    }
+    public void setCharacterName(final String characterName) {
+        this.characterName = characterName;
+    }
 
     public Prop getPlayer() {
         return player;

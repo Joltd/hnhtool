@@ -21,20 +21,27 @@ public class KnownObject {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id")
-    private Space owner;
+    @JoinColumn(name = "space_id")
+    private Space space;
+
+    @ManyToOne(cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "parent_id")
+    private KnownObject parent;
+
+    @Enumerated(EnumType.STRING)
+    private Place place;
 
     @ManyToOne
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    private Integer x;
-
-    private Integer y;
-
     private LocalDateTime actual;
 
     private Boolean lost = false;
+
+    private Integer x;
+
+    private Integer y;
 
     public Long getId() {
         return id;
@@ -43,11 +50,25 @@ public class KnownObject {
         this.id = id;
     }
 
-    public Space getOwner() {
-        return owner;
+    public Space getSpace() {
+        return space;
     }
-    public void setOwner(final Space owner) {
-        this.owner = owner;
+    public void setSpace(final Space space) {
+        this.space = space;
+    }
+
+    public KnownObject getParent() {
+        return parent;
+    }
+    public void setParent(final KnownObject parent) {
+        this.parent = parent;
+    }
+
+    public Place getPlace() {
+        return place;
+    }
+    public void setPlace(final Place place) {
+        this.place = place;
     }
 
     public Resource getResource() {
@@ -55,6 +76,20 @@ public class KnownObject {
     }
     public void setResource(final Resource resource) {
         this.resource = resource;
+    }
+
+    public LocalDateTime getActual() {
+        return actual;
+    }
+    public void setActual(final LocalDateTime actual) {
+        this.actual = actual;
+    }
+
+    public Boolean getLost() {
+        return lost;
+    }
+    public void setLost(final Boolean lost) {
+        this.lost = lost;
     }
 
     public Integer getX() {
@@ -75,22 +110,16 @@ public class KnownObject {
         return new IntPoint(x, y);
     }
 
-    public LocalDateTime getActual() {
-        return actual;
-    }
-    public void setActual(final LocalDateTime actual) {
-        this.actual = actual;
-    }
-
-    public Boolean getLost() {
-        return lost;
-    }
-    public void setLost(final Boolean lost) {
-        this.lost = lost;
-    }
-
     @Override
     public String toString() {
         return String.valueOf(id);
     }
+
+    public enum Place {
+        MAIN_INVENTORY,
+        STUDY_INVENTORY,
+        EQUIP,
+        HAND
+    }
+
 }
