@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester.core.component;
+package com.evgenltd.hnhtool.harvester.core.component.matcher;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
@@ -31,7 +31,7 @@ public class MatcherTest {
         final Prop treeProp = createProp("tree", 1, 0);
         final Prop bushProp = createProp("bush", 7, 9);
 
-        final MatcherImpl.Result<Prop, KnownObject> result = Matcher.matchPropToKnownObject(
+        final MatchingResult<Prop, KnownObject> result = Matcher.matchPropToKnownObject(
                 Arrays.asList(treeProp, bushProp),
                 Arrays.asList(treeKnown1, treeKnown2, treeKnown3, treeKnown4, barrelKnown)
         );

@@ -11,7 +11,23 @@ import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
  */
 public class Heap {
 
+    private Long knownObjectId;
     private StoreBoxWidget storeBox;
+
+    public boolean isOpened() {
+        return storeBox != null;
+    }
+
+    public void clearWidget() {
+        storeBox = null;
+    }
+
+    public Long getKnownObjectId() {
+        return knownObjectId;
+    }
+    public void setKnownObjectId(final Long knownObjectId) {
+        this.knownObjectId = knownObjectId;
+    }
 
     public StoreBoxWidget getStoreBox() {
         return storeBox;

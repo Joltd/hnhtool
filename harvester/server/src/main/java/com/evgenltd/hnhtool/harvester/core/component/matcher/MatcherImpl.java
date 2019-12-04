@@ -1,6 +1,7 @@
-package com.evgenltd.hnhtool.harvester.core.component;
+package com.evgenltd.hnhtool.harvester.core.component.matcher;
 
 import com.evgenltd.hnhtools.entity.IntPoint;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Function;
@@ -13,9 +14,9 @@ import java.util.stream.Collectors;
  * <p>Author:  lebed</p>
  * <p>Created: 04-12-2019 00:07</p>
  */
-class MatcherImpl {
+final class MatcherImpl {
 
-    <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> Result<L, R> match(
+    <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> MatchingResult<L, R> match(
             final List<L> left,
             final List<R> right,
             final Function<L, LW> buildLeftWrapper,
@@ -28,29 +29,29 @@ class MatcherImpl {
                 .map(buildRightWrapper)
                 .collect(Collectors.toList());
 
-        final List<Entry<LW,RW>> resultEntries = match(leftWrappers, rightWrappers);
-        final Result<L, R> result = new Result<>();
+        final List<MatchingEntry<LW,RW>> resultEntries = match(leftWrappers, rightWrappers);
+        final MatchingResult<L, R> result = new MatchingResult<>();
 
-        for (final Entry<LW, RW> entry : resultEntries) {
+        for (final MatchingEntry<LW, RW> entry : resultEntries) {
             final LW leftWrapper = entry.getLeft();
             final RW rightWrapper = entry.getRight();
 
             if (leftWrapper != null && rightWrapper != null) {
-                result.matches.add(new Entry<>(leftWrapper.getValue(), rightWrapper.getValue()));
+                result.getMatches().add(new MatchingEntry<>(leftWrapper.getValue(), rightWrapper.getValue()));
                 continue;
             }
 
             if (leftWrapper == null) {
-                result.rightNotMatched.add(rightWrapper.getValue());
+                result.getRightNotMatched().add(rightWrapper.getValue());
             } else {
-                result.leftNotMatched.add(leftWrapper.getValue());
+                result.getLeftNotMatched().add(leftWrapper.getValue());
             }
         }
 
         return result;
     }
 
-    private <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> List<Entry<LW, RW>> match(
+    private <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> List<MatchingEntry<LW, RW>> match(
             final List<LW> left,
             final List<RW> right
     ) {
@@ -59,70 +60,34 @@ class MatcherImpl {
         final Map<String, List<RW>> rightIndex = right.stream()
                 .collect(Collectors.groupingBy(Wrapper::getKey, Collectors.toList()));
 
-        final List<Entry<LW,RW>> result = new ArrayList<>();
+        final List<MatchingEntry<LW,RW>> result = new ArrayList<>();
 
         leftIndex.forEach((key, leftVariants) -> {
 
             Collections.sort(leftVariants);
             final LW leftVariant = leftVariants.remove(0);
-            leftVariants.forEach(l -> result.add(new Entry<>(l, null)));
+            leftVariants.forEach(l -> result.add(new MatchingEntry<>(l, null)));
 
             final List<RW> rightVariants = rightIndex.remove(key);
             if (rightVariants == null) {
-                result.add(new Entry<>(leftVariant, null));
+                result.add(new MatchingEntry<>(leftVariant, null));
                 return;
             }
 
             Collections.sort(rightVariants);
             final RW rightVariant = rightVariants.remove(0);
-            rightVariants.forEach(r -> result.add(new Entry<>(null, r)));
+            rightVariants.forEach(r -> result.add(new MatchingEntry<>(null, r)));
 
-            result.add(new Entry<>(leftVariant, rightVariant));
+            result.add(new MatchingEntry<>(leftVariant, rightVariant));
 
         });
 
         rightIndex.values()
                 .stream()
                 .flatMap(Collection::stream)
-                .forEach(r -> result.add(new Entry<>(null, r)));
+                .forEach(r -> result.add(new MatchingEntry<>(null, r)));
 
         return result;
-    }
-
-    public static final class Result<L,R> {
-        private List<L> leftNotMatched = new ArrayList<>();
-        private List<R> rightNotMatched = new ArrayList<>();
-        private List<Entry<L,R>> matches = new ArrayList<>();
-
-        public List<L> getLeftNotMatched() {
-            return leftNotMatched;
-        }
-
-        public List<R> getRightNotMatched() {
-            return rightNotMatched;
-        }
-
-        public List<Entry<L, R>> getMatches() {
-            return matches;
-        }
-    }
-
-    public static final class Entry<L, R> {
-        private L left;
-        private R right;
-
-        Entry(final L left, final R right) {
-            this.left = left;
-            this.right = right;
-        }
-
-        public L getLeft() {
-            return left;
-        }
-
-        public R getRight() {
-            return right;
-        }
     }
 
     static abstract class Wrapper<T> implements Comparable<Wrapper<T>> {
@@ -145,7 +110,7 @@ class MatcherImpl {
         }
 
         @Override
-        public int compareTo(final MatcherImpl.Wrapper<T> o) {
+        public int compareTo(@NotNull final MatcherImpl.Wrapper<T> o) {
             return 0;
         }
     }

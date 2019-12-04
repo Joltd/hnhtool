@@ -1,4 +1,4 @@
-package com.evgenltd.hnhtool.harvester.core.component;
+package com.evgenltd.hnhtool.harvester.core.component.matcher;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtools.clientapp.Prop;
@@ -15,17 +15,17 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 04-12-2019 01:31</p>
  */
-public class Matcher {
+public final class Matcher {
 
     private static final Comparator<KnownObject> KNOWN_OBJECT_COMPARATOR = Comparator.comparing(KnownObject::getLost)
             .thenComparing(KnownObject::getActual)
             .reversed();
 
-    public static MatcherImpl.Result<Prop, KnownObject> matchPropToKnownObject(final List<Prop> props, final List<KnownObject> knownObjects) {
+    public static MatchingResult<Prop, KnownObject> matchPropToKnownObject(final List<Prop> props, final List<KnownObject> knownObjects) {
         return new MatcherImpl().match(props, knownObjects, PropWrapper::new, KnownObjectWrapper::new);
     }
 
-    public static MatcherImpl.Result<ItemWidget, KnownObject> matchItemWidgetToKnownObject(final List<ItemWidget> itemWidgets, final List<KnownObject> knownObjects) {
+    public static MatchingResult<ItemWidget, KnownObject> matchItemWidgetToKnownObject(final List<ItemWidget> itemWidgets, final List<KnownObject> knownObjects) {
         return new MatcherImpl().match(itemWidgets, knownObjects, ItemWidgetWrapper::new, KnownObjectWrapper::new);
     }
 

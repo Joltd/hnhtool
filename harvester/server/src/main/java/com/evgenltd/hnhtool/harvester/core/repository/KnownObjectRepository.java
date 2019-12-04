@@ -20,6 +20,8 @@ import java.util.Optional;
 @Repository
 public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> {
 
+    Optional<KnownObject> findByResourceName(final String resourceName);
+
     default KnownObject findByIdOrThrow(Long id) {
         return findById(id).orElseThrow(() -> new ApplicationException("There is no KnownObject with id=[%s]", id));
     }

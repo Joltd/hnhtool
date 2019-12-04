@@ -4,6 +4,7 @@ import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,14 +19,6 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     Optional<Resource> findByName(String name);
 
-    default Resource findAndCreateIfNecessary(final String name) {
-        return findByName(name)
-                .orElseGet(() -> {
-                    final Resource resource = new Resource();
-                    resource.setName(name);
-                    resource.setUnknown(true);
-                    return save(resource);
-                });
-    }
+    List<Resource> findAllByNameIn(List<String> names);
 
 }

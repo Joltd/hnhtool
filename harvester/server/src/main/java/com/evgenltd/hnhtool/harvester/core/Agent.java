@@ -1,6 +1,9 @@
 package com.evgenltd.hnhtool.harvester.core;
 
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtools.entity.IntPoint;
+
+import java.util.function.Supplier;
 
 /**
  * Project: hnhtool-root
@@ -15,13 +18,17 @@ public interface Agent {
     // #                                                #
     // ##################################################
 
+    void await(Supplier<Boolean> condition);
+
     void move(IntPoint position);
 
-    void openContainer(Long knownObjectId);
+    void openContainer(KnownObject knownObject);
 
     void openHeap(Long knownObjectId);
 
-    void takeItemInHand(Long knownItemId);
+    void takeItemInHandFromWorld(KnownObject knownItem);
+
+    void takeItemInHandFromInventory(KnownObject knownItem);
 
     void takeItemInHandFromCurrentHeap();
 
@@ -37,17 +44,11 @@ public interface Agent {
 
     void dropItemFromHandInEquip(Integer position);
 
-    void dropItemFromInventoryInWorld(Long knownItemId);
-
-    void transferItem(Long knownItemId);
-
-    void transferItemFromCurrentHeap();
-
     void applyItemInHandOnObject(Long knownObjectId);
 
     void applyItemInHandOnItem(Long knownItemId);
 
-    void scanObjects();
+    void closeCurrentInventory();
 
 //    void performContextMenuCommand();
 
