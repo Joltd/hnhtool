@@ -63,10 +63,11 @@ public class MatchingService {
                 props,
                 Prop::getResource
         );
+        resources.values().forEach(resource -> resource.setProp(true));
         final List<Prop> filteredProps = props.stream()
                 .filter(prop -> {
                     final Resource resource = resources.get(prop.getResource());
-                    return resourceCondition.test(resource);
+                    return resourceCondition.test(resource) && resource != null;
                 })
                 .collect(Collectors.toList());
 
@@ -75,10 +76,10 @@ public class MatchingService {
             offset = storeNewSpace();
         }
 
-        final Area area = new Area(props, offset.getPosition());
+        final Area area = new Area(filteredProps, offset.getPosition());
         final List<KnownObject> knownObjects = loadKnownObjects(area, offset.getSpace());
         final MatchingResult<Prop, KnownObject> matchingResult = Matcher.matchPropToKnownObject(
-                props,
+                filteredProps,
                 knownObjects
         );
 

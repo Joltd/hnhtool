@@ -56,6 +56,7 @@ public class BaseBehaviorTest {
 
         KnownObject knownObject = new KnownObject();
         knownObject.setResource(resource);
+        knownObjectRepository.save(knownObject);
     }
 
     @Test

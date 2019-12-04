@@ -22,6 +22,8 @@ public class Character {
     }
     public void setKnownObjectId(final Long knownObjectId) {
         this.knownObjectId = knownObjectId;
+        this.getMainInventory().setKnownObjectId(knownObjectId);
+        this.getStudyInventory().setKnownObjectId(knownObjectId);
     }
 
     public String getCharacterName() {

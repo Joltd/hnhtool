@@ -6,7 +6,6 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
@@ -89,6 +88,11 @@ public class AgentImpl implements Agent {
 
         matchingService.researchItems(
                 characterObjectId,
+                KnownObject.Place.HAND,
+                Collections.emptyList()
+        );
+        matchingService.researchItems(
+                characterObjectId,
                 KnownObject.Place.MAIN_INVENTORY,
                 character.getMainInventory().getItems()
         );
@@ -122,21 +126,24 @@ public class AgentImpl implements Agent {
 
     @Override
     public void move(final IntPoint position) {
+        refreshState();
+        final IntPoint newPosition = character.getProp().getPosition().add(position);
         // other args if item in hand
         clientApp.sendWidgetCommand(
                 mapView.getId(),
                 CLICK_COMMAND,
                 SCREEN_POSITION,
-                position,
+                newPosition,
                 Mouse.LMB.code,
                 KeyModifier.NO.code
         );
 
-        await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(position));
+        await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(newPosition));
     }
 
     @Override
     public void openContainer(final KnownObject knownObject) {
+        refreshState();
         forClose.forEach(this::closeWidget);
 
         final Prop prop = getPropOrThrow(
@@ -172,11 +179,12 @@ public class AgentImpl implements Agent {
 
     @Override
     public void openHeap(final Long knownObjectId) {
-
+        refreshState();
     }
 
     @Override
     public void takeItemInHandFromWorld(final KnownObject knownItem) {
+        refreshState();
         final Prop prop = getPropOrThrow(
                 knownItem.getResource().getName(),
                 knownItem.getPosition().sub(worldPoint.getPosition())
@@ -217,6 +225,7 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHandFromInventory(final KnownObject knownItem) {
+        refreshState();
         final ItemWidget widget = getItemOrThrow(
                 knownItem.getResource().getName(),
                 knownItem.getPosition().sub(worldPoint.getPosition())
@@ -248,7 +257,7 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHandFromCurrentHeap() {
-
+        refreshState();
     }
 
     @Override
@@ -267,6 +276,7 @@ public class AgentImpl implements Agent {
     }
 
     private void dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place, final IntPoint position) {
+        refreshState();
         final Integer inventoryId = inventory.getWidgetOrThrow().getId();
         final ItemWidget targetItem = hand.getItemorThrow();
         final Long knownItemId = hand.getKnownItemId();
@@ -279,7 +289,7 @@ public class AgentImpl implements Agent {
                 position
         );
 
-        clientApp.await(() -> {
+        await(() -> {
             if (!hand.isEmpty()) {
                 return false;
             }
@@ -302,11 +312,12 @@ public class AgentImpl implements Agent {
 
     @Override
     public void dropItemFromHandInCurrentHeap() {
-
+        refreshState();
     }
 
     @Override
     public void dropItemFromHandInWorld() {
+        refreshState();
         final ItemWidget itemInHand = hand.getItemorThrow();
         final Long knownItemId = hand.getKnownItemId();
 
@@ -320,7 +331,7 @@ public class AgentImpl implements Agent {
                 KeyModifier.NO.code
         );
 
-        clientApp.await(() -> {
+        await(() -> {
             if (!hand.isEmpty()) {
                 return false;
             }
@@ -339,7 +350,7 @@ public class AgentImpl implements Agent {
 
     @Override
     public void dropItemFromHandInEquip(final Integer position) {
-
+        refreshState();
     }
 
 //    private void dropItemFromInventoryInWorld(final Long knownItemId) {}
@@ -350,16 +361,17 @@ public class AgentImpl implements Agent {
 
     @Override
     public void applyItemInHandOnObject(final Long knownObjectId) {
-
+        refreshState();
     }
 
     @Override
     public void applyItemInHandOnItem(final Long knownItemId) {
-
+        refreshState();
     }
 
     @Override
     public void closeCurrentInventory() {
+        refreshState();
         clientApp.sendWidgetCommand(currentInventory.getWidget().getId(), CLOSE_COMMAND);
         currentInventory.setKnownObjectId(null);
         currentInventory.clearWidget();
@@ -368,6 +380,7 @@ public class AgentImpl implements Agent {
     }
 
     private void closeWidget(final Integer widgetId) {
+        refreshState();
         clientApp.sendWidgetCommand(widgetId, CLOSE_COMMAND);
 
         await(() -> !widgetIndex.containsKey(widgetId));
@@ -390,6 +403,7 @@ public class AgentImpl implements Agent {
 
         character.getMainInventory().clearWidget();
         character.getMainInventory().clearWidget();
+        hand.setItem(null);
         currentInventory.clearWidget();
         currentHeap.clearWidget();
 
@@ -434,7 +448,7 @@ public class AgentImpl implements Agent {
             inventory.setWidget(inventoryWidget);
         }
 
-        if (!Objects.equals(currentInventory.getWidget().getId(), inventoryWidget.getId())) {
+        if (currentInventory.isOpened() && !Objects.equals(currentInventory.getWidget().getId(), inventoryWidget.getId())) {
             forClose.add(inventoryWidget.getId());
         }
     }
@@ -494,8 +508,10 @@ public class AgentImpl implements Agent {
     // #                                                #
     // ##################################################
 
+    @Override
     public void scan() {
-        worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), Resource::isContainer);
+        worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
+        knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), character.getProp().getPosition());
     }
 
     // ##################################################

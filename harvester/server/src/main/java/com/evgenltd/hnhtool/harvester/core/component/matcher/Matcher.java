@@ -42,7 +42,7 @@ public final class Matcher {
 
         @Override
         public IntPoint getPosition() {
-            return getValue().getPosition();
+            return getValue().getX() != null ? getValue().getPosition() : null;
         }
 
         @Override

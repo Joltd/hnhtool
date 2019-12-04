@@ -13,8 +13,13 @@ create table accounts (
 	character_name varchar(255)
 );
 
+create table resource_groups (
+	id numeric(19,0) identity(1,1) primary key
+)
+
 create table resources (
 	id numeric(19,0) identity(1,1) primary key,
+	group_id numeric(19,0) foreign key references resource_groups(id),
 	name varchar(255),
 	unknown tinyint,
 	player tinyint,

@@ -16,7 +16,7 @@ public class Hand {
     private ItemWidget item;
 
     public boolean isEmpty() {
-        return item != null;
+        return item == null;
     }
 
     public Long getKnownItemId() {

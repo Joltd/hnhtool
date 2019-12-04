@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,9 +36,10 @@ public class ResourceService {
 
     public <T> Map<String, Resource> loadResourceIndexByNames(final List<T> visuals, final Function<T,String> resourceGetter) {
 
-        final List<String> resources = visuals.stream()
+        final Set<String> resources = visuals.stream()
                 .map(resourceGetter)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
         final Map<String, Resource> index = resourceRepository.findAllByNameIn(resources)
                 .stream()
