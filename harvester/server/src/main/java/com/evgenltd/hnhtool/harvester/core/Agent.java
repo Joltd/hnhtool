@@ -50,6 +50,8 @@ public interface Agent {
 
     void closeCurrentInventory();
 
+    void scan();
+
 //    void performContextMenuCommand();
 
 }
