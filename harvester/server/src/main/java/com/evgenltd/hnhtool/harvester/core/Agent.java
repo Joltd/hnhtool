@@ -24,7 +24,7 @@ public interface Agent {
 
     void openContainer(KnownObject knownObject);
 
-    void openHeap(Long knownObjectId);
+    void openHeap(KnownObject knownObject);
 
     void takeItemInHandFromWorld(KnownObject knownItem);
 

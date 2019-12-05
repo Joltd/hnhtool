@@ -178,12 +178,37 @@ public class AgentImpl implements Agent {
     }
 
     @Override
-    public void openHeap(final Long knownObjectId) {
+    public void openHeap(final KnownObject knownObject) {
         refreshState();
+        forClose.forEach(this::closeWidget);
+
+        final Prop prop = getPropOrThrow(
+                knownObject.getResource().getName(),
+                knownObject.getPosition().sub(worldPoint.getPosition())
+        );
+
+        currentInventory.setKnownObjectId(knownObject.getId());
+
+        clientApp.sendWidgetCommand(
+                mapView.getId(),
+                CLICK_COMMAND,
+                SCREEN_POSITION,
+                prop.getPosition(),
+                Mouse.RMB.code,
+                KeyModifier.NO.code,
+                UNKNOWN_FLAG,
+                prop.getId(),
+                prop.getPosition(),
+                UNKNOWN_FLAG,
+                SKIP_FLAG
+        );
+
+        await(currentHeap::isOpened);
     }
 
     @Override
     public void takeItemInHandFromWorld(final KnownObject knownItem) {
+        hand.checkEmpty();
         refreshState();
         final Prop prop = getPropOrThrow(
                 knownItem.getResource().getName(),
@@ -225,6 +250,7 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHandFromInventory(final KnownObject knownItem) {
+        hand.checkEmpty();
         refreshState();
         final ItemWidget widget = getItemOrThrow(
                 knownItem.getResource().getName(),
@@ -257,7 +283,14 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHandFromCurrentHeap() {
+        hand.checkEmpty();
         refreshState();
+
+        final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+
+        clientApp.sendWidgetCommand(storeBox.getId(), CLICK_COMMAND);
+
+        await(() -> !hand.isEmpty());
     }
 
     @Override
@@ -278,7 +311,7 @@ public class AgentImpl implements Agent {
     private void dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place, final IntPoint position) {
         refreshState();
         final Integer inventoryId = inventory.getWidgetOrThrow().getId();
-        final ItemWidget targetItem = hand.getItemorThrow();
+        final ItemWidget targetItem = hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
 
         hand.setKnownItemId(null);
@@ -313,12 +346,18 @@ public class AgentImpl implements Agent {
     @Override
     public void dropItemFromHandInCurrentHeap() {
         refreshState();
+        hand.getItemOrThrow();
+        final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+
+        clientApp.sendWidgetCommand(storeBox.getId(), DROP_COMMAND);
+
+        await(hand::isEmpty);
     }
 
     @Override
     public void dropItemFromHandInWorld() {
         refreshState();
-        final ItemWidget itemInHand = hand.getItemorThrow();
+        final ItemWidget itemInHand = hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
 
         hand.setKnownItemId(null);

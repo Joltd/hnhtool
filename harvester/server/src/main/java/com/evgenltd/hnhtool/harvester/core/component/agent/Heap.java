@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.component.agent;
 
 import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
+import com.evgenltd.hnhtools.common.ApplicationException;
 
 /**
  * <p></p>
@@ -32,7 +33,12 @@ public class Heap {
     public StoreBoxWidget getStoreBox() {
         return storeBox;
     }
-
+    public StoreBoxWidget getStoreBoxOrThrow() {
+        if (!isOpened()) {
+            throw new ApplicationException("There is no opened heap");
+        }
+        return storeBox;
+    }
     public void setStoreBox(final StoreBoxWidget storeBox) {
         this.storeBox = storeBox;
     }

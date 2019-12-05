@@ -18,6 +18,12 @@ public class Hand {
     public boolean isEmpty() {
         return item == null;
     }
+    public void checkEmpty() {
+        if (isEmpty()) {
+            return;
+        }
+        throw new ApplicationException("Hand hold another item");
+    }
 
     public Long getKnownItemId() {
         return knownItemId;
@@ -29,7 +35,7 @@ public class Hand {
     public ItemWidget getItem() {
         return item;
     }
-    public ItemWidget getItemorThrow() {
+    public ItemWidget getItemOrThrow() {
         if (isEmpty()) {
             throw new ApplicationException("There is no in hand");
         }
