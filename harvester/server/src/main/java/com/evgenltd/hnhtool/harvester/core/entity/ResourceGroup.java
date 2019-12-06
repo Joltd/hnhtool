@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -19,7 +20,7 @@ public class ResourceGroup {
     private Long id;
 
     @OneToMany(mappedBy = "group")
-    private Set<Resource> resources;
+    private Set<Resource> resources = new HashSet<>();
 
     public Long getId() {
         return id;

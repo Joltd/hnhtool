@@ -5,10 +5,7 @@ import com.evgenltd.hnhtool.harvester.core.repository.ResourceRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,6 +53,19 @@ public class ResourceService {
 
         return index;
 
+    }
+
+    public List<String> loadResourceOfGroup(final String name) {
+        final Resource resource = findByName(name);
+        if (resource.getGroup() == null) {
+            return Collections.singletonList(name);
+        }
+
+        return resource.getGroup()
+                .getResources()
+                .stream()
+                .map(Resource::getName)
+                .collect(Collectors.toList());
     }
 
     private Resource storeUnknownResource(final String name) {

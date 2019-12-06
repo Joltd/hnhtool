@@ -43,7 +43,7 @@ public class AgentImpl implements Agent {
 //    private static final String ITEM_ACT_SHORT_COMMAND = "iact";
 //    private static final String TRANSFER_COMMAND = "transfer";
 //    private static final String TRANSFER_EXT_COMMAND = "xfer";
-//    private static final String PLACE_COMMAND = "place";
+    private static final String PLACE_COMMAND = "place";
     private static final String CLOSE_COMMAND = "close";
 //    private static final String CONTEXT_MENU_COMMAND = "cl";
 
@@ -55,6 +55,7 @@ public class AgentImpl implements Agent {
 
     private MatchingService matchingService;
     private KnownObjectService knownObjectService;
+    private ResourceService resourceService;
 
     private ClientApp clientApp;
 
@@ -72,10 +73,12 @@ public class AgentImpl implements Agent {
 
     public AgentImpl(
             final MatchingService matchingService,
-            final KnownObjectService knownObjectService
+            final KnownObjectService knownObjectService,
+            final ResourceService resourceService
     ) {
         this.matchingService = matchingService;
         this.knownObjectService = knownObjectService;
+        this.resourceService = resourceService;
     }
 
     void setClientApp(final ClientApp clientApp) {
@@ -287,10 +290,19 @@ public class AgentImpl implements Agent {
         refreshState();
 
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+        final Long heapId = currentHeap.getKnownObjectId();
+
+        final KnownObject item = knownObjectService.loadKnownItemFromHeap(heapId);
 
         clientApp.sendWidgetCommand(storeBox.getId(), CLICK_COMMAND);
 
         await(() -> !hand.isEmpty());
+
+        hand.setKnownItemId(item.getId());
+
+        knownObjectService.moveToHand(character.getKnownObjectId(), item.getId(), item.getResource());
+
+        knownObjectService.deleteHeapIfEmpty(heapId);
     }
 
     @Override
@@ -347,11 +359,21 @@ public class AgentImpl implements Agent {
     public void dropItemFromHandInCurrentHeap() {
         refreshState();
         hand.getItemOrThrow();
+        final Long knownItemId = hand.getKnownItemId();
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+        currentHeap.checkEnoughSpace();
 
         clientApp.sendWidgetCommand(storeBox.getId(), DROP_COMMAND);
 
-        await(hand::isEmpty);
+        await(() -> {
+            if (!hand.isEmpty()) {
+                return false;
+            }
+
+            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), storeBox.getFirst()); // getFirst - check it
+
+            return true;
+        });
     }
 
     @Override
@@ -375,8 +397,9 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            final String resource = itemInHand.getResource(); // lookup prop resource
-            final Prop prop = getProp(resource, itemInHand.getPosition());
+            final String resource = itemInHand.getResource();
+            final List<String> resources = resourceService.loadResourceOfGroup(resource);
+            final Prop prop = getProp(resources, itemInHand.getPosition());
             if (prop == null) {
                 return false;
             }
@@ -423,6 +446,44 @@ public class AgentImpl implements Agent {
         clientApp.sendWidgetCommand(widgetId, CLOSE_COMMAND);
 
         await(() -> !widgetIndex.containsKey(widgetId));
+    }
+
+    @Override
+    public void placeHeap(final IntPoint position) {
+        refreshState();
+        final ItemWidget item = hand.getItemOrThrow();
+        final Long knownItemId = hand.getKnownItemId();
+        final KnownObject knownItem = knownObjectService.findById(knownItemId);
+
+        clientApp.sendWidgetCommand(
+                mapView.getId(),
+                PLACE_COMMAND,
+                position,
+                0, // angle
+                Mouse.LMB.code,
+                KeyModifier.NO
+        );
+
+        await(() -> {
+            if (!hand.isEmpty()) {
+                return false;
+            }
+
+            final List<String> resources = resourceService.loadResourceOfGroup(knownItem.getResource().getName());
+            final Prop heapProp = getProp(resources, position);
+            if (heapProp == null) {
+                return false;
+            }
+
+            final Long heapId = knownObjectService.storeHeap(
+                    worldPoint.getSpace(),
+                    heapProp.getPosition().add(worldPoint.getPosition()),
+                    heapProp.getResource()
+            );
+            knownObjectService.moveToHeap(knownItemId, heapId, 1);
+
+            return true;
+        });
     }
 
     // ##################################################
@@ -568,9 +629,13 @@ public class AgentImpl implements Agent {
     }
 
     private Prop getProp(final String resource, final IntPoint position) {
+        return getProp(Collections.singletonList(resource), position);
+    }
+
+    private Prop getProp(final List<String> resources, final IntPoint position) {
         return propIndex.values()
                 .stream()
-                .filter(prop -> Objects.equals(prop.getResource(), resource)
+                .filter(prop -> resources.contains(prop.getResource())
                         && Objects.equals(prop.getPosition(), position))
                 .findFirst()
                 .orElse(null);

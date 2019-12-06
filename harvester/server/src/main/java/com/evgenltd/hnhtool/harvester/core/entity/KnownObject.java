@@ -4,6 +4,8 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p></p>
@@ -27,6 +29,9 @@ public class KnownObject {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private KnownObject parent;
+
+    @OneToMany(mappedBy = "parent")
+    private Set<KnownObject> childes = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private Place place;
@@ -62,6 +67,13 @@ public class KnownObject {
     }
     public void setParent(final KnownObject parent) {
         this.parent = parent;
+    }
+
+    public Set<KnownObject> getChildes() {
+        return childes;
+    }
+    public void setChildes(final Set<KnownObject> childes) {
+        this.childes = childes;
     }
 
     public Place getPlace() {

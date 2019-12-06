@@ -50,6 +50,8 @@ public interface Agent {
 
     void closeCurrentInventory();
 
+    void placeHeap(IntPoint position);
+
     void scan();
 
 //    void performContextMenuCommand();
