@@ -31,15 +31,15 @@ public class Knapsack<B,I> {
             final Function<B, Collection<I>> boxGetItems,
             final Function<B, IntPoint> boxGetSize
     ) {
-        this.boxes = boxes;
-        this.items = items;
+        this.boxes = new ArrayList<>(boxes);
+        this.items = new ArrayList<>(items);
         this.itemGetPosition = itemGetPosition;
         this.itemGetSize = itemGetSize;
         this.boxGetItems = boxGetItems;
         this.boxGetSize = boxGetSize;
     }
 
-    public List<Result<B,I>> place() {
+    public Result<B,I> place() {
 
         final List<BoxWrapper<B>> boxWrappers = this.boxes.stream()
                 .map(this::wrapBox)
@@ -47,28 +47,20 @@ public class Knapsack<B,I> {
 
         items.sort(Comparator.comparing(this::getItemKey).reversed());
 
-        final List<Result<B,I>> results = new ArrayList<>();
+        final Result<B,I> result = new Result<>();
 
         for (final I item : items) {
 
-            final IntPoint itemSize = itemGetSize.apply(item);
-
-            for (final BoxWrapper<B> boxWrapper : boxWrappers) {
-
-                final IntPoint suitablePosition = boxWrapper.findSuitablePosition(itemSize);
-                if (suitablePosition != null) {
-
-                    boxWrapper.fillCells(suitablePosition, itemSize);
-                    results.add(new Result<>(item, boxWrapper.getBox(), suitablePosition));
-                    break;
-
-                }
-
+            final Entry<B, I> entry = tryYoPlaceInBoxes(boxWrappers, item);
+            if (entry != null) {
+                result.getPlaced().add(entry);
+            } else {
+                result.getSkipped().add(item);
             }
 
         }
 
-        return results;
+        return result;
 
     }
 
@@ -93,12 +85,43 @@ public class Knapsack<B,I> {
         return size.getX() * size.getY();
     }
 
+    private Entry<B,I> tryYoPlaceInBoxes(final List<BoxWrapper<B>> boxWrappers, final I item) {
+        final IntPoint itemSize = itemGetSize.apply(item);
+
+        for (final BoxWrapper<B> boxWrapper : boxWrappers) {
+
+            final IntPoint suitablePosition = boxWrapper.findSuitablePosition(itemSize);
+            if (suitablePosition != null) {
+
+                boxWrapper.fillCells(suitablePosition, itemSize);
+                return new Entry<>(item, boxWrapper.getBox(), suitablePosition);
+
+            }
+
+        }
+
+        return null;
+    }
+
     public static final class Result<B,I> {
+        private final List<I> skipped = new ArrayList<>();
+        private final List<Entry<B,I>> placed = new ArrayList<>();
+
+        public List<I> getSkipped() {
+            return skipped;
+        }
+
+        public List<Entry<B,I>> getPlaced() {
+            return placed;
+        }
+    }
+
+    public static final class Entry<B,I> {
         private I item;
         private B box;
         private IntPoint position;
 
-        Result(final I item, final B box, final IntPoint position) {
+        Entry(final I item, final B box, final IntPoint position) {
             this.item = item;
             this.box = box;
             this.position = position;
@@ -131,16 +154,16 @@ public class Knapsack<B,I> {
         }
 
         void fillCells(final IntPoint position, final IntPoint size) {
-            for (int x = position.getX(); x < position.getX() + size.getX(); x++) {
-                for (int y = position.getY(); y < position.getY() + size.getY(); y++) {
-                    cells[x][y] = true;
+            for (int y = position.getY(); y < position.getY() + size.getY(); y++) {
+                for (int x = position.getX(); x < position.getX() + size.getX(); x++) {
+                    cells[y][x] = true;
                 }
             }
         }
 
         IntPoint findSuitablePosition(final IntPoint size) {
-            for (int x = 0; x < cells.length - size.getX() - 1; x++) {
-                for (int y = 0; y < cells[x].length - size.getY() - 1; y++) {
+            for (int y = 0; y < cells.length - (size.getY() - 1); y++) {
+                for (int x = 0; x < cells[y].length - (size.getX() - 1); x++) {
                     if (isFit(x, y, size.getX(), size.getY())) {
                         return new IntPoint(x,y);
                     }
@@ -150,9 +173,9 @@ public class Knapsack<B,I> {
         }
 
         private boolean isFit(final int positionX, final int positionY, final int sizeX, final int sizeY) {
-            for (int x = positionX; x < positionX + sizeX; x++) {
-                for (int y = positionY; y < positionY + sizeY; y++) {
-                    if (cells[x][y]) {
+            for (int y = positionY; y < positionY + sizeY; y++) {
+                for (int x = positionX; x < positionX + sizeX; x++) {
+                    if (cells[y][x]) {
                         return false;
                     }
                 }
