@@ -80,6 +80,8 @@ public class KnownObjectService {
         heapObject.setX(position.getX());
         heapObject.setY(position.getY());
         heapObject.setResource(resource);
+        heapObject.setLost(false);
+        heapObject.setActual(LocalDateTime.now());
         return knownObjectRepository.save(heapObject).getId();
     }
 
@@ -110,7 +112,12 @@ public class KnownObjectService {
 
     }
 
-    private void storeNewKnownItem(
+    public KnownObject storeNewKnownItem(final KnownObject parent, final KnownObject.Place place, final ItemWidget item) {
+        final Resource resource = resourceService.findByName(item.getResource());
+        return storeNewKnownItem(parent, place, resource, item.getPosition());
+    }
+
+    private KnownObject storeNewKnownItem(
             final KnownObject parent,
             final KnownObject.Place place,
             final Resource resource,
@@ -122,7 +129,7 @@ public class KnownObjectService {
         knownItem.setResource(resource);
         knownItem.setX(position.getX());
         knownItem.setY(position.getY());
-        knownObjectRepository.save(knownItem);
+        return knownObjectRepository.save(knownItem);
     }
 
     public void moveToHand(final Long characterId, final Long knownItemId, final String resourceName) {

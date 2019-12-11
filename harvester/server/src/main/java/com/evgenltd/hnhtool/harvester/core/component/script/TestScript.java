@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.component.script;
 
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -25,6 +26,19 @@ public class TestScript extends Script {
     @Override
     public void execute() {
         getAgent().scan();
+
+//        final KnownObject bark = knownObjectRepository.findByResourceName("gfx/invobjs/bark").get();
+//
+//        getAgent().takeItemInHandFromInventory(bark);
+
+//        final IntPoint position = getAgent().getCharacterPosition();
+
+//        getAgent().placeHeap(new IntPoint(-1003866, -960910));
+
+        final KnownObject heap = knownObjectRepository.findById(268L).get();
+        getAgent().openHeap(heap);
+
+        getAgent().takeItemInHandFromCurrentHeap();
 
 //        getAgent().move(new IntPoint(1000, 1000));
 /*

@@ -19,9 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.IntBinaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -114,6 +112,40 @@ public class MatchingService {
 
         matchingResult.getRightNotMatched().forEach(knownObjectRepository::delete);
 
+    }
+
+    @Nullable
+    public Long researchHand(final Long parentId, @Nullable final ItemWidget itemWidget) {
+
+        final List<ItemWidget> itemWidgets = Optional.ofNullable(itemWidget)
+                .map(Collections::singletonList)
+                .orElse(Collections.emptyList());
+        final KnownObject parent = knownObjectService.findById(parentId);
+        final List<KnownObject> knownItems = knownObjectRepository.findByParentIdAndPlace(parentId, KnownObject.Place.HAND);
+
+        final MatchingResult<ItemWidget, KnownObject> matchingResult = Matcher.matchItemWidgetToKnownObject(
+                itemWidgets,
+                knownItems
+        );
+
+        if (!matchingResult.getRightNotMatched().isEmpty()) {
+            knownObjectRepository.delete(matchingResult.getRightNotMatched().get(0));
+        }
+
+        if (itemWidget == null) {
+            return null;
+        }
+
+        if (!matchingResult.getMatches().isEmpty()) {
+            return matchingResult.getMatches().get(0).getRight().getId();
+        }
+
+        final KnownObject knownItem = knownObjectService.storeNewKnownItem(
+                parent,
+                KnownObject.Place.HAND,
+                itemWidget
+        );
+        return knownItem.getId();
     }
 
     private WorldPoint storeNewSpace() {

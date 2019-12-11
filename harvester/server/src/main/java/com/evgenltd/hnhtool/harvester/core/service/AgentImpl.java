@@ -39,7 +39,7 @@ public class AgentImpl implements Agent {
     private static final String CLICK_COMMAND = "click";
     private static final String TAKE_COMMAND = "take";
     private static final String DROP_COMMAND = "drop";
-//    private static final String ITEM_ACT_COMMAND = "itemact";
+    private static final String ITEM_ACT_COMMAND = "itemact";
 //    private static final String ITEM_ACT_SHORT_COMMAND = "iact";
 //    private static final String TRANSFER_COMMAND = "transfer";
 //    private static final String TRANSFER_EXT_COMMAND = "xfer";
@@ -89,11 +89,11 @@ public class AgentImpl implements Agent {
         final Long characterObjectId = knownObjectService.loadCharacterObjectId(character.getCharacterName());
         character.setKnownObjectId(characterObjectId);
 
-        matchingService.researchItems(
+        final Long knownItemIdInHand = matchingService.researchHand(
                 characterObjectId,
-                KnownObject.Place.HAND,
-                Collections.emptyList()
+                hand.getItem()
         );
+        hand.setKnownItemId(knownItemIdInHand);
         matchingService.researchItems(
                 characterObjectId,
                 KnownObject.Place.MAIN_INVENTORY,
@@ -104,11 +104,24 @@ public class AgentImpl implements Agent {
                 KnownObject.Place.STUDY_INVENTORY,
                 character.getStudyInventory().getItems()
         );
+        System.out.println();
     }
 
     // ##################################################
     // #                                                #
-    // #  API                                           #
+    // #  State API                                     #
+    // #                                                #
+    // ##################################################
+
+    @Override
+    public IntPoint getCharacterPosition() {
+        return character.getProp().getPosition();
+    }
+
+
+    // ##################################################
+    // #                                                #
+    // #  Commands API                                  #
     // #                                                #
     // ##################################################
 
@@ -207,6 +220,8 @@ public class AgentImpl implements Agent {
         );
 
         await(currentHeap::isOpened);
+
+        currentHeap.setKnownObjectId(knownObject.getId());
     }
 
     @Override
@@ -286,8 +301,8 @@ public class AgentImpl implements Agent {
 
     @Override
     public void takeItemInHandFromCurrentHeap() {
-        hand.checkEmpty();
         refreshState();
+        hand.checkEmpty();
 
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
         final Long heapId = currentHeap.getKnownObjectId();
@@ -358,10 +373,13 @@ public class AgentImpl implements Agent {
     @Override
     public void dropItemFromHandInCurrentHeap() {
         refreshState();
+        final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
         hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
-        final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+
         currentHeap.checkEnoughSpace();
+
+        final Integer currentHeapSize = storeBox.getFirst();
 
         clientApp.sendWidgetCommand(storeBox.getId(), DROP_COMMAND);
 
@@ -370,7 +388,11 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), storeBox.getFirst()); // getFirst - check it
+            if (storeBox.getFirst() <= currentHeapSize) {
+                return false;
+            }
+
+            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), storeBox.getFirst());
 
             return true;
         });
@@ -451,9 +473,17 @@ public class AgentImpl implements Agent {
     @Override
     public void placeHeap(final IntPoint position) {
         refreshState();
-        final ItemWidget item = hand.getItemOrThrow();
+        hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
         final KnownObject knownItem = knownObjectService.findById(knownItemId);
+
+        clientApp.sendWidgetCommand(
+                mapView.getId(),
+                ITEM_ACT_COMMAND,
+                SCREEN_POSITION,
+                character.getProp().getPosition(), // seems it's ignored by server
+                0
+        );
 
         clientApp.sendWidgetCommand(
                 mapView.getId(),
@@ -461,7 +491,7 @@ public class AgentImpl implements Agent {
                 position,
                 0, // angle
                 Mouse.LMB.code,
-                KeyModifier.NO
+                KeyModifier.NO.code
         );
 
         await(() -> {
@@ -612,8 +642,6 @@ public class AgentImpl implements Agent {
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
         knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), character.getProp().getPosition());
-
-        System.out.println();
     }
 
     // ##################################################
