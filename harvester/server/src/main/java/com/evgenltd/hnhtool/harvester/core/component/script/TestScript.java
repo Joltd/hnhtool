@@ -2,9 +2,13 @@ package com.evgenltd.hnhtool.harvester.core.component.script;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -27,37 +31,31 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().scan();
 
-//        final KnownObject bark = knownObjectRepository.findByResourceName("gfx/invobjs/bark").get();
-//
-//        getAgent().takeItemInHandFromInventory(bark);
+        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(
+//                getAgent().getCharacterId(),
+                342L,
+//                KnownObject.Place.MAIN_INVENTORY
+                null
+        )
+                .stream()
+                .filter(item -> item.getResource().getName().equals("gfx/invobjs/bark"))
+                .collect(Collectors.toList());
 
-//        final IntPoint position = getAgent().getCharacterPosition();
 
-//        getAgent().placeHeap(new IntPoint(-1003866, -960910));
+        /*getAgent().takeItemInHandFromInventory(items.get(0));
+        getAgent().placeHeap(new IntPoint(-1003866, -960910));*/
 
-        final KnownObject heap = knownObjectRepository.findById(268L).get();
+        final KnownObject heap = knownObjectRepository.findById(342L).get();
         getAgent().openHeap(heap);
 
-        getAgent().takeItemInHandFromCurrentHeap();
-
-//        getAgent().move(new IntPoint(1000, 1000));
-/*
-        final KnownObject container = knownObjectRepository.findById(95L).get();
-        getAgent().openContainer(container);
-
-        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(
-                1L,
-                KnownObject.Place.MAIN_INVENTORY
-        );
+//        getAgent().takeItemInHandFromInventory(items.get(0));
+//        getAgent().dropItemFromHandInCurrentHeap();
 
         for (int i = 0; i < items.size(); i++) {
-            final KnownObject item = items.get(i);
-            final int y = i / 3;
-            final int x = i % 3;
-            getAgent().takeItemInHandFromInventory(item);
-            getAgent().dropItemFromHandInCurrentInventory(new IntPoint(x, y));
+            getAgent().takeItemInHandFromCurrentHeap();
+            getAgent().dropItemFromHandInMainInventory(new IntPoint(i, 2));
         }
-*/
+
     }
 
 }

@@ -12,6 +12,8 @@ import java.util.function.Supplier;
  */
 public interface Agent {
 
+    Long getCharacterId();
+
     IntPoint getCharacterPosition();
 
     // ##################################################

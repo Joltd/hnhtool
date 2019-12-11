@@ -114,10 +114,14 @@ public class AgentImpl implements Agent {
     // ##################################################
 
     @Override
+    public Long getCharacterId() {
+        return character.getKnownObjectId();
+    }
+
+    @Override
     public IntPoint getCharacterPosition() {
         return character.getProp().getPosition();
     }
-
 
     // ##################################################
     // #                                                #
@@ -388,11 +392,11 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            if (storeBox.getFirst() <= currentHeapSize) {
+            if (currentHeap.getStoreBox().getFirst() <= currentHeapSize) {
                 return false;
             }
 
-            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), storeBox.getFirst());
+            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), currentHeap.getStoreBox().getFirst());
 
             return true;
         });
