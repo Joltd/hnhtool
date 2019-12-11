@@ -1,8 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.component.script;
 
-import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
-import com.evgenltd.hnhtools.entity.IntPoint;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -29,15 +27,23 @@ public class TestScript extends Script {
         getAgent().scan();
 
 //        getAgent().move(new IntPoint(1000, 1000));
-
+/*
         final KnownObject container = knownObjectRepository.findById(95L).get();
         getAgent().openContainer(container);
 
-        final KnownObject leaf = knownObjectRepository.findById(493L).get();
-        getAgent().takeItemInHandFromInventory(leaf);
-        getAgent().dropItemFromHandInMainInventory(new IntPoint());
+        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(
+                1L,
+                KnownObject.Place.MAIN_INVENTORY
+        );
 
-//        getAgent().move(new IntPoint(10,10));
+        for (int i = 0; i < items.size(); i++) {
+            final KnownObject item = items.get(i);
+            final int y = i / 3;
+            final int x = i % 3;
+            getAgent().takeItemInHandFromInventory(item);
+            getAgent().dropItemFromHandInCurrentInventory(new IntPoint(x, y));
+        }
+*/
     }
 
 }

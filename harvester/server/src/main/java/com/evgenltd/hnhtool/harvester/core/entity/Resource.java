@@ -21,6 +21,10 @@ public class Resource {
     @JoinColumn(name = "group_id")
     private ResourceGroup group;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "content_id")
+    private ResourceContent content;
+
     private String name;
 
     private Boolean unknown = false;
@@ -45,6 +49,13 @@ public class Resource {
     }
     public void setGroup(final ResourceGroup group) {
         this.group = group;
+    }
+
+    public ResourceContent getContent() {
+        return content;
+    }
+    public void setContent(final ResourceContent content) {
+        this.content = content;
     }
 
     public String getName() {

@@ -1,7 +1,10 @@
 package com.evgenltd.hnhtools.clientapp.widgets;
 
 import com.evgenltd.hnhtools.entity.IntPoint;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p></p>
@@ -16,6 +19,5 @@ public interface ItemWidget extends Widget {
 
     IntPoint getPosition();
 
-    ArrayNode getLabel();
-
+    Map<String, List<JsonNode>> getInfoResources();
 }

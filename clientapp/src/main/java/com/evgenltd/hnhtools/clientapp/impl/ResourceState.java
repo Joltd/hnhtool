@@ -17,6 +17,7 @@ final class ResourceState {
 
     private static final String ID = "resourceId";
     private static final String NAME = "resourceName";
+    private static final String VERSION = "resourceVersion";
 
     private final Map<Long, String> index = new HashMap<>();
 
@@ -26,6 +27,7 @@ final class ResourceState {
             return;
         }
         index.put(id, JsonUtil.asText(data, NAME));
+//        JsonUtil.asInt(data, VERSION);
     }
 
     @Nullable

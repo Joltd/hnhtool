@@ -612,6 +612,8 @@ public class AgentImpl implements Agent {
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
         knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), character.getProp().getPosition());
+
+        System.out.println();
     }
 
     // ##################################################
