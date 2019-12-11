@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  * <p>Author:  lebed</p>
  * <p>Created: 20-11-2019 23:32</p>
  */
-public class WidgetFactory {
+public final class WidgetFactory {
 
     public static WidgetImpl build(final WidgetState.RelAccessor rel) {
         final Integer id = rel.getWidgetId();

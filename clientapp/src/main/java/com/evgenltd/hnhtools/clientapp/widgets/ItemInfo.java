@@ -1,7 +1,5 @@
 package com.evgenltd.hnhtools.clientapp.widgets;
 
-import com.evgenltd.hnhtools.entity.IntPoint;
-
 import java.util.List;
 
 /**
@@ -9,13 +7,12 @@ import java.util.List;
  * <br/>
  * <p>Project: hnhtool-root</p>
  * <p>Author:  lebed</p>
- * <p>Created: 20-11-2019 23:17</p>
+ * <p>Created: 11-12-2019 21:00</p>
  */
-public interface ItemWidget extends Widget {
+public interface ItemInfo {
 
     String getResource();
 
-    IntPoint getPosition();
-
     List<? extends ItemInfo> getItemInfoList();
+
 }

@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
+import com.evgenltd.hnhtools.clientapp.impl.widgets.ItemInfoImpl;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.ItemWidgetImpl;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetFactory;
 import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetImpl;
@@ -83,12 +84,26 @@ public final class WidgetState {
 
     private void fillResource(final WidgetImpl widget) {
         if (widget instanceof ItemWidgetImpl) {
+
             final ItemWidgetImpl item = (ItemWidgetImpl) widget;
+
             final Long resourceId = item.getResourceId();
-            if (resourceId == null) {
-                return;
+            if (resourceId != null) {
+                item.setResource(resourceState.getResource(resourceId));
             }
-            item.setResource(resourceState.getResource(resourceId));
+
+            fillResource(item.getItemInfoList());
+
+        }
+    }
+
+    private void fillResource(final List<ItemInfoImpl> itemInfoList) {
+        for (final ItemInfoImpl itemInfo : itemInfoList) {
+            final Long resourceId = itemInfo.getResourceId();
+            if (resourceId != null) {
+                itemInfo.setResource(resourceState.getResource(resourceId));
+            }
+            fillResource(itemInfo.getItemInfoList());
         }
     }
 

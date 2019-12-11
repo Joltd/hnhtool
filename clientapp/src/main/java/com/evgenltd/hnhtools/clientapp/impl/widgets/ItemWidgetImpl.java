@@ -7,9 +7,9 @@ import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -28,7 +28,7 @@ public final class ItemWidgetImpl extends WidgetImpl implements ItemWidget {
     private IntPoint position;
     private Long resourceId;
     private String resource;
-    private Map<String, List<JsonNode>> infoResources = new HashMap<>();
+    private List<ItemInfoImpl> itemInfoList = new ArrayList<>();
 
     private ItemWidgetImpl(final ItemWidgetImpl itemWidget) {
         super(itemWidget);
@@ -71,25 +71,58 @@ public final class ItemWidgetImpl extends WidgetImpl implements ItemWidget {
     }
 
     @Override
-    public Map<String, List<JsonNode>> getInfoResources() {
-        return infoResources;
+    public List<ItemInfoImpl> getItemInfoList() {
+        return itemInfoList;
     }
 
     @Override
     public void handleMessage(final WidgetState.RelAccessor message) {
         if (Objects.equals(message.getWidgetMessageName(), LABEL_NAME)) {
-            infoResources.clear();
-
-            for (final JsonNode infoNode : message.getArgs()) {
-                if (!infoNode.isArray()) {
-                    continue;
-                }
-
-                final List<JsonNode> args = StreamSupport.stream(infoNode.spliterator(), false)
-                        .skip(1)
-                        .collect(Collectors.toList());
-                infoResources.put(JsonUtil.asText(infoNode.get(0)), args);
-            }
+            this.itemInfoList = readItemInfoList(message.getArgs());
         }
     }
+
+    private List<ItemInfoImpl> readItemInfoList(final JsonNode infoNodes) {
+        if (!infoNodes.isArray()) {
+            return Collections.emptyList();
+        }
+
+        final List<ItemInfoImpl> result = new ArrayList<>();
+        for (final JsonNode infoNode : infoNodes) {
+            if (!infoNode.isArray()) {
+                continue;
+            }
+
+            if (infoNode.size() <= 1) {
+                continue;
+            }
+
+            result.add(readItemInfo(infoNode));
+        }
+        return result;
+    }
+
+    private ItemInfoImpl readItemInfo(final JsonNode args) {
+
+        final ItemInfoImpl itemInfo = new ItemInfoImpl();
+        itemInfo.setResourceId(JsonUtil.asLong(args.get(0)));
+
+        if (args.get(1).isArray()) {
+
+            final List<ItemInfoImpl> itemInfoList = readItemInfoList(args.get(1));
+            itemInfo.setItemInfoList(itemInfoList);
+
+        } else {
+
+            final List<JsonNode> itemArgs = StreamSupport.stream(args.spliterator(), false)
+                    .skip(1)
+                    .collect(Collectors.toList());
+            itemInfo.setArgs(itemArgs);
+
+        }
+
+        return itemInfo;
+
+    }
+
 }
