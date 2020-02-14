@@ -62,23 +62,21 @@ public class KnownObjectService {
         final KnownObject heap = findById(heapId);
         return heap.getChildes()
                 .stream()
-                .max(Comparator.comparing(KnownObject::getX))
+                .max(Comparator.comparingInt(knownObject -> knownObject.getPosition().getX()))
                 .orElseThrow(() -> new ApplicationException("There is no items in Heap [%s]", heapId));
     }
 
     public void storeCharacter(final Long knownObjectId, final Space space, final IntPoint characterPosition) {
         final KnownObject characterObject = findById(knownObjectId);
         characterObject.setSpace(space);
-        characterObject.setX(characterPosition.getX());
-        characterObject.setY(characterPosition.getY());
+        characterObject.setPosition(characterPosition);
     }
 
     public Long storeHeap(final Space space, final IntPoint position, final String resourceName) {
         final Resource resource = resourceService.findByName(resourceName);
         final KnownObject heapObject = new KnownObject();
         heapObject.setSpace(space);
-        heapObject.setX(position.getX());
-        heapObject.setY(position.getY());
+        heapObject.setPosition(position);
         heapObject.setResource(resource);
         heapObject.setLost(false);
         heapObject.setActual(LocalDateTime.now());
@@ -89,8 +87,7 @@ public class KnownObjectService {
         final KnownObject knownObject = new KnownObject();
         knownObject.setSpace(space);
         knownObject.setResource(resource);
-        knownObject.setX(position.getX());
-        knownObject.setY(position.getY());
+        knownObject.setPosition(position);
         knownObject.setLost(false);
         knownObject.setActual(LocalDateTime.now());
         knownObjectRepository.save(knownObject);
@@ -127,9 +124,8 @@ public class KnownObjectService {
         knownItem.setParent(parent);
         knownItem.setPlace(place);
         knownItem.setResource(resource);
-        knownItem.setX(position.getX());
-        knownItem.setY(position.getY());
-        return knownObjectRepository.save(knownItem);
+        knownItem.setPosition(position);
+        knownObjectRepository.save(knownItem);
     }
 
     public void moveToHand(final Long characterId, final Long knownItemId, final String resourceName) {
@@ -141,8 +137,7 @@ public class KnownObjectService {
         final KnownObject character = findById(characterId);
         final KnownObject knownItem = findById(knownItemId);
         knownItem.setPlace(KnownObject.Place.HAND);
-        knownItem.setX(null);
-        knownItem.setY(null);
+        knownItem.setPosition(null);
         knownItem.setParent(character);
         knownItem.setResource(resource);
     }
@@ -151,8 +146,7 @@ public class KnownObjectService {
         final KnownObject knownItem = findById(knownItemId);
         final KnownObject parent = findById(parentId);
         knownItem.setPlace(place);
-        knownItem.setX(itemWidget.getPosition().getX());
-        knownItem.setY(itemWidget.getPosition().getY());
+        knownItem.setPosition(itemWidget.getPosition());
         knownItem.setParent(parent);
 //        knownItem.setResource(resource);
     }
@@ -161,8 +155,7 @@ public class KnownObjectService {
         final Resource resource = resourceService.findByName(prop.getResource());
         final KnownObject knownItem = findById(knownItemId);
         knownItem.setPlace(null);
-        knownItem.setX(prop.getPosition().getX());
-        knownItem.setY(prop.getPosition().getY());
+        knownItem.setPosition(prop.getPosition());
         knownItem.setParent(null);
         knownItem.setResource(resource);
     }
@@ -171,8 +164,7 @@ public class KnownObjectService {
         final KnownObject knownItem = findById(knownItemId);
         final KnownObject heap = findById(heapId);
         knownItem.setPlace(null);
-        knownItem.setX(position);
-        knownItem.setY(null);
+        knownItem.setPosition(new IntPoint(position, 0));
         knownItem.setParent(heap);
     }
 

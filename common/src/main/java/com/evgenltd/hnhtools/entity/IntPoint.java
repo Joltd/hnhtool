@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.entity;
 
+import com.evgenltd.hnhtools.common.Assert;
+
 import java.util.Objects;
 
 /**
@@ -53,6 +55,30 @@ public final class IntPoint {
 
     public DoublePoint devide(final DoublePoint modifier) {
         return new DoublePoint(getX() / modifier.getX(), getY() / modifier.getY());
+    }
+
+    public String asString() {
+        return String.format("%s;%s", getX(), getY());
+    }
+
+    public static IntPoint valueOf(final String string) {
+        if (Assert.isEmpty(string)) {
+            return new IntPoint();
+        }
+
+        final String[] parts = string.split(";");
+        if (parts.length != 2) {
+            return new IntPoint();
+        }
+
+        try {
+            return new IntPoint(
+                    Integer.parseInt(parts[0]),
+                    Integer.parseInt(parts[1])
+            );
+        } catch (NumberFormatException e) {
+            return new IntPoint();
+        }
     }
 
     @Override

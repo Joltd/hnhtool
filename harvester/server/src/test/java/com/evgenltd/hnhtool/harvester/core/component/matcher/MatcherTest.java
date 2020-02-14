@@ -54,8 +54,7 @@ public class MatcherTest {
         final Resource resource = new Resource();
         resource.setName(resourceName);
         final KnownObject knownObject = new KnownObject();
-        knownObject.setX(x);
-        knownObject.setY(y);
+        knownObject.setPosition(new IntPoint(x, y));
         knownObject.setActual(actual);
         knownObject.setLost(lost);
         knownObject.setResource(resource);

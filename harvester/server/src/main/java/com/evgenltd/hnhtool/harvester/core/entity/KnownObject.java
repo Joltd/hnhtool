@@ -1,6 +1,8 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
 import com.evgenltd.hnhtools.entity.IntPoint;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -44,9 +46,9 @@ public class KnownObject {
 
     private Boolean lost = false;
 
-    private Integer x;
-
-    private Integer y;
+    @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
+    @Columns(columns = {@Column(name = "x"), @Column(name = "y")})
+    private IntPoint position;
 
     public Long getId() {
         return id;
@@ -104,22 +106,11 @@ public class KnownObject {
         this.lost = lost;
     }
 
-    public Integer getX() {
-        return x;
-    }
-    public void setX(final Integer x) {
-        this.x = x;
-    }
-
-    public Integer getY() {
-        return y;
-    }
-    public void setY(final Integer y) {
-        this.y = y;
-    }
-
     public IntPoint getPosition() {
-        return new IntPoint(x, y);
+        return position;
+    }
+    public void setPosition(final IntPoint position) {
+        this.position = position;
     }
 
     @Override
