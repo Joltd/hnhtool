@@ -126,6 +126,7 @@ public class KnownObjectService {
         knownItem.setResource(resource);
         knownItem.setPosition(position);
         knownObjectRepository.save(knownItem);
+        return knownItem;
     }
 
     public void moveToHand(final Long characterId, final Long knownItemId, final String resourceName) {
