@@ -60,7 +60,7 @@ public class KnownObjectService {
 
     public KnownObject loadKnownItemFromHeap(final Long heapId) {
         final KnownObject heap = findById(heapId);
-        return heap.getChildes()
+        return heap.getChildren()
                 .stream()
                 .max(Comparator.comparingInt(knownObject -> knownObject.getPosition().getX()))
                 .orElseThrow(() -> new ApplicationException("There is no items in Heap [%s]", heapId));
@@ -171,7 +171,7 @@ public class KnownObjectService {
 
     public void deleteHeapIfEmpty(final Long heapId) {
         final KnownObject heap = findById(heapId);
-        if (heap.getChildes().isEmpty()) {
+        if (heap.getChildren().isEmpty()) {
             knownObjectRepository.delete(heap);
         }
     }

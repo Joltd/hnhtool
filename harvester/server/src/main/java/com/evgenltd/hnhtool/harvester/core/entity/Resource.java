@@ -1,5 +1,9 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
+import com.evgenltd.hnhtools.entity.IntPoint;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 
 /**
@@ -33,9 +37,15 @@ public class Resource {
 
     private boolean prop = false;
 
-    private boolean container = false;
+    private boolean box = false;
+
+    private boolean heap = false;
 
     private boolean item = false;
+
+    @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
+    @Columns(columns = {@Column(name = "x"), @Column(name = "y")})
+    private IntPoint size = new IntPoint(0,0);
 
     public Long getId() {
         return id;
@@ -86,11 +96,18 @@ public class Resource {
         this.prop = prop;
     }
 
-    public boolean isContainer() {
-        return container;
+    public boolean isBox() {
+        return box;
     }
-    public void setContainer(final boolean container) {
-        this.container = container;
+    public void setBox(final boolean container) {
+        this.box = container;
+    }
+
+    public boolean isHeap() {
+        return heap;
+    }
+    public void setHeap(final boolean heap) {
+        this.heap = heap;
     }
 
     public boolean isItem() {
@@ -98,5 +115,12 @@ public class Resource {
     }
     public void setItem(final boolean item) {
         this.item = item;
+    }
+
+    public IntPoint getSize() {
+        return size;
+    }
+    public void setSize(final IntPoint size) {
+        this.size = size;
     }
 }

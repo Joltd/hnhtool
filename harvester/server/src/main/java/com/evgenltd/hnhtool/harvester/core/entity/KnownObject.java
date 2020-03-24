@@ -33,7 +33,7 @@ public class KnownObject {
     private KnownObject parent;
 
     @OneToMany(mappedBy = "parent")
-    private Set<KnownObject> childes = new HashSet<>();
+    private Set<KnownObject> children = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private Place place;
@@ -71,11 +71,11 @@ public class KnownObject {
         this.parent = parent;
     }
 
-    public Set<KnownObject> getChildes() {
-        return childes;
+    public Set<KnownObject> getChildren() {
+        return children;
     }
-    public void setChildes(final Set<KnownObject> childes) {
-        this.childes = childes;
+    public void setChildren(final Set<KnownObject> childes) {
+        this.children = childes;
     }
 
     public Place getPlace() {

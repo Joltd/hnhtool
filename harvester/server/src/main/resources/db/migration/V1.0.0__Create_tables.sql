@@ -30,8 +30,11 @@ create table resources (
 	unknown tinyint,
 	player tinyint,
 	prop tinyint,
-	container tinyint,
-	item tinyint
+	box tinyint,
+	heap tinyint,
+	item tinyint,
+	x int,
+	y int
 );
 
 create table spaces (
@@ -52,4 +55,16 @@ create table known_objects (
 	y int
 );
 
-alter table known_objects add foreign key (parent_id) references known_objects(id)
+alter table known_objects add foreign key (parent_id) references known_objects(id);
+
+create table warehouses (
+	id numeric(19,0) identity(1,1) primary key
+);
+
+create table warehouse_points (
+	warehouse_id numeric(19,0),
+	x int,
+	y int
+);
+
+alter table warehouse_points add foreign key (warehouse_id) references warehouses(id);

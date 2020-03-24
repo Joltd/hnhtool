@@ -51,7 +51,7 @@ public class Knapsack<B,I> {
 
         for (final I item : items) {
 
-            final Entry<B, I> entry = tryYoPlaceInBoxes(boxWrappers, item);
+            final Entry<B, I> entry = tryToPlaceInBoxes(boxWrappers, item);
             if (entry != null) {
                 result.getPlaced().add(entry);
             } else {
@@ -85,7 +85,7 @@ public class Knapsack<B,I> {
         return size.getX() * size.getY();
     }
 
-    private Entry<B,I> tryYoPlaceInBoxes(final List<BoxWrapper<B>> boxWrappers, final I item) {
+    private Entry<B,I> tryToPlaceInBoxes(final List<BoxWrapper<B>> boxWrappers, final I item) {
         final IntPoint itemSize = itemGetSize.apply(item);
 
         for (final BoxWrapper<B> boxWrapper : boxWrappers) {

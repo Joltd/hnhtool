@@ -29,7 +29,6 @@ public final class Matcher {
         return new MatcherImpl().match(itemWidgets, knownObjects, ItemWidgetWrapper::new, KnownObjectWrapper::new);
     }
 
-
     private static class KnownObjectWrapper extends MatcherImpl.Wrapper<KnownObject> {
         KnownObjectWrapper(final KnownObject value) {
             super(value);
