@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.service.KnownObjectService;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.function.Supplier;
@@ -11,6 +12,20 @@ import java.util.function.Supplier;
  * Created: 25-11-2019 18:41
  */
 public interface Agent {
+
+    // ##################################################
+    // #                                                #
+    // #  Services                                      #
+    // #                                                #
+    // ##################################################
+
+    KnownObjectService getKnownObjectService();
+
+    // ##################################################
+    // #                                                #
+    // #  Character                                     #
+    // #                                                #
+    // ##################################################
 
     Long getCharacterId();
 
@@ -54,7 +69,7 @@ public interface Agent {
 
     void closeCurrentInventory();
 
-    void placeHeap(IntPoint position);
+    Long placeHeap(IntPoint position);
 
     void scan();
 

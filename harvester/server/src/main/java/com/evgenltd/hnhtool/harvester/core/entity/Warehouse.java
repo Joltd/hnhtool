@@ -1,9 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
-import com.evgenltd.hnhtools.entity.IntPoint;
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Type;
-
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,11 +19,8 @@ public class Warehouse {
     @Id
     private Long id;
 
-    @ElementCollection
-    @CollectionTable(name = "warehouse_points", joinColumns = @JoinColumn(name = "warehouse_id"))
-    @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
-    @Columns(columns = {@Column(name = "x"), @Column(name = "y")})
-    private Set<IntPoint> points = new HashSet<>();
+    @OneToMany(mappedBy = "warehouse")
+    private Set<WarehouseCell> cells = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -36,11 +29,11 @@ public class Warehouse {
         this.id = id;
     }
 
-    public Set<IntPoint> getPoints() {
-        return points;
+    public Set<WarehouseCell> getCells() {
+        return cells;
     }
-    public void setPoints(final Set<IntPoint> points) {
-        this.points = points;
+    public void setCells(final Set<WarehouseCell> cells) {
+        this.cells = cells;
     }
 
 }

@@ -1,12 +1,11 @@
 package com.evgenltd.hnhtool.harvester.core.component.storekeeper;
 
-import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.entity.Resource;
-import com.evgenltd.hnhtool.harvester.core.entity.ResourceGroup;
-import com.evgenltd.hnhtool.harvester.core.entity.Warehouse;
+import com.evgenltd.hnhtool.harvester.core.component.Holder;
+import com.evgenltd.hnhtool.harvester.core.entity.*;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p></p>
@@ -15,15 +14,23 @@ import java.util.*;
  * <p>Author:  lebed</p>
  * <p>Created: 23-03-2020 22:40</p>
  */
-final class Storekeeper {
+public final class Warehousing {
 
     private final Set<IntPoint> freePoints = new HashSet<>();
     private final List<Heap> heaps = new ArrayList<>();
     private final List<Box> boxes = new ArrayList<>();
 
-    public Result keep(final Warehouse warehouse, final List<KnownObject> containers, final List<KnownObject> items) {
+    public Result solve(final List<KnownObject> containers, final List<KnownObject> items) {
+        prepareContainerModel(containers);
+        return solveImpl(items);
+    }
 
-        prepareContainerModel(warehouse, containers);
+    public Result solve(final Warehouse warehouse, final List<KnownObject> items) {
+        prepareContainerModel(warehouse);
+        return solveImpl(items);
+    }
+
+    private Result solveImpl(final List<KnownObject> items) {
 
         final Result result = new Result();
 
@@ -54,11 +61,22 @@ final class Storekeeper {
         return result;
     }
 
-    private void prepareContainerModel(
-            final Warehouse warehouse,
-            final List<KnownObject> containers
-    ) {
-        freePoints.addAll(warehouse.getPoints());
+    private void prepareContainerModel(final Warehouse warehouse) {
+        warehouse.getCells()
+                .stream()
+                .filter(cell -> cell.getContainer() == null)
+                .forEach(cell -> freePoints.add(cell.getPosition()));
+
+        final List<KnownObject> containers = warehouse.getCells()
+                .stream()
+                .filter(cell -> cell.getContainer() != null)
+                .map(WarehouseCell::getContainer)
+                .collect(Collectors.toList());
+
+        prepareContainerModel(containers);
+    }
+
+    private void prepareContainerModel(final List<KnownObject> containers) {
 
         for (final KnownObject container : containers) {
 
@@ -102,7 +120,7 @@ final class Storekeeper {
             // select nearest heap
 
             heap.incrementCount();
-            return new HeapEntry(item, heap.getKnownObject());
+            return new HeapEntry(item, heap.getKnownObjectHolder());
 
         }
 
@@ -135,7 +153,7 @@ final class Storekeeper {
         final Heap heap = new Heap(newHeap, 1);
         heaps.add(heap);
 
-        return new HeapEntry(item, newHeap);
+        return new HeapEntry(item, heap.getKnownObjectHolder());
     }
 
     private BoxEntry findBox(final KnownObject item) {
@@ -156,23 +174,29 @@ final class Storekeeper {
         }
     }
 
-    public record HeapEntry(KnownObject item, KnownObject heap) {}
+    public record HeapEntry(KnownObject item, Holder<KnownObject>heap) {}
 
     public record BoxEntry(KnownObject item, KnownObject container, IntPoint position) {}
 
     private static final class Heap {
         private final KnownObject knownObject;
+        private final Holder<KnownObject> knownObjectHolder;
         private int count;
         private final int max;
 
         Heap(final KnownObject knownObject, final int count) {
             this.knownObject = knownObject;
+            this.knownObjectHolder = Holder.of(knownObject);
             this.count = count;
             this.max = knownObject.getResource().getSize().getX();
         }
 
         KnownObject getKnownObject() {
             return knownObject;
+        }
+
+        public Holder<KnownObject> getKnownObjectHolder() {
+            return knownObjectHolder;
         }
 
         int getCount() {

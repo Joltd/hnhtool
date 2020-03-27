@@ -61,7 +61,7 @@ public class MatchingService {
                 props,
                 Prop::getResource
         );
-        resources.values().forEach(resource -> resource.setProp(true));
+        resources.values().forEach(resource -> resource.setVisual(Resource.Visual.PROP));
         final List<Prop> filteredProps = props.stream()
                 .filter(prop -> {
                     final Resource resource = resources.get(prop.getResource());

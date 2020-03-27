@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -105,6 +106,11 @@ public class AgentImpl implements Agent {
                 character.getStudyInventory().getItems()
         );
         System.out.println();
+    }
+
+    @Override
+    public KnownObjectService getKnownObjectService() {
+        return knownObjectService;
     }
 
     // ##################################################
@@ -475,7 +481,7 @@ public class AgentImpl implements Agent {
     }
 
     @Override
-    public void placeHeap(final IntPoint position) {
+    public Long placeHeap(final IntPoint position) {
         refreshState();
         hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
@@ -498,6 +504,8 @@ public class AgentImpl implements Agent {
                 KeyModifier.NO.code
         );
 
+        final AtomicLong holder = new AtomicLong();
+
         await(() -> {
             if (!hand.isEmpty()) {
                 return false;
@@ -516,8 +524,12 @@ public class AgentImpl implements Agent {
             );
             knownObjectService.moveToHeap(knownItemId, heapId, 1);
 
+            holder.set(heapId);
+
             return true;
         });
+
+        return holder.get();
     }
 
     // ##################################################

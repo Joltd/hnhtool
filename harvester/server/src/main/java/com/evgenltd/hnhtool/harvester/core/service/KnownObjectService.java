@@ -8,6 +8,7 @@ import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -38,6 +39,7 @@ public class KnownObjectService {
         this.knownObjectRepository = knownObjectRepository;
     }
 
+    @NotNull
     public KnownObject findById(final Long id) {
         return knownObjectRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException("There is no KnownObject for id [%s]", id));
@@ -120,6 +122,7 @@ public class KnownObjectService {
             final Resource resource,
             final IntPoint position
     ) {
+        resource.setVisual(Resource.Visual.WIDGET);
         final KnownObject knownItem = new KnownObject();
         knownItem.setParent(parent);
         knownItem.setPlace(place);

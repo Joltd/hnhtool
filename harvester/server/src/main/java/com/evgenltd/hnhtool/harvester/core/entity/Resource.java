@@ -31,7 +31,9 @@ public class Resource {
 
     private String name;
 
-    private Boolean unknown = false;
+    private Visual visual;
+
+    private boolean unknown = false;
 
     private boolean player = false;
 
@@ -75,10 +77,17 @@ public class Resource {
         this.name = name;
     }
 
-    public Boolean getUnknown() {
+    public Visual getVisual() {
+        return visual;
+    }
+    public void setVisual(final Visual visual) {
+        this.visual = visual;
+    }
+
+    public boolean getUnknown() {
         return unknown;
     }
-    public void setUnknown(final Boolean unknown) {
+    public void setUnknown(final boolean unknown) {
         this.unknown = unknown;
     }
 
@@ -122,5 +131,10 @@ public class Resource {
     }
     public void setSize(final IntPoint size) {
         this.size = size;
+    }
+
+    public enum Visual {
+        PROP,
+        WIDGET
     }
 }
