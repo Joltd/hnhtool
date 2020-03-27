@@ -31,6 +31,7 @@ public class Resource {
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
     private Visual visual;
 
     private boolean unknown = false;

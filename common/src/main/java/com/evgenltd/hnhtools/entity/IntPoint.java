@@ -13,8 +13,8 @@ import java.util.Objects;
  */
 public final class IntPoint {
 
-    private int x;
-    private int y;
+    private final int x;
+    private final int y;
 
     public IntPoint() {
         this(0,0);

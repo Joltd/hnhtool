@@ -47,10 +47,11 @@ public class BaseBehaviorTest {
 
     @Test
     public void addAccount() {
-        accountService.registerAccount("Grafbredbery", "15051953", "botixo");
+        accountService.registerAccount("Grafbredbery", "15051953", "Hild");
+        accountService.registerAccount("temedrou", "nRJWfd2v", "Vilko");
 
         Resource resource = new Resource();
-        resource.setName("botixo");
+        resource.setName("Vilko");
         resource.setPlayer(true);
         resourceRepository.save(resource);
 

@@ -3,7 +3,9 @@ package com.evgenltd.hnhtool.harvester.core.component.type;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.Type;
+import org.hibernate.usertype.CompositeUserType;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -17,11 +19,30 @@ import java.util.Objects;
  * Author:  Lebedev
  * Created: 14-02-2020 18:18
  */
-public class IntPointType implements UserType {
+public class IntPointType implements CompositeUserType {
+    @Override
+    public String[] getPropertyNames() {
+        return new String[] {"x", "y"};
+    }
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] {Types.INTEGER, Types.INTEGER};
+    public Type[] getPropertyTypes() {
+        return new Type[] {IntegerType.INSTANCE, IntegerType.INSTANCE};
+    }
+
+    @Override
+    public Object getPropertyValue(final Object component, final int property) throws HibernateException {
+        final IntPoint point = (IntPoint) component;
+        return switch (property) {
+            case 0 -> point.getX();
+            case 1 -> point.getY();
+            default -> throw new HibernateException("Unknown property " + property);
+        };
+    }
+
+    @Override
+    public void setPropertyValue(final Object component, final int property, final Object value) throws HibernateException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -30,13 +51,13 @@ public class IntPointType implements UserType {
     }
 
     @Override
-    public boolean equals(final Object left, final Object right) throws HibernateException {
-        return Objects.equals(left, right);
+    public boolean equals(final Object first, final Object second) throws HibernateException {
+        return Objects.equals(first, second);
     }
 
     @Override
-    public int hashCode(final Object o) throws HibernateException {
-        return Objects.hashCode(o);
+    public int hashCode(final Object component) throws HibernateException {
+        return Objects.hashCode(component);
     }
 
     @Override
@@ -78,6 +99,9 @@ public class IntPointType implements UserType {
 
     @Override
     public Object deepCopy(final Object object) throws HibernateException {
+        if (object == null) {
+            return null;
+        }
         final IntPoint point = (IntPoint) object;
         return new IntPoint(point.getY(), point.getY());
     }
@@ -88,19 +112,28 @@ public class IntPointType implements UserType {
     }
 
     @Override
-    public Serializable disassemble(final Object object) throws HibernateException {
+    public Serializable disassemble(final Object object, final SharedSessionContractImplementor session) throws HibernateException {
         final IntPoint point = (IntPoint) object;
         return point.asString();
     }
 
     @Override
-    public Object assemble(final Serializable serializable, final Object owner) throws HibernateException {
+    public Object assemble(
+            final Serializable serializable,
+            final SharedSessionContractImplementor session,
+            final Object owner
+    ) throws HibernateException {
         final String cached = (String) serializable;
         return IntPoint.valueOf(cached);
     }
 
     @Override
-    public Object replace(final Object left, final Object right, final Object owner) throws HibernateException {
+    public Object replace(
+            final Object left,
+            final Object right,
+            final SharedSessionContractImplementor session,
+            final Object owner
+    ) throws HibernateException {
         return left;
     }
 }

@@ -58,12 +58,12 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>7.2.1.jre8</version>
+            <version>8.2.2.jre13</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>5.2.4</version>
+            <version>6.3.2</version>
         </dependency>
 
         <!-- web -->
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>27.1-jre</version>
+            <version>28.2-jre</version>
         </dependency>
         <dependency>
             <groupId>es.usc.citius.hipster</groupId>
@@ -96,7 +96,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.10</version>
+            <version>4.5.12</version>
         </dependency>
 
         <!-- testing -->

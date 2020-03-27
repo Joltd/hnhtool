@@ -27,6 +27,7 @@ create table resources (
 	group_id numeric(19,0) foreign key references resource_groups(id),
 	content_id numeric(19,0) foreign key references resource_contents(id),
 	name varchar(255),
+	visual varchar(255),
 	unknown tinyint,
 	player tinyint,
 	prop tinyint,
