@@ -1,3 +1,10 @@
 .idea/
 *.iml
-target
+target/
+
+dist/
+tmp/
+out-tsc/
+
+harvester/web/node_modules
+npm-debug.log

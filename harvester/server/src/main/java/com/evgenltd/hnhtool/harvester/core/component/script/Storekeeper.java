@@ -5,9 +5,12 @@ import com.evgenltd.hnhtool.harvester.core.component.Holder;
 import com.evgenltd.hnhtool.harvester.core.component.storekeeper.Warehousing;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Warehouse;
+import com.evgenltd.hnhtool.harvester.core.entity.WarehouseCell;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p></p>
@@ -36,6 +39,16 @@ public class Storekeeper {
             if (heap.get().getId() == null) {
                 final Long heapId = agent.placeHeap(heap.get().getPosition());
                 final KnownObject newHeap = agent.getKnownObjectService().findById(heapId);
+                final WarehouseCell cell = warehouse.getCells()
+                        .stream()
+                        .filter(c -> Objects.equals(c.getPosition(), newHeap.getPosition()))
+                        .findFirst()
+                        .orElseThrow(() -> new ApplicationException(
+                                "Warehouse [%s] does not have cell with  position [%s]",
+                                warehouse.getId(),
+                                newHeap.getPosition()
+                        ));
+                cell.setContainer(newHeap);
                 heap.set(newHeap);
             }
 

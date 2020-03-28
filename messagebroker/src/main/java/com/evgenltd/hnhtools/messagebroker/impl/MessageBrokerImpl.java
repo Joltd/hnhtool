@@ -33,7 +33,7 @@ public final class MessageBrokerImpl implements MessageBroker {
 
     private static final Logger log = LogManager.getLogger(MessageBroker.class);
 
-    private static final int PROTOCOL_VERSION = 22;
+    private static final int PROTOCOL_VERSION = 23;
     private static final String BROKER_NAME = "Hafen";
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;
@@ -395,11 +395,11 @@ public final class MessageBrokerImpl implements MessageBroker {
     }
 
     private boolean relProcessor() {
-        return outboundRelHolder.getNextAwaiting()
-                .stream()
-                .map(RelRequest::toWriter)
-                .peek(this::send)
-                .count() > 0;
+        final List<RelRequest> nextAwaiting = outboundRelHolder.getNextAwaiting();
+        for (final RelRequest relRequest : nextAwaiting) {
+            send(relRequest.toWriter());
+        }
+        return !nextAwaiting.isEmpty();
     }
 
     private boolean objectDataAcknowledgeProcessor() {

@@ -13,6 +13,17 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>14</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.evgenltd.hnhtool</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>

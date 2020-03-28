@@ -105,7 +105,6 @@ public class AgentImpl implements Agent {
                 KnownObject.Place.STUDY_INVENTORY,
                 character.getStudyInventory().getItems()
         );
-        System.out.println();
     }
 
     @Override

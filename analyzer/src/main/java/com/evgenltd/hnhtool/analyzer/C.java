@@ -24,7 +24,7 @@ import java.rmi.registry.Registry;
  */
 public class C implements Lifecycle {
 
-    private static C instance = new C();
+    private static final C instance = new C();
 
     private ObjectMapper mapper;
     private Registry registry;

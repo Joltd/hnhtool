@@ -27,11 +27,11 @@ public final class ClientAppImpl implements ClientApp {
 
     private static final String PLAY_COMMAND = "play";
 
-    private WidgetState widgetState;
-    private PropState propState;
-    private MessageBroker messageBroker;
-    private Lock lock = new ReentrantLock();
-    private Condition waitForReceive = lock.newCondition();
+    private final WidgetState widgetState;
+    private final PropState propState;
+    private final MessageBroker messageBroker;
+    private final Lock lock = new ReentrantLock();
+    private final Condition waitForReceive = lock.newCondition();
 
     public ClientAppImpl(
             @NotNull final ObjectMapper objectMapper,
