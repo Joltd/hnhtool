@@ -3,14 +3,22 @@ import {NgModule} from '@angular/core';
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
+import {WorldViewerComponent} from './world-viewer/world-viewer.component';
+import {HttpClientModule} from '@angular/common/http';
+import {BladesNavigationModule} from "./blades-navigation/blades-navigation.module";
+import {StubComponent} from "./stub/stub.component";
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    WorldViewerComponent,
+    StubComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    HttpClientModule,
+    AppRoutingModule,
+    BladesNavigationModule
   ],
   providers: [],
   bootstrap: [AppComponent]

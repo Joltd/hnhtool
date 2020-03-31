@@ -1,0 +1,8 @@
+:host {
+  height: 100%;
+  display: grid;
+  grid-template-columns: max-content;
+  grid-template-rows: max-content;
+  padding: 8px;
+  border-right: #000000 solid 1px;
+}

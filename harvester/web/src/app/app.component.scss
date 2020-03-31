@@ -1,0 +1,48 @@
+$nav_color: #212121;
+
+.material-icons {
+  color: #FFFFFF;
+  font-size: 32px;
+  margin: 4px 8px;
+}
+
+:host {
+  height: 100%;
+  display: grid;
+  grid-template-columns: min-content auto;
+  grid-template-rows: 40px auto;
+}
+
+nav {
+  background-color: $nav_color;
+  grid-column: span 2;
+  .material-icons {
+    cursor: pointer;
+  }
+}
+
+aside {
+  .nav-item {
+    :hover {
+      background-color: lighten($nav_color, 10);
+    }
+
+    .nav-link {
+      color: #FFFFFF;
+      padding: 0 32px 0 0;
+      display: grid;
+      grid-template-columns: min-content 1fr;
+      align-items: center;
+      justify-items: left;
+    }
+  }
+  background-color: $nav_color;
+  display: grid;
+  grid-template-columns: min-content;
+  grid-auto-rows: min-content;
+
+  .collapsed {
+    font-size: 0;
+    padding: 0!important;
+  }
+}

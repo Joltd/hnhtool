@@ -38,10 +38,10 @@ public class MatchingService {
 
     private static final Logger log = LogManager.getLogger(MatchingService.class);
 
-    private SpaceRepository spaceRepository;
-    private KnownObjectRepository knownObjectRepository;
-    private KnownObjectService knownObjectService;
-    private ResourceService resourceService;
+    private final SpaceRepository spaceRepository;
+    private final KnownObjectRepository knownObjectRepository;
+    private final KnownObjectService knownObjectService;
+    private final ResourceService resourceService;
 
     public MatchingService(
             final SpaceRepository spaceRepository,
@@ -168,7 +168,7 @@ public class MatchingService {
 
     private List<KnownObject> loadKnownObjects(final Area area, final Space space) {
         return knownObjectRepository.findObjectsInArea(
-                space,
+                space.getId(),
                 area.getUpperLeftX(),
                 area.getUpperLeftY(),
                 area.getLowerRightX(),

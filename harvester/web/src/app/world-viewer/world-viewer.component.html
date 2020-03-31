@@ -1,0 +1,23 @@
+<svg
+    #world
+    [attr.viewBox]="offset.x + ' ' + offset.y + ' ' + size.x + ' ' + size.y"
+    (mousedown)="startDrag($event)"
+    (mouseup)="endDrag($event)"
+    (mousemove)="drag($event)"
+    (mouseleave)="endDrag($event)"
+>
+    <circle
+            r="5"
+            [attr.cx]="worldToSvg(knownObject.position).x"
+            [attr.cy]="worldToSvg(knownObject.position).y"
+            *ngFor="let knownObject of knownObjects"
+    />
+</svg>
+<div class="btn-group space-toolbar" role="group">
+    <button
+            *ngFor="let space of spaces"
+            (click)="selectSpace(space)"
+            type="button"
+            class="btn btn-primary"
+    >{{space.name}}</button>
+</div>

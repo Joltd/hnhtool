@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build"
+    "build": "ng build",
+    "test": "ng test"
   },
   "private": true,
   "dependencies": {
@@ -26,8 +27,8 @@
     "@angular/compiler-cli": "~9.1.0",
     "@angular/language-service": "~9.1.0",
     "@types/node": "^12.11.1",
-    "codelyzer": "^5.1.2",
     "ts-node": "~8.3.0",
+    "tslint": "~6.1.0",
     "typescript": "~3.8.3"
   }
 }

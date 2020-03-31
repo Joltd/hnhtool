@@ -1,0 +1,12 @@
+:host {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.hidden {
+  display: none;
+}
+
+.large {
+  grid-column: span 2;
+}
