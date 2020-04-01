@@ -1,0 +1,6 @@
+:host {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 8px;
+  grid-auto-columns: min-content;
+}

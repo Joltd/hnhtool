@@ -4,9 +4,12 @@ import {NgModule} from '@angular/core';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {WorldViewerComponent} from './world-viewer/world-viewer.component';
-import {HttpClientModule} from '@angular/common/http';
-import {BladesNavigationModule} from "./blades-navigation/blades-navigation.module";
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {BladesNavigationModule} from "./core/blades-navigation/blades-navigation.module";
 import {StubComponent} from "./stub/stub.component";
+import {ResourceManagementModule} from "./resource-management/resource-management.module";
+import {CoreCommonModule} from "./core/common/core-common.module";
+import {ErrorInterceptor} from "./core/common/error-hub/service/error-interceptor";
 
 @NgModule({
   declarations: [
@@ -18,9 +21,17 @@ import {StubComponent} from "./stub/stub.component";
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
-    BladesNavigationModule
+    BladesNavigationModule,
+    CoreCommonModule,
+    ResourceManagementModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ErrorInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}

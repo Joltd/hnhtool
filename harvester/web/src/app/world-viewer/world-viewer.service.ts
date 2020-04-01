@@ -6,7 +6,7 @@ import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Point} from "./model/point";
 import {KnownObject} from "./model/known-object";
-import {ErrorHubService} from "../core/service/error-hub.service";
+import {ErrorHubService} from "../core/common/error-hub/service/error-hub.service";
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class WorldViewerService {
   constructor(private http: HttpClient, private errorHubService: ErrorHubService) {}
 
   public loadSpaces(): Observable<Space[]> {
-    return this.http.get<Space[]>(environment.apiUrl + '/space').pipe(this.errorHubService.catchError());
+    return this.http.get<Space[]>(environment.apiUrl + '/space');
   }
 
   public loadKnownObjects(spaceId: number, from: Point, to: Point): Observable<KnownObject[]> {
@@ -28,7 +28,6 @@ export class WorldViewerService {
         .set("toY", to.y.toString());
     return this.http.get<any[]>(environment.apiUrl + '/knownObject', {params})
         .pipe(
-            this.errorHubService.catchError(),
             map((result: any[]) => result.map(entry => new KnownObject(entry)))
         );
   }

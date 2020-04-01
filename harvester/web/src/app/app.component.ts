@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
-import {BladesService} from "./blades-navigation/service/blades.service";
+import {BladesService} from "./core/blades-navigation/service/blades.service";
 import {StubComponent} from "./stub/stub.component";
+import {ResourceManagementComponent} from "./resource-management/component/resource-management/resource-management.component";
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,10 @@ export class AppComponent {
 
   toggleCollapsed() {
     this.collapsed = !this.collapsed;
+  }
+
+  openResourceManagement() {
+    this.bladesService.openBlade(ResourceManagementComponent, true);
   }
 
   openStub(message: string) {

@@ -1,0 +1,18 @@
+:host {
+}
+
+.filter {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 8px;
+  align-items: center;
+}
+
+.list-group {
+  padding: 8px 0;
+
+  .list-group-item {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px;
+  }
+}

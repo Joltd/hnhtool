@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * <p>Created: 28-03-2020 19:58</p>
  */
 @RestController
-@RequestMapping("/knownObject")
+@RequestMapping("/known-object")
 public class KnownObjectController {
 
     private final KnownObjectRepository knownObjectRepository;

@@ -1,5 +1,5 @@
 import {Component, Input} from '@angular/core';
-import {BladesService} from "../blades-navigation/service/blades.service";
+import {BladesService} from "../core/blades-navigation/service/blades.service";
 
 @Component({
     selector: 'stub',

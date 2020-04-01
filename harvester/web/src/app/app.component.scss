@@ -10,7 +10,7 @@ $nav_color: #212121;
   height: 100%;
   display: grid;
   grid-template-columns: min-content auto;
-  grid-template-rows: 40px auto;
+  grid-template-rows: 40px calc(100vh - 40px);
 }
 
 nav {
