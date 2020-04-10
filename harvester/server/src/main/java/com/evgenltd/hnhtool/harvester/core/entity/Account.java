@@ -23,6 +23,8 @@ public class Account {
 
     private String characterName;
 
+    private boolean enabled = true;
+
     public Long getId() {
         return id;
     }
@@ -51,4 +53,10 @@ public class Account {
         this.characterName = characterName;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+    }
 }

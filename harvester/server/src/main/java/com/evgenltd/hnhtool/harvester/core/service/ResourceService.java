@@ -1,12 +1,10 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
+import com.evgenltd.hnhtool.harvester.core.entity.ResourceGroup;
+import com.evgenltd.hnhtool.harvester.core.repository.ResourceGroupRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.ResourceRepository;
-import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -24,16 +22,15 @@ import java.util.stream.Collectors;
 @Transactional
 public class ResourceService {
 
-    @Value("${hafen.resource.host}")
-    private String hafenResourceHost;
+    private final ResourceRepository resourceRepository;
+    private final ResourceGroupRepository resourceGroupRepository;
 
-    private ResourceRepository resourceRepository;
-    private RestTemplate restTemplate;
-
-    public ResourceService(final ResourceRepository resourceRepository) {
+    public ResourceService(
+            final ResourceRepository resourceRepository,
+            final ResourceGroupRepository resourceGroupRepository
+    ) {
         this.resourceRepository = resourceRepository;
-//        final HttpComponentsClientHttpRequestFactory requestFactory = new ResourceLoader().buildRequestFactory();
-//        this.restTemplate = new RestTemplate(requestFactory);
+        this.resourceGroupRepository = resourceGroupRepository;
     }
 
     public Resource findByName(final String name) {
@@ -78,6 +75,19 @@ public class ResourceService {
                 .collect(Collectors.toList());
     }
 
+    public void updateGroup(final Long resourceId, final Long groupId) {
+        final Resource resource = resourceRepository.loadById(resourceId);
+        if (groupId == null) {
+            resource.setGroup(null);
+        } else if (groupId == -1) {
+            final ResourceGroup group = resourceGroupRepository.save(new ResourceGroup());
+            resource.setGroup(group);
+        } else {
+            final ResourceGroup resourceGroup = resourceGroupRepository.loadById(groupId);
+            resource.setGroup(resourceGroup);
+        }
+    }
+
     private Resource storeUnknownResource(final String name) {
         final Resource resource = new Resource();
         resource.setName(name);
@@ -91,22 +101,22 @@ public class ResourceService {
         return resourceRepository.save(resource);
     }
 
-    @Nullable
-    private byte[] loadResourceContent(final String name) {
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
-        final HttpEntity<String> entity = new HttpEntity<>(headers);
-        final ResponseEntity<byte[]> response = restTemplate.exchange(
-                hafenResourceHost + name + ".res",
-                HttpMethod.GET,
-                entity,
-                byte[].class
-        );
-        if (Objects.equals(response.getStatusCode(), HttpStatus.OK)) {
-            return response.getBody();
-        }
-
-        return null;
-    }
+//    @Nullable
+//    private byte[] loadResourceContent(final String name) {
+//        final HttpHeaders headers = new HttpHeaders();
+//        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
+//        final HttpEntity<String> entity = new HttpEntity<>(headers);
+//        final ResponseEntity<byte[]> response = restTemplate.exchange(
+//                hafenResourceHost + name + ".res",
+//                HttpMethod.GET,
+//                entity,
+//                byte[].class
+//        );
+//        if (Objects.equals(response.getStatusCode(), HttpStatus.OK)) {
+//            return response.getBody();
+//        }
+//
+//        return null;
+//    }
 
 }

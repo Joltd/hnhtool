@@ -1,0 +1,15 @@
+<div class="header">
+    <h1>Agent</h1>
+    <button class="btn btn-primary" (click)="save()"><i class="material-icons">done</i></button>
+    <button class="btn btn-primary" (click)="close()"><i class="material-icons">close</i></button>
+</div>
+<input type="text" class="form-control" placeholder="Username" [(ngModel)]="agent.username">
+<input type="text" class="form-control" placeholder="Password" />
+<div>
+    {{agent.character}}
+    <button class="btn btn-primary" (click)="selectCharacter()"><i class="material-icons">more_horiz</i></button>
+</div>
+<div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" id="ae-enabled">
+    <label class="custom-control-label" for="ae-enabled"></label>
+</div>

@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.repository;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,6 +18,10 @@ import java.util.Optional;
  */
 @Repository
 public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> {
+
+    default KnownObject loadById(Long id) {
+        return findById(id).orElseThrow(() -> new ApplicationException("There is no entry [%s]", id));
+    }
 
     Optional<KnownObject> findByResourceName(final String resourceName);
 

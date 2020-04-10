@@ -1,24 +1,26 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {ResourceManagementComponent} from "./component/resource-management/resource-management.component";
+import {ResourceBrowserComponent} from "./component/resource-browser/resource-browser.component";
 import {FormsModule} from "@angular/forms";
 import {CoreCommonModule} from "../core/common/core-common.module";
 import {ResourceService} from "./service/resource.service";
+import {ResourceEditorComponent} from "./component/resource-editor/resource-editor.component";
+import {RouterModule} from "@angular/router";
+import {ResourceGroupBrowserComponent} from "./component/resource-group-browser/resource-group-browser.component";
 
 @NgModule({
     declarations: [
-        ResourceManagementComponent
+        ResourceBrowserComponent,
+        ResourceEditorComponent,
+        ResourceGroupBrowserComponent
     ],
     imports: [
         CommonModule,
         FormsModule,
-        CoreCommonModule
+        CoreCommonModule,
+        RouterModule
     ],
-    exports: [
-        ResourceManagementComponent
-    ],
-    providers: [
-        ResourceService
-    ]
+    exports: [ResourceBrowserComponent],
+    providers: [ResourceService]
 })
 export class ResourceManagementModule {}

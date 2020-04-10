@@ -1,0 +1,11 @@
+:host {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 1em;
+  grid-auto-columns: min-content min-content 1fr min(70px);
+  align-items: center;
+}
+
+.form-control {
+  text-align: right;
+}

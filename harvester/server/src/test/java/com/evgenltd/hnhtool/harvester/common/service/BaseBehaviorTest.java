@@ -3,16 +3,21 @@ package com.evgenltd.hnhtool.harvester.common.service;
 import com.evgenltd.hnhtool.harvester.Application;
 import com.evgenltd.hnhtool.harvester.core.AgentService;
 import com.evgenltd.hnhtool.harvester.core.component.script.TestScript;
+import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.ResourceRepository;
 import com.evgenltd.hnhtool.harvester.core.service.AccountService;
+import com.evgenltd.hnhtools.clientapp.ClientApp;
+import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -45,6 +50,14 @@ public class BaseBehaviorTest {
     @Autowired
     private KnownObjectRepository knownObjectRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Value("${hafen.server}")
+    private String server;
+    @Value("${hafen.port}")
+    private Integer port;
+
     @Test
     public void addAccount() {
         accountService.registerAccount("Grafbredbery", "15051953", "Hild");
@@ -64,6 +77,22 @@ public class BaseBehaviorTest {
     public void commonTest() {
         final TestScript script = testScriptFactory.getObject();
         agentService.scheduleScriptExecution(script);
+    }
+
+    @Test
+    public void charList() {
+        final Account account = accountService.randomAccount();
+        final byte[] cookie = accountService.loginByAccount(account.getUsername(), account.getToken());
+        final ClientApp clientApp = ClientAppFactory.buildClientApp(
+                objectMapper,
+                server,
+                port,
+                account.getUsername(),
+                cookie
+        );
+
+        clientApp.login();
+        System.out.println();
     }
 
 }

@@ -58,6 +58,16 @@ public final class Authentication implements AutoCloseable {
 		}
 	}
 
+	public static byte[] hashStringToBytes(final String hash) {
+		final byte[] result = new byte[hash.length() / 2];
+		for (int index = 0; index < result.length; index++) {
+			final int from = index * 2;
+			final String singleByte = hash.substring(from, from + 2);
+			result[index] = (byte) Integer.parseInt(singleByte, 16);
+		}
+		return result;
+	}
+
 	private Authentication() {
 
 		try {
@@ -111,7 +121,7 @@ public final class Authentication implements AutoCloseable {
 
 	}
 
-	public AuthenticationResult login(final String username, final byte[] passwordHash) {
+	public Result login(final String username, final byte[] passwordHash) {
 		Objects.requireNonNull(username, "[Username] should not be empty");
 
 		doLogin(COMMAND_LOGIN, username, passwordHash);
@@ -120,10 +130,10 @@ public final class Authentication implements AutoCloseable {
 
 		close();
 
-		return new AuthenticationResult(cookie, token);
+		return new Result(cookie, token);
 	}
 
-    public AuthenticationResult loginByToken(final String username, final byte[] token) {
+    public Result loginByToken(final String username, final byte[] token) {
 	    Objects.requireNonNull(username, "[Username] should not be empty");
 
 	    doLogin(COMMAND_LOGIN_BY_TOKEN, username, token);
@@ -131,7 +141,7 @@ public final class Authentication implements AutoCloseable {
 
         close();
 
-	    return new AuthenticationResult(cookie, null);
+	    return new Result(cookie, null);
     }
 
 	@Override
@@ -233,4 +243,5 @@ public final class Authentication implements AutoCloseable {
 		return "cert-" + certificateAliasIncrement++;
 	}
 
+	public record Result(byte[] cookie, byte[] token) {}
 }

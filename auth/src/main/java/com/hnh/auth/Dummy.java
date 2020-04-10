@@ -29,18 +29,18 @@ public class Dummy {
                 .setHost("game.havenandhearth.com")
                 .init();
 
-        final AuthenticationResult result = authentication.login(
+        final Authentication.Result result = authentication.login(
                 username,
                 Authentication.passwordHash(password)
         );
 
         final FileOutputStream cookieStream = new FileOutputStream(new File("D:\\cookie.dat"));
-        cookieStream.write(result.getCookie());
+        cookieStream.write(result.cookie());
         final FileOutputStream tokenStream = new FileOutputStream(new File("D:\\token.dat"));
-        tokenStream.write(result.getToken());
+        tokenStream.write(result.token());
 
-        System.out.println("Cookie = " + Arrays.toString(result.getCookie()));
-        System.out.println("Token = " + Arrays.toString(result.getToken()));
+        System.out.println("Cookie = " + Arrays.toString(result.cookie()));
+        System.out.println("Token = " + Arrays.toString(result.token()));
     }
 
     private static void loginByToken(final String username) {
@@ -62,15 +62,15 @@ public class Dummy {
                     .setHost("game.havenandhearth.com")
                     .init();
 
-            final AuthenticationResult result = authentication.loginByToken(
+            final Authentication.Result result = authentication.loginByToken(
                     username,
                     token
             );
 
             final FileOutputStream cookieStream = new FileOutputStream(new File("D:\\cookie.dat"));
-            cookieStream.write(result.getCookie());
+            cookieStream.write(result.cookie());
 
-            System.out.println("Cookie = " + Arrays.toString(result.getCookie()));
+            System.out.println("Cookie = " + Arrays.toString(result.cookie()));
 
         } catch (final Exception e) {
             throw new RuntimeException(e);

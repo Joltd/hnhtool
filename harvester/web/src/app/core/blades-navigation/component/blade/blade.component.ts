@@ -18,7 +18,7 @@ import {Blade} from "../../model/blade";
 export class BladeComponent implements OnInit,OnDestroy {
 
     @Input()
-    blade: Blade;
+    blade: Blade<any>;
 
     @ViewChild('container', {read: ViewContainerRef, static: true})
     container: ViewContainerRef;
@@ -28,9 +28,12 @@ export class BladeComponent implements OnInit,OnDestroy {
     constructor(private componentFactoryResolver: ComponentFactoryResolver) {}
 
     ngOnInit(): void {
+        debugger
         let componentFactory = this.componentFactoryResolver.resolveComponentFactory(this.blade.component);
         this.componentRef = this.container.createComponent(componentFactory);
         this.componentRef.instance.bladeId = this.blade.id;
+        this.blade.componentCreation.emit(this.componentRef.instance);
+        console.log('Blade init done');
     }
 
     ngOnDestroy(): void {

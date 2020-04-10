@@ -9,13 +9,13 @@ $nav_color: #212121;
 :host {
   height: 100%;
   display: grid;
-  grid-template-columns: min-content auto;
+  grid-template-columns: min-content 0 auto;
   grid-template-rows: 40px calc(100vh - 40px);
 }
 
 nav {
   background-color: $nav_color;
-  grid-column: span 2;
+  grid-column: span 3;
   .material-icons {
     cursor: pointer;
   }

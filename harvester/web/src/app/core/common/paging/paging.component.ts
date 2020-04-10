@@ -1,17 +1,23 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 
 @Component({
-    selector: 'page-counter',
-    templateUrl: 'page-counter.component.html',
-    styleUrls: ['page-counter.component.scss']
+    selector: 'paging',
+    templateUrl: 'paging.component.html',
+    styleUrls: ['paging.component.scss']
 })
-export class PageCounterComponent {
+export class PagingComponent {
 
     @Input()
     page: number = 0;
 
     @Output()
     pageChange: EventEmitter<any> = new EventEmitter<any>();
+
+    @Input()
+    size: number = 10;
+
+    @Output()
+    sizeChange: EventEmitter<any> = new EventEmitter<any>();
 
     constructor() {}
 
@@ -29,4 +35,7 @@ export class PageCounterComponent {
         this.pageChange.emit(this.page);
     }
 
+    onSizeChange() {
+        this.sizeChange.emit(this.size);
+    }
 }

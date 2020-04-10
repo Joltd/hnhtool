@@ -1,0 +1,15 @@
+:host {
+  display: grid;
+  grid-gap: 8px;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr min-content min-content;
+  grid-template-rows: min-content;
+  grid-gap: 8px;
+  align-items: center;
+  .btn {
+    height: 50px;
+  }
+}

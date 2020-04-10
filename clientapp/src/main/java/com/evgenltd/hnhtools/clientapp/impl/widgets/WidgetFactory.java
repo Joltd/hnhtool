@@ -19,31 +19,20 @@ public final class WidgetFactory {
         final ArrayNode childArgs = rel.getChildArgs();
         final ArrayNode parentArgs = rel.getParentArgs();
 
-        switch (type) {
-            case "inv":
-                return new InventoryWidgetImpl(id, type, parentId, childArgs);
-            case "item":
-                return new ItemWidgetImpl(id, type, parentId, childArgs, parentArgs);
-            case "isbox":
-                return new StoreBoxWidgetImpl(id, type, parentId, childArgs);
-
-            case "gameui":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "mapview":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "epry":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "chr":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "speedget":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "scm":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            case "sm":
-                return new WidgetImpl(id, type, parentId, childArgs);
-            default:
-                return new WidgetImpl(id, type, parentId, childArgs);
-        }
+        return switch (type) {
+            case "inv" -> new InventoryWidgetImpl(id, type, parentId, childArgs);
+            case "item" -> new ItemWidgetImpl(id, type, parentId, childArgs, parentArgs);
+            case "isbox" -> new StoreBoxWidgetImpl(id, type, parentId, childArgs);
+            case "charlist" -> new CharListWidgetImpl(id, type, parentId, childArgs);
+//            case "gameui" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "mapview" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "epry" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "chr" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "speedget" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "scm" -> new WidgetImpl(id, type, parentId, childArgs);
+//            case "sm" -> new WidgetImpl(id, type, parentId, childArgs);
+            default -> new WidgetImpl(id, type, parentId, childArgs);
+        };
     }
 
 }

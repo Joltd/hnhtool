@@ -26,7 +26,7 @@ public final class WidgetState {
 
     private final Map<Integer, WidgetImpl> index = new HashMap<>();
 
-    private ResourceState resourceState;
+    private final ResourceState resourceState;
 
     WidgetState(final ResourceState resourceState) {
         this.resourceState = resourceState;
@@ -116,7 +116,7 @@ public final class WidgetState {
         private static final String CHILD_ARGS = "cArgs";
         private static final String PARENT_ARGS = "pArgs";
         private static final String ARGS = "args";
-        private JsonNode data;
+        private final JsonNode data;
 
         RelAccessor(final JsonNode data) {
             this.data = data;

@@ -21,6 +21,7 @@ final class InventoryWidgetImpl extends WidgetImpl implements InventoryWidget {
 
     private InventoryWidgetImpl(final InventoryWidgetImpl inventoryWidget) {
         super(inventoryWidget);
+        this.size = inventoryWidget.size;
     }
 
     InventoryWidgetImpl(final Integer id, final String type, final Integer parentId, final ArrayNode args) {

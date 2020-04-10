@@ -11,10 +11,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
  */
 public class WidgetImpl implements Widget {
 
-    private Integer id;
-    private String type;
-    private Integer parentId;
-    private ArrayNode args;
+    private final Integer id;
+    private final String type;
+    private final Integer parentId;
+    private final ArrayNode args;
 
     WidgetImpl(final WidgetImpl widget) {
         this.id = widget.id;

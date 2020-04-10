@@ -30,6 +30,7 @@
                     <configuration>
                         <target>14</target>
                         <source>14</source>
+                        <compilerArgs>--enable-preview</compilerArgs>
                     </configuration>
                 </plugin>
             </plugins>

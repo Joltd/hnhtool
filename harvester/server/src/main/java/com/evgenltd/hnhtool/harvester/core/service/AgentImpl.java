@@ -554,21 +554,11 @@ public class AgentImpl implements Agent {
 
         for (final Widget widget : widgets) {
             switch (widget.getType()) {
-                case "gameui":
-                    prepareGameUi(widget);
-                    break;
-                case "mapview":
-                    mapView = widget;
-                    break;
-                case "inv":
-                    prepareInventory((InventoryWidget) widget);
-                    break;
-                case "item":
-                    prepareItem((ItemWidget) widget);
-                    break;
-                case "isbox":
-                    prepareHeap((StoreBoxWidget) widget);
-                    break;
+                case "gameui" -> prepareGameUi(widget);
+                case "mapview" -> mapView = widget;
+                case "inv" -> prepareInventory((InventoryWidget) widget);
+                case "item" -> prepareItem((ItemWidget) widget);
+                case "isbox" -> prepareHeap((StoreBoxWidget) widget);
             }
         }
     }

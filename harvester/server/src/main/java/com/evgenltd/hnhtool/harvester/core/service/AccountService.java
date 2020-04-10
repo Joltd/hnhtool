@@ -3,8 +3,8 @@ package com.evgenltd.hnhtool.harvester.core.service;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.common.Assert;
 import com.hnh.auth.Authentication;
-import com.hnh.auth.AuthenticationResult;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,10 +26,42 @@ public class AccountService {
     @Value("${hafen.port}")
     private Integer port;
 
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
     public AccountService(final AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
+    }
+
+    @NotNull
+    public Account findById(final Long id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new ApplicationException("There is no Account for id [%s]", id));
+    }
+
+    public void authenticateAccount(final Account account, final String passwordHash) {
+        if (account.getId() == null) {
+            final boolean accountAlreadyExists = accountRepository.findAccountByUsername(account.getUsername()).isPresent();
+            if (accountAlreadyExists) {
+                throw new ApplicationException("Account [%s] already exists", account.getUsername());
+            }
+
+            if (Assert.isEmpty(passwordHash)) {
+                throw new ApplicationException("Password should be specified");
+            }
+        }
+
+        if (Assert.isNotEmpty(passwordHash)) {
+            final byte[] token = acquireToken(account.getUsername(), passwordHash);
+            account.setToken(token);
+        }
+    }
+
+    private byte[] acquireToken(final String username, final String passwordHash) {
+        try (final Authentication init = buildAuthentication()) {
+            final byte[] passwordHashAsBytes = Authentication.hashStringToBytes(passwordHash);
+            final Authentication.Result result = init.login(username, passwordHashAsBytes);
+            return result.token();
+        }
     }
 
     public void registerAccount(@NotNull final String username, @NotNull final String password, @NotNull final String characterName) {
@@ -42,11 +74,11 @@ public class AccountService {
         }
 
         try (final Authentication init = buildAuthentication()) {
-            final AuthenticationResult result = init.login(
+            final Authentication.Result result = init.login(
                     username,
                     Authentication.passwordHash(password)
             );
-            final byte[] token = result.getToken();
+            final byte[] token = result.token();
 
             final Account account = new Account();
             account.setUsername(username);
@@ -68,11 +100,11 @@ public class AccountService {
         Objects.requireNonNull(token, "[Token] should not be empty");
 
         try (final Authentication init = buildAuthentication()) {
-            final AuthenticationResult result = init.loginByToken(
+            final Authentication.Result result = init.loginByToken(
                     username,
                     token
             );
-            return result.getCookie();
+            return result.cookie();
         }
     }
 

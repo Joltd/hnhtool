@@ -1,11 +1,15 @@
 import {NgModule} from '@angular/core';
 import {ErrorHubService} from "./error-hub/service/error-hub.service";
-import {PageCounterComponent} from "./page-counter/page-counter.component";
+import {PagingComponent} from "./paging/paging.component";
 import {ErrorInterceptor} from "./error-hub/service/error-interceptor";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
-    declarations: [PageCounterComponent],
-    exports: [PageCounterComponent],
+    declarations: [PagingComponent],
+    exports: [PagingComponent],
+    imports: [
+        FormsModule
+    ],
     providers: [ErrorHubService, ErrorInterceptor]
 })
 export class CoreCommonModule {}

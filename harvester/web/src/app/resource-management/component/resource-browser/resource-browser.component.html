@@ -1,0 +1,38 @@
+<input type="text" class="form-control name" placeholder="Name" [(ngModel)]="name" (ngModelChange)="load()">
+<div class="form-check unknown">
+    <input id="rb-unknown" type="checkbox" class="form-check-input" [(ngModel)]="unknown" (ngModelChange)="load()">
+    <label class="form-check-label" for="rb-unknown">Unknown</label>
+</div>
+
+<table class="header">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th class="visual-column">Visual</th>
+            <th class="unknown-column">Unknown</th>
+            <th class="action-column"></th>
+        </tr>
+    </thead>
+</table>
+
+<div class="browser">
+    <table class="table table-hover table-sm border">
+        <tbody>
+            <tr *ngFor="let resource of resources">
+                <td>{{resource.name}}</td>
+                <td class="visual-column">{{resource.visual}}</td>
+                <td class="unknown-column">{{resource.unknown}}</td>
+                <td class="action-column">
+                    <a (click)="doEditResource(resource)"><i class="material-icons">edit</i></a>
+                    <a (click)="doChangeGroup(resource)"><i class="material-icons">dashboard</i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<paging class="paging" [(page)]="page" [(size)]="size" (pageChange)="load()" (sizeChange)="load()"></paging>
+
+<resource-editor class="edit" *ngIf="editResource != null" [resource]="editResource" (onClose)="closeEditResource()"></resource-editor>
+
+<resource-group-browser class="edit" *ngIf="changeGroup != null" [resource]="changeGroup" (onClose)="closeChangeGroup()"></resource-group-browser>

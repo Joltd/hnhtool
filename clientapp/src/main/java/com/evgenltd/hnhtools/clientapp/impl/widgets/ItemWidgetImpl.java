@@ -25,7 +25,7 @@ public final class ItemWidgetImpl extends WidgetImpl implements ItemWidget {
 
     private static final String LABEL_NAME = "tt";
 
-    private IntPoint position;
+    private final IntPoint position;
     private Long resourceId;
     private String resource;
     private List<ItemInfoImpl> itemInfoList = new ArrayList<>();

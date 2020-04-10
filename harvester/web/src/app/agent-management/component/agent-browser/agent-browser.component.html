@@ -1,0 +1,11 @@
+<div class="list-group">
+    <div *ngFor="let agent of agents" class="list-group-item">
+        <div>{{agent.username}}</div>
+        <div>{{agent.character}}</div>
+        <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" [ngModel]="agent.enabled" (ngModelChange)="toggleAgentState()" [id]="'ab-' + agent.id + '-enabled'">
+            <label class="custom-control-label" [htmlFor]="'ab-' + agent.id + '-enabled'"></label>
+        </div>
+        <button class="btn btn-primary" (click)="openAgent(agent.id)"><i class="material-icons">more_horiz</i></button>
+    </div>
+</div>

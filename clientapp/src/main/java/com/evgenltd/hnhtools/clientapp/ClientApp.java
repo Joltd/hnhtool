@@ -26,6 +26,8 @@ public interface ClientApp {
     // #                                                #
     // ##################################################
 
+    void login();
+
     void play(String characterName);
 
     void logout();

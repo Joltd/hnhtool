@@ -1,0 +1,54 @@
+:host {
+  padding: 1em;
+  display: grid;
+  grid-template-columns: 1fr repeat(2, min-content);
+  grid-template-rows: min-content min-content 1fr min-content;
+  grid-gap: 1em;
+  grid-template-areas:
+    'name unknown edit'
+    'header header edit'
+    'browser browser edit'
+    'paging paging edit';
+}
+
+.name {
+  grid-area: name;
+}
+
+.unknown {
+  grid-area: unknown;
+  align-self: center;
+}
+
+.edit {
+  grid-area: edit;
+}
+
+.group {
+  grid-area: group;
+}
+
+.header {
+  grid-area: header;
+}
+
+.browser {
+  grid-area: browser;
+  overflow: auto;
+}
+
+.paging {
+  grid-area: paging;
+}
+
+.visual-column {
+  width: 100px;
+}
+
+.unknown-column {
+  width: 100px;
+}
+
+.action-column {
+  width: 80px;
+}

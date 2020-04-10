@@ -89,6 +89,17 @@ public final class ClientAppImpl implements ClientApp {
     }
 
     @Override
+    public void login() {
+        try {
+            messageBroker.connect();
+            await(messageBroker::isLife);
+        } catch (Exception e) {
+            messageBroker.disconnect();
+            throw e;
+        }
+    }
+
+    @Override
     public void play(final String characterName) {
         try {
             messageBroker.connect();
@@ -103,7 +114,9 @@ public final class ClientAppImpl implements ClientApp {
 
     @Override
     public void logout() {
-        messageBroker.disconnect();
+        if (messageBroker.isLife()) {
+            messageBroker.disconnect();
+        }
     }
 
     @Override

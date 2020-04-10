@@ -1,21 +1,22 @@
 <nav>
-    <i class="material-icons" (click)="toggleCollapsed()">menu</i>
+    <i class="material-icons" (click)="toggleCollapsed()">apps</i>
 </nav>
 <aside class="nav">
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" href="#" (click)="openResourceManagement()"><i class="material-icons">chevron_right</i>Resources</a>
+        <a class="nav-link" [class.collapsed]="collapsed" routerLink="/resource"><i class="material-icons">dashboard</i>Resources</a>
     </div>
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" href="#" (click)="openStub('bots')"><i class="material-icons">chevron_right</i>Bots</a>
+        <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">people</i>Bots</a>
     </div>
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" href="#" (click)="openStub('works')"><i class="material-icons">chevron_right</i>Works</a>
+        <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">chevron_right</i>Works</a>
     </div>
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" href="#" (click)="openStub('monitoring')"><i class="material-icons">chevron_right</i>Monitoring</a>
+        <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">chevron_right</i>Monitoring</a>
     </div>
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" href="#" (click)="openStub('world')"><i class="material-icons">chevron_right</i>World</a>
+        <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">chevron_right</i>World</a>
     </div>
 </aside>
-<blades-manager></blades-manager>
+<router-outlet></router-outlet>
+

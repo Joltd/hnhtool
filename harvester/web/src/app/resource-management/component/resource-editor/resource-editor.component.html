@@ -1,0 +1,24 @@
+<div class="header">
+    <h2>Resource</h2>
+    <button class="btn btn-primary" (click)="save()"><i class="material-icons">done</i></button>
+    <button class="btn btn-primary" (click)="close()"><i class="material-icons">close</i></button>
+</div>
+<div>{{resource.name}}</div>
+<div class="form-check">
+    <input id="unknown" type="checkbox" class="form-check-input" [(ngModel)]="resource.unknown">
+    <label class="form-check-label" for="unknown">Unknown</label>
+</div>
+<div class="form-check">
+    <input id="re-box" type="checkbox" class="form-check-input" [(ngModel)]="resource.box">
+    <label class="form-check-label" for="re-box">Box</label>
+</div>
+<div class="form-check">
+    <input id="re-heap" type="checkbox" class="form-check-input" [(ngModel)]="resource.heap">
+    <label class="form-check-label" for="re-heap">Heap</label>
+</div>
+<div class="form-check">
+    <input id="re-item" type="checkbox" class="form-check-input" [(ngModel)]="resource.item">
+    <label class="form-check-label" for="re-item">Item</label>
+</div>
+<input type="text" class="form-control" placeholder="Width" [(ngModel)]="resource.x">
+<input type="text" class="form-control" placeholder="Height" [(ngModel)]="resource.y">

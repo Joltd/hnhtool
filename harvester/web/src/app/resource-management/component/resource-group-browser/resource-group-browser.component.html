@@ -1,0 +1,23 @@
+<div class="header">
+    <!--suppress HtmlFormInputWithoutLabel -->
+    <input type="text" class="form-control" placeholder="Name" [(ngModel)]="name" (ngModelChange)="load()">
+    <button class="btn btn-primary" (click)="close()"><i class="material-icons">close</i></button>
+</div>
+
+<div class="list-group">
+    <div *ngFor="let group of groups" class="list-group-item">
+        <div>{{group.resources}}</div>
+        <a *ngIf="contains(group); else add" (click)="deleteFromGroup(group)">
+            <i class="material-icons">delete</i>
+        </a>
+        <ng-template #add>
+            <a (click)="addToGroup(group)">
+                <i class="material-icons">add</i>
+            </a>
+        </ng-template>
+    </div>
+</div>
+
+<button class="btn btn-light" (click)="addToNewGroup()"><i class="material-icons">add</i></button>
+
+<paging [(page)]="page" [(size)]="size" (change)="load()"></paging>
