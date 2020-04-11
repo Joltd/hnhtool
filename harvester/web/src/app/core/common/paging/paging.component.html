@@ -1,9 +1,5 @@
-<button class="btn btn-secondary" (click)="prev()">
-    <i class="material-icons">chevron_left</i>
-</button>
-<button class="btn btn-secondary" (click)="next()">
-    <i class="material-icons">chevron_right</i>
-</button>
+<i class="material-icons c-pointer" (click)="prev()">chevron_left</i>
+<i class="material-icons c-pointer" (click)="next()">chevron_right</i>
 <div></div>
 <!--suppress HtmlFormInputWithoutLabel -->
 <input type="text" class="form-control" placeholder="Size" [(ngModel)]="size" (focusout)="onSizeChange()">

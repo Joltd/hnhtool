@@ -5,23 +5,20 @@ import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {BladesNavigationModule} from "../core/blades-navigation/blades-navigation.module";
 import {AgentService} from "./service/agent.service";
+import {CharacterChooserComponent} from "./component/character-chooser/character-chooser.component";
 
 @NgModule({
     declarations: [
         AgentBrowserComponent,
-        AgentEditorComponent
+        AgentEditorComponent,
+        CharacterChooserComponent
     ],
     imports: [
         CommonModule,
         FormsModule,
         BladesNavigationModule
     ],
-    exports: [
-        AgentBrowserComponent,
-        AgentEditorComponent
-    ],
-    providers: [
-        AgentService
-    ]
+    exports: [AgentBrowserComponent],
+    providers: [AgentService]
 })
 export class AgentManagementModule {}

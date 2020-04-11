@@ -1,8 +1,6 @@
-import {Component} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {Agent} from "../../model/agent";
 import {AgentService} from "../../service/agent.service";
-import {BladesService} from "../../../core/blades-navigation/service/blades.service";
-import {BladeMeta} from "../../../core/blades-navigation/model/blade-meta";
 
 @Component({
     selector: 'agent-editor',
@@ -11,25 +9,33 @@ import {BladeMeta} from "../../../core/blades-navigation/model/blade-meta";
 })
 export class AgentEditorComponent {
 
-    public static meta: BladeMeta = new BladeMeta({singleton: true});
-
-    bladeId: number;
-
+    @Input()
     agent: Agent = new Agent();
 
-    constructor(private bladesService: BladesService, private agentService: AgentService) {}
+    @Output()
+    onClose: EventEmitter<any> = new EventEmitter<any>();
+
+    selectCharacter: boolean = false;
+
+    constructor(private agentService: AgentService) {}
 
     save() {
-        this.agentService.update(this.agent)
-            .subscribe(() => this.close());
+        this.agentService.update(this.agent).subscribe(() => this.close());
     }
 
     close() {
-        this.bladesService.closeBlade(this.bladeId);
+        this.onClose.emit();
     }
 
-    selectCharacter() {
+    doSelectCharacter() {
+        this.selectCharacter = true;
+    }
 
+    onSelectCharacter(character: string) {
+        if (character) {
+            this.agent.character = character;
+        }
+        this.selectCharacter = false;
     }
 
 }

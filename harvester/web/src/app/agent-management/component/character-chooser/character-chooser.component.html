@@ -1,0 +1,8 @@
+<div class="list-group">
+    <div
+            *ngFor="let character of characters"
+            class="list-group-item list-group-item-action"
+            (click)="onSelect.emit(character)"
+    >{{character}}</div>
+</div>
+<button class="btn btn-primary" (click)="onSelect.emit(null)">Cancel</button>

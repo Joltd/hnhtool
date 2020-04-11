@@ -1,8 +1,24 @@
-.list-group {
-  padding: 8px;
+:host {
+  padding: 1em;
+  display: grid;
+  grid-gap: 1em;
+  grid-auto-flow: column;
+  grid-template-columns: 1fr min-content;
+  grid-template-rows: min-content 1fr;
+}
 
-  .list-group-item {
-    display: grid;
-    grid-template-columns: 1fr 100px 100px 100px;
-  }
+.header {
+
+}
+
+.browser {
+  overflow: auto;
+}
+
+.editor {
+  grid-row: span 2;
+}
+
+.action-column {
+  width: 60px;
 }

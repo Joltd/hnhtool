@@ -63,8 +63,7 @@ public class AgentController {
 
     @PostMapping("/{id}")
     public void updateEnabled(@PathVariable final Long id, @RequestParam(name = "enabled") final Boolean enabled) {
-        final Account account = accountService.findById(id);
-        account.setEnabled(enabled != null && enabled);
+        accountService.enableAccount(id, enabled);
     }
 
     @GetMapping("/{id}/character")

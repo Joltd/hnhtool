@@ -1,9 +1,6 @@
 import {Component, OnInit} from "@angular/core";
-import {BladesService} from "../../../core/blades-navigation/service/blades.service";
 import {AgentService} from "../../service/agent.service";
 import {Agent} from "../../model/agent";
-import {AgentEditorComponent} from "../agent-editor/agent-editor.component";
-import {BladeMeta} from "../../../core/blades-navigation/model/blade-meta";
 
 @Component({
     selector: 'agent-browser',
@@ -12,13 +9,10 @@ import {BladeMeta} from "../../../core/blades-navigation/model/blade-meta";
 })
 export class AgentBrowserComponent implements OnInit{
 
-    public static meta: BladeMeta = new BladeMeta({singleton: true});
+    agents: Agent[] = [];
+    agent: Agent;
 
-    bladeId: number;
-
-    agents: Agent[]
-
-    constructor(private bladesService: BladesService, private agentService: AgentService) {}
+    constructor(private agentService: AgentService) {}
 
     ngOnInit(): void {
         this.load();
@@ -28,17 +22,21 @@ export class AgentBrowserComponent implements OnInit{
         this.agentService.list().subscribe(result => this.agents = result);
     }
 
-    close() {
-        this.bladesService.closeBlade(this.bladeId);
+    addAgent() {
+        this.agent = new Agent();
     }
 
-    openAgent(id: number) {
-        this.bladesService.openBlade(AgentEditorComponent)
-            .subscribe(componentInstance => {
-
-            })
+    editAgent(agent: Agent) {
+        this.agent = agent;
     }
 
-    toggleAgentState() {}
+    closeEditAgent() {
+        this.agent = null;
+    }
+
+    toggleAgentState(agent: Agent) {
+        this.agentService.updateEnabled(agent.id, agent.enabled)
+            .subscribe(() => {});
+    }
 
 }

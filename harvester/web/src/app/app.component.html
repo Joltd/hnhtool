@@ -1,12 +1,12 @@
 <nav>
-    <i class="material-icons" (click)="toggleCollapsed()">apps</i>
+    <i class="material-icons c-pointer" (click)="toggleCollapsed()">apps</i>
 </nav>
 <aside class="nav">
     <div class="nav-item">
         <a class="nav-link" [class.collapsed]="collapsed" routerLink="/resource"><i class="material-icons">dashboard</i>Resources</a>
     </div>
     <div class="nav-item">
-        <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">people</i>Bots</a>
+        <a class="nav-link" [class.collapsed]="collapsed" routerLink="/agent"><i class="material-icons">people</i>Agents</a>
     </div>
     <div class="nav-item">
         <a class="nav-link" [class.collapsed]="collapsed" ><i class="material-icons">chevron_right</i>Works</a>

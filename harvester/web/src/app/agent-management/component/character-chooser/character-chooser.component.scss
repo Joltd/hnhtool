@@ -1,0 +1,6 @@
+:host {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: 1fr min-content;
+  width: 200px  ;
+}

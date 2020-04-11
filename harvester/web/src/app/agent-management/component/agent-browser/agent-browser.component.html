@@ -1,11 +1,33 @@
-<div class="list-group">
-    <div *ngFor="let agent of agents" class="list-group-item">
-        <div>{{agent.username}}</div>
-        <div>{{agent.character}}</div>
-        <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" [ngModel]="agent.enabled" (ngModelChange)="toggleAgentState()" [id]="'ab-' + agent.id + '-enabled'">
-            <label class="custom-control-label" [htmlFor]="'ab-' + agent.id + '-enabled'"></label>
-        </div>
-        <button class="btn btn-primary" (click)="openAgent(agent.id)"><i class="material-icons">more_horiz</i></button>
-    </div>
+<table class="header">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Character</th>
+            <th class="action-column"></th>
+            <th class="action-column"></th>
+        </tr>
+    </thead>
+</table>
+
+<div class="browser">
+    <table class="table table-hover border">
+        <tbody>
+            <tr *ngFor="let agent of agents">
+                <td>{{agent.username}}</td>
+                <td>{{agent.character}}</td>
+                <td class="action-column">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" (ngModelChange)="toggleAgentState(agent)" [id]="'ab-' + agent.id + '-enabled'">
+                        <label class="custom-control-label" [htmlFor]="'ab-' + agent.id + '-enabled'"></label>
+                    </div>
+                </td>
+                <td class="action-column">
+                    <a (click)="editAgent(agent)"><i class="material-icons c-pointer">more_horiz</i></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-light" (click)="addAgent()"><i class="material-icons">add</i></button>
 </div>
+
+<agent-editor class="editor" *ngIf="agent != null" [agent]="agent" (onClose)="closeEditAgent()"></agent-editor>

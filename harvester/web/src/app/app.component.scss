@@ -16,9 +16,6 @@ $nav_color: #212121;
 nav {
   background-color: $nav_color;
   grid-column: span 3;
-  .material-icons {
-    cursor: pointer;
-  }
 }
 
 aside {

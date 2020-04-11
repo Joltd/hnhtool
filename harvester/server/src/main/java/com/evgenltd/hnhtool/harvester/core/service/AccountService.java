@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Objects;
 
 /**
@@ -36,6 +37,12 @@ public class AccountService {
     public Account findById(final Long id) {
         return accountRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException("There is no Account for id [%s]", id));
+    }
+
+    @Transactional
+    public void enableAccount(final Long id, final boolean enabled) {
+        final Account account = findById(id);
+        account.setEnabled(enabled);
     }
 
     public void authenticateAccount(final Account account, final String passwordHash) {

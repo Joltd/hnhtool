@@ -12,9 +12,11 @@ import {ErrorInterceptor} from "./core/common/error-hub/service/error-intercepto
 import {AgentManagementModule} from "./agent-management/agent-management.module";
 import {RouterModule, Routes} from "@angular/router";
 import {ResourceBrowserComponent} from "./resource-management/component/resource-browser/resource-browser.component";
+import {AgentBrowserComponent} from "./agent-management/component/agent-browser/agent-browser.component";
 
 const appRoutes: Routes = [
   { path: 'resource', component: ResourceBrowserComponent },
+  { path: 'agent', component: AgentBrowserComponent },
   { path: '', redirectTo: '/resource', pathMatch: 'full'}
 ]
 

@@ -19,7 +19,7 @@ export class ResourceEditorComponent {
     constructor(private route: ActivatedRoute, private resourceService: ResourceService) {}
 
     save() {
-        this.resourceService.update(this.resource).subscribe(result => this.close());
+        this.resourceService.update(this.resource).subscribe(() => this.close());
     }
 
     close() {

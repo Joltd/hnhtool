@@ -1,15 +1,20 @@
-<div class="header">
-    <h1>Agent</h1>
-    <button class="btn btn-primary" (click)="save()"><i class="material-icons">done</i></button>
-    <button class="btn btn-primary" (click)="close()"><i class="material-icons">close</i></button>
+<div class="editor">
+    <div class="header">
+        <h1>Agent</h1>
+        <i (click)="save()"  class="material-icons c-pointer">done</i>
+        <i (click)="close()" class="material-icons c-pointer">close</i>
+    </div>
+    <input type="text" class="form-control" placeholder="Username" [(ngModel)]="agent.username">
+    <input type="text" class="form-control" placeholder="Password" />
+    <ng-container *ngIf="agent.id">
+        <div class="character">
+            <div>{{agent.character}}</div>
+            <i class="material-icons c-pointer" (click)="doSelectCharacter()">more_horiz</i>
+        </div>
+        <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" id="ae-enabled">
+            <label class="custom-control-label" for="ae-enabled">Enabled</label>
+        </div>
+    </ng-container>
 </div>
-<input type="text" class="form-control" placeholder="Username" [(ngModel)]="agent.username">
-<input type="text" class="form-control" placeholder="Password" />
-<div>
-    {{agent.character}}
-    <button class="btn btn-primary" (click)="selectCharacter()"><i class="material-icons">more_horiz</i></button>
-</div>
-<div class="custom-control custom-switch">
-    <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" id="ae-enabled">
-    <label class="custom-control-label" for="ae-enabled"></label>
-</div>
+<character-chooser *ngIf="selectCharacter" [agent]="agent" (onSelect)="onSelectCharacter($event)"></character-chooser>
