@@ -18,6 +18,7 @@
     "@angular/platform-browser": "~9.1.0",
     "@angular/platform-browser-dynamic": "~9.1.0",
     "@angular/router": "~9.1.0",
+    "@ctrl/tinycolor": "^2.6.1",
     "class-transformer": "^0.2.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "~6.5.4",

@@ -23,6 +23,12 @@ public class Application extends SpringBootServletInitializer {
         SpringApplication.run(Application.class, args);
     }
 
+    // ##################################################
+    // #                                                #
+    // #  123                                           #
+    // #                                                #
+    // ##################################################
+
     @Bean
     public WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurer() {

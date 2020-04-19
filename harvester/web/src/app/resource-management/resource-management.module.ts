@@ -2,7 +2,7 @@ import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ResourceBrowserComponent} from "./component/resource-browser/resource-browser.component";
 import {FormsModule} from "@angular/forms";
-import {CoreCommonModule} from "../core/common/core-common.module";
+import {CoreModule} from "../core/core.module";
 import {ResourceService} from "./service/resource.service";
 import {ResourceEditorComponent} from "./component/resource-editor/resource-editor.component";
 import {RouterModule} from "@angular/router";
@@ -17,7 +17,7 @@ import {ResourceGroupBrowserComponent} from "./component/resource-group-browser/
     imports: [
         CommonModule,
         FormsModule,
-        CoreCommonModule,
+        CoreModule,
         RouterModule
     ],
     exports: [ResourceBrowserComponent],

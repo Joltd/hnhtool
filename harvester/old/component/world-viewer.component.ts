@@ -1,15 +1,15 @@
-import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
-import {WorldViewerService} from "./world-viewer.service";
-import {Space} from './model/space';
-import {Point} from "./model/point";
-import {KnownObject} from "./model/known-object";
+import {Component, ElementRef, HostListener, ViewChild} from "@angular/core";
+import {Space} from "../model/space";
+import {KnownObject} from "../model/known-object";
+import {Point} from "../model/point";
+import {WorldViewerService} from "../service/world-viewer.service";
 
 @Component({
-  selector: 'world-viewer',
-  templateUrl: 'world-viewer.component.html',
-  styleUrls: ['world-viewer.component.scss'],
+    selector: 'some',
+    templateUrl: 'world-viewer.component.html',
+    styleUrls: ['world-viewer.component.scss']
 })
-export class WorldViewerComponent implements OnInit {
+export class WorldViewerComponent {
 
   private static readonly MULTIPLIER = 100.0;
 
