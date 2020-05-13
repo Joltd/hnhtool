@@ -1,18 +1,38 @@
-import {Point} from "./point";
+import {Injectable} from "@angular/core";
+import {Point} from "../model/point";
 
-export class Viewport {
+@Injectable()
+export class ViewportService {
+
     private multiplier: number = 100;
-    private position: Point = new Point(0,0);
-    private size: Point = new Point(1000, 1000);
+    private _position: Point = new Point(0,0);
+    private _size: Point = new Point(1000, 1000);
     private zoom: number = 1;
     private zoomLevels: number[] = [0.5,1,2,4,8];
     private _cursor: Point = new Point(-1, -1);
 
     // ##################################################
     // #                                                #
-    // #  Cursor                                        #
+    // #  Accessors                                     #
     // #                                                #
     // ##################################################
+
+
+    get position(): Point {
+        return this._position;
+    }
+
+    set position(value: Point) {
+        this._position = value;
+    }
+
+    get size(): Point {
+        return this._size;
+    }
+
+    set size(value: Point) {
+        this._size = value;
+    }
 
     get cursor(): Point {
         return this._cursor;
@@ -29,9 +49,7 @@ export class Viewport {
     // ##################################################
 
     resize(screenWidth: number, screenHeight: number) {
-        this.size = new Point(screenWidth, screenHeight)
-            .mul(this.multiplier)
-            .mul(this.zoomLevels[this.zoom]);
+        this._size = this.sizeScreenToWorld(screenWidth, screenHeight);
     }
 
     // ##################################################
@@ -53,11 +71,11 @@ export class Viewport {
     }
 
     positionScreenToWorld(screenX: number, screenY: number): Point {
-        return this.sizeScreenToWorld(screenX, screenY).add(this.position);
+        return this.sizeScreenToWorld(screenX, screenY).add(this._position);
     }
 
     positionWorldToScreen(worldPosition: Point): Point {
-        return this.sizeWorldToScreen(worldPosition.sub(this.position));
+        return this.sizeWorldToScreen(worldPosition.sub(this._position));
     }
 
     // ##################################################
@@ -67,9 +85,9 @@ export class Viewport {
     // ##################################################
 
     move(screenDelta: Point) {
-        this.position = this.sizeScreenToWorld(screenDelta.x, screenDelta.y)
+        this._position = this.sizeScreenToWorld(screenDelta.x, screenDelta.y)
             .negate()
-            .add(this.position)
+            .add(this._position)
     }
 
     // ##################################################
@@ -84,8 +102,8 @@ export class Viewport {
         }
 
         this.zoom--;
-        this.size = this.size.div(2);
-        this.position = position.sub(this.size.div(2));
+        this._size = this._size.div(2);
+        this._position = position.sub(this._size.div(2));
     }
 
     public zoomOut(position: Point) {
@@ -94,9 +112,7 @@ export class Viewport {
         }
 
         this.zoom++;
-        this.size = this.size.mul(2);
-        this.position = position.sub(this.size.div(2));
+        this._size = this._size.mul(2);
+        this._position = position.sub(this._size.div(2));
     }
-
-
 }

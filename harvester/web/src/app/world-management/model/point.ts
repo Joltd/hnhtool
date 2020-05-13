@@ -39,4 +39,11 @@ export class Point {
     div(value: number) {
         return new Point(this.x / value, this.y / value);
     }
+
+    round(value: number) {
+        return new Point(
+            Math.floor(this.x / value) * value,
+            Math.floor(this.y / value) * value
+        );
+    }
 }

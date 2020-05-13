@@ -1,1 +1,11 @@
-<visualizer></visualizer>
+<!--<div class="toolbar">-->
+<!--    <div class="command" *ngFor="let command of commandService.commandList()" (click)="command.perform()">-->
+<!--        <i class="material-icons">{{command.icon}}</i>-->
+<!--    </div>-->
+<!--</div>-->
+<canvas #canvas
+        (mousemove)="onMouseMove($event)"
+        (mousedown)="onMouseDown($event)"
+        (mouseup)="onMouseUp($event)"
+        (mousewheel)="onMouseWheel($event)"
+></canvas>
