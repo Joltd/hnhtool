@@ -2,12 +2,10 @@ import {ViewportService} from "./viewport.service";
 import {Point} from "../model/point";
 import {EntityService} from "./entity.service";
 import {ModeService} from "./mode/mode.service";
-import {Injectable} from "@angular/core";
 import {SelectableComponent} from "../model/component/selectable.component";
 import {HoverableComponent} from "../model/component/hoverable.component";
 import {Renderable} from "../model/component/render/renderable";
 
-@Injectable()
 export class InputService {
 
     private lmb: boolean = false;
@@ -117,7 +115,7 @@ export class InputService {
                 continue;
             }
 
-            hoverable.hovered = renderable.isIntersect(this.viewportService.cursor);
+            // hoverable.hovered = renderable.isIntersect(this.viewportService.cursor);
         }
     }
 
@@ -154,7 +152,6 @@ export class InputService {
                 continue;
             }
 
-            renderable.move(delta);
             moved = true;
         }
         return moved;

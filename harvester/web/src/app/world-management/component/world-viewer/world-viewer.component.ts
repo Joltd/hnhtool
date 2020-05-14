@@ -1,6 +1,10 @@
 import {Component, ElementRef, NgZone, OnInit, ViewChild} from "@angular/core";
 import {Point} from "../../model/point";
 import {ViewerService} from "../../service/viewer.service";
+import {Renderable} from "../../model/component/render/renderable";
+import {PointComponent} from "../../model/component/render/point.component";
+import {SelectableComponent} from "../../model/component/selectable.component";
+import {HoverableComponent} from "../../model/component/hoverable.component";
 
 @Component({
     selector: 'world-viewer',
@@ -21,6 +25,13 @@ export class WorldViewerComponent implements OnInit {
     ngOnInit(): void {
         this.context = this.canvas.nativeElement.getContext('2d');
 
+        let entity = this.viewerService.createEntity();
+        let pointComponent = new PointComponent();
+        pointComponent.position = new Point(10000, 10000);
+        entity.addComponent(pointComponent, Renderable);
+        entity.addComponent(new SelectableComponent());
+        entity.addComponent(new HoverableComponent());
+
         this.ngZone.runOutsideAngular(() => {
             let loop = () => {
                 this.main();
@@ -39,13 +50,11 @@ export class WorldViewerComponent implements OnInit {
         this.viewerService.resizeViewport(screenWidth, screenHeight);
 
         this.renderGrid();
+        this.renderSelectionArea();
 
-        // for (let entity of this.entityService.entities()) {
-        //     let component = entity.getComponent(Renderable);
-        //     if (component) {
-        //         component.render(this.context, this.viewportService);
-        //     }
-        // }
+        for (let entity of this.viewerService.queryEntities(Renderable)) {
+            entity.getComponent(Renderable).render(this.context, this.viewerService);
+        }
     }
 
     renderGrid() {
@@ -66,6 +75,24 @@ export class WorldViewerComponent implements OnInit {
             this.context.lineTo(size.x, y);
         }
 
+        this.context.stroke();
+    }
+
+    renderSelectionArea() {
+        let selectionArea = this.viewerService.selectionArea();
+        if (!selectionArea) {
+            return;
+        }
+
+        let from = this.viewerService.positionWorldToScreen(selectionArea.from);
+        let to = this.viewerService.positionWorldToScreen(selectionArea.to);
+        this.context.strokeStyle = '#88a1ff'
+        this.context.beginPath();
+        this.context.moveTo(from.x, from.y);
+        this.context.lineTo(to.x, from.y);
+        this.context.lineTo(to.x, to.y);
+        this.context.lineTo(from.x, to.y);
+        this.context.lineTo(from.x, from.y);
         this.context.stroke();
     }
 

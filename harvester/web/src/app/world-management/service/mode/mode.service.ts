@@ -1,8 +1,6 @@
-import {Injectable} from "@angular/core";
 import {Event} from "../input.service";
 import {Command} from "../command";
 
-@Injectable()
 export class ModeService {
 
     private mode: Mode;

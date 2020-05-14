@@ -1,7 +1,5 @@
-import {Injectable} from "@angular/core";
 import {Entity} from "../model/entity";
 
-@Injectable()
 export class EntityService {
 
     private _generatedId: number = 1;

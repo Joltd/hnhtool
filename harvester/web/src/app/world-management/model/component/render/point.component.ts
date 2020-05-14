@@ -1,6 +1,7 @@
 import {Point} from "../../point";
 import {Renderable} from "./renderable";
-import {ViewportService} from "../../../service/viewport.service";
+import {ViewerService} from "../../../service/viewer.service";
+import {Box} from "../../box";
 
 export class PointComponent extends Renderable {
 
@@ -9,16 +10,17 @@ export class PointComponent extends Renderable {
     private _color: string = '#00FF00';
     private _size: number = 1000;
 
-    isIntersect(point: Point): boolean {
-        return false;
+    isIntersect(box: Box): boolean {
+        return box.isContains(this._position);
     }
 
-    move(delta: Point) {
-
-    }
-
-    render(context: CanvasRenderingContext2D, viewportService: ViewportService) {
-
+    render(context: CanvasRenderingContext2D, viewerService: ViewerService) {
+        context.fillStyle = this._color;
+        let position = viewerService.positionWorldToScreen(this._position);
+        let size = viewerService.sizeWorldToScreen(new Point(this._size, 0)).x;
+        context.beginPath();
+        context.arc(position.x, position.y, size, 0, 2 * Math.PI);
+        context.fill();
     }
 
     get position(): Point {

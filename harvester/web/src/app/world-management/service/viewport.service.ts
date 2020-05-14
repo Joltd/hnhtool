@@ -1,7 +1,5 @@
-import {Injectable} from "@angular/core";
 import {Point} from "../model/point";
 
-@Injectable()
 export class ViewportService {
 
     private multiplier: number = 100;

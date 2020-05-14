@@ -1,4 +1,3 @@
-import {Injectable} from "@angular/core";
 import {Mode} from "./mode.service";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../../../environments/environment";
@@ -12,7 +11,6 @@ import {LineComponent} from "../../model/component/render/line.component";
 import {Command} from "../command";
 import {Point} from "../../model/point";
 
-@Injectable()
 export class PathModeService implements Mode {
 
     private _edges: Entity[] = [];

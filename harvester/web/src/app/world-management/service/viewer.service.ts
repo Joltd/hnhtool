@@ -1,13 +1,21 @@
-import {Injectable} from "@angular/core";
+import {Injectable, Type} from "@angular/core";
 import {Viewport} from "../model/viewport";
 import {Point} from "../model/point";
 import {Mouse} from "../model/mouse";
+import {Entity} from "../model/entity";
+import {Renderable} from "../model/component/render/renderable";
+import {SelectableComponent} from "../model/component/selectable.component";
+import {HoverableComponent} from "../model/component/hoverable.component";
+import {Box} from "../model/box";
 
 @Injectable()
 export class ViewerService {
 
     private viewport: Viewport = new Viewport();
     private mouse: Mouse = new Mouse();
+
+    private nextEntityId: number = 1;
+    private entities: Entity[] = [];
 
     // ##################################################
     // #                                                #
@@ -29,6 +37,7 @@ export class ViewerService {
     onMouseUp(event: MouseEvent) {
         this.mouse.dragging = false;
         if (event.button == 0) {
+            this.handleSelection();
             this.mouse.lmb = false;
         } else if (event.button == 1) {
             this.mouse.mmb = false;
@@ -36,19 +45,24 @@ export class ViewerService {
             this.mouse.rmb = false;
         }
         this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
+        this.mouse.origin = null;
     }
 
     onMouseMove(event: MouseEvent) {
         this.mouse.dragging = true;
         let cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
         if (this.mouse.lmb) {
-
+            if (!this.mouse.origin) {
+                this.mouse.origin = this.mouse.cursor;
+            }
         } else if (this.mouse.mmb) {
             let delta = cursor.sub(this.mouse.cursor);
             this.moveViewport(delta);
         } else if (this.mouse.rmb) {
 
         } else {
+            this.mouse.cursor = cursor;
+            this.handleHovering();
             this.mouse.dragging = false;
         }
         this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
@@ -134,8 +148,88 @@ export class ViewerService {
 
     // ##################################################
     // #                                                #
-    // #                                                #
+    // #  Mouse                                         #
     // #                                                #
     // ##################################################
+
+    selectionArea(): Box {
+        return this.mouse.getSelectionArea();
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Entity                                        #
+    // #                                                #
+    // ##################################################
+
+    createEntity(): Entity {
+        let entity = new Entity(this.nextEntityId++);
+        this.entities.push(entity);
+        return entity;
+    }
+
+    queryEntities<T>(componentType: Type<T>): Entity[] {
+        return this.entities.filter(entity => entity.getComponent(componentType))
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Selection                                     #
+    // #                                                #
+    // ##################################################
+
+    private handleSelection() {
+
+        let selectionArea = this.mouse.getSelectionArea();
+        if (!selectionArea) {
+            selectionArea = new Box(this.mouse.cursor.sub(100), this.mouse.cursor.add(100));
+        }
+
+        let wasSelected = false;
+        for (let entity of this.entities) {
+            let renderable = entity.getComponent(Renderable);
+            let selectableComponent = entity.getComponent(SelectableComponent);
+            if (!selectableComponent) {
+                continue;
+            }
+
+            if (!renderable) {
+                selectableComponent.selected = false;
+                continue;
+            }
+
+            selectableComponent.selected = renderable.isIntersect(selectionArea);
+            wasSelected = wasSelected || selectableComponent.selected;
+        }
+
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Hovering                                      #
+    // #                                                #
+    // ##################################################
+
+    private handleHovering() {
+        let hoverArea = new Box(
+            this.mouse.cursor.sub(100),
+            this.mouse.cursor.add(100)
+        );
+
+        for (let entity of this.entities) {
+            let renderable = entity.getComponent(Renderable);
+            let hoverableComponent = entity.getComponent(HoverableComponent);
+            if (!hoverableComponent) {
+                continue;
+            }
+
+            if (!renderable) {
+                hoverableComponent.hovered = false;
+                continue;
+            }
+
+            hoverableComponent.hovered = renderable.isIntersect(hoverArea);
+        }
+    }
 
 }

@@ -1,17 +1,13 @@
-import {Point} from "../../point";
-import {ViewportService} from "../../../service/viewport.service";
+import {ViewerService} from "../../../service/viewer.service";
+import {Box} from "../../box";
 
 export class Renderable {
 
-    isIntersect(point: Point): boolean {
+    isIntersect(box: Box): boolean {
         throw 'Unsupported';
     }
 
-    move(delta: Point) {
-        throw 'Unsupported';
-    }
-
-    render(context: CanvasRenderingContext2D, viewportService: ViewportService) {
+    render(context: CanvasRenderingContext2D, viewerService: ViewerService) {
         throw 'Unsupported';
     }
 
