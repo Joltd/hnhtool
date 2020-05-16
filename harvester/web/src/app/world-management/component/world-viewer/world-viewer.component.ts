@@ -5,6 +5,7 @@ import {Renderable} from "../../model/component/render/renderable";
 import {PointComponent} from "../../model/component/render/point.component";
 import {SelectableComponent} from "../../model/component/selectable.component";
 import {HoverableComponent} from "../../model/component/hoverable.component";
+import {RenderService} from "../../service/render.service";
 
 @Component({
     selector: 'world-viewer',
@@ -19,11 +20,13 @@ export class WorldViewerComponent implements OnInit {
 
     constructor(
         private ngZone: NgZone,
-        private viewerService: ViewerService
+        private viewerService: ViewerService,
+        private renderService: RenderService
     ) {}
 
     ngOnInit(): void {
         this.context = this.canvas.nativeElement.getContext('2d');
+        this.viewerService.canvas = this.context;
 
         let entity = this.viewerService.createEntity();
         let pointComponent = new PointComponent();
@@ -53,7 +56,7 @@ export class WorldViewerComponent implements OnInit {
         this.renderSelectionArea();
 
         for (let entity of this.viewerService.queryEntities(Renderable)) {
-            entity.getComponent(Renderable).render(this.context, this.viewerService);
+            this.renderService.render(entity);
         }
     }
 

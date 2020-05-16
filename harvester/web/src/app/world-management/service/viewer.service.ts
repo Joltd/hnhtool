@@ -11,13 +11,25 @@ import {Box} from "../model/box";
 @Injectable()
 export class ViewerService {
 
+    private static readonly CURSOR_BOX = new Point(100, 100);
+
+    private _canvas: CanvasRenderingContext2D;
+
     private viewport: Viewport = new Viewport();
     private mouse: Mouse = new Mouse();
 
     private nextEntityId: number = 1;
     private entities: Entity[] = [];
 
-    // ##################################################
+    get canvas(): CanvasRenderingContext2D {
+        return this._canvas;
+    }
+
+    set canvas(value: CanvasRenderingContext2D) {
+        this._canvas = value;
+    }
+
+// ##################################################
     // #                                                #
     // #  Handlers                                      #
     // #                                                #
@@ -31,7 +43,7 @@ export class ViewerService {
         } else if (event.button == 2) {
             this.mouse.rmb = true;
         }
-        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
+        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.offsetY);
     }
 
     onMouseUp(event: MouseEvent) {
@@ -44,13 +56,13 @@ export class ViewerService {
         } else if (event.button == 2) {
             this.mouse.rmb = false;
         }
-        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
+        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.offsetY);
         this.mouse.origin = null;
     }
 
     onMouseMove(event: MouseEvent) {
         this.mouse.dragging = true;
-        let cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
+        let cursor = this.positionScreenToWorld(event.offsetX, event.offsetY);
         if (this.mouse.lmb) {
             if (!this.mouse.origin) {
                 this.mouse.origin = this.mouse.cursor;
@@ -65,7 +77,7 @@ export class ViewerService {
             this.handleHovering();
             this.mouse.dragging = false;
         }
-        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.screenY);
+        this.mouse.cursor = this.positionScreenToWorld(event.offsetX, event.offsetY);
     }
 
     onMouseWheel(event: WheelEvent) {
@@ -182,7 +194,10 @@ export class ViewerService {
 
         let selectionArea = this.mouse.getSelectionArea();
         if (!selectionArea) {
-            selectionArea = new Box(this.mouse.cursor.sub(100), this.mouse.cursor.add(100));
+            selectionArea = new Box(
+                this.mouse.cursor.sub(ViewerService.CURSOR_BOX),
+                this.mouse.cursor.add(ViewerService.CURSOR_BOX)
+            );
         }
 
         let wasSelected = false;
@@ -212,8 +227,8 @@ export class ViewerService {
 
     private handleHovering() {
         let hoverArea = new Box(
-            this.mouse.cursor.sub(100),
-            this.mouse.cursor.add(100)
+            this.mouse.cursor.sub(ViewerService.CURSOR_BOX),
+            this.mouse.cursor.add(ViewerService.CURSOR_BOX)
         );
 
         for (let entity of this.entities) {

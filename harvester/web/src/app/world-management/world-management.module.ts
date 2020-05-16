@@ -2,6 +2,7 @@ import {NgModule} from "@angular/core";
 import {WorldViewerComponent} from "./component/world-viewer/world-viewer.component";
 import {CommonModule} from "@angular/common";
 import {ViewerService} from "./service/viewer.service";
+import {RenderService} from "./service/render.service";
 
 @NgModule({
     declarations: [WorldViewerComponent],
@@ -10,7 +11,8 @@ import {ViewerService} from "./service/viewer.service";
         CommonModule
     ],
     providers: [
-        ViewerService
+        ViewerService,
+        RenderService
     ]
 })
 export class WorldManagementModule {}
