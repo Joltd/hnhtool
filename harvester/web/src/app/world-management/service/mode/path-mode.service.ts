@@ -1,156 +1,64 @@
-import {Mode} from "./mode.service";
-import {HttpClient} from "@angular/common/http";
-import {environment} from "../../../../environments/environment";
-import {Entity} from "../../model/entity";
+import {ViewerService} from "../viewer.service";
 import {SelectableComponent} from "../../model/component/selectable.component";
+import {Mode} from "./mode.service";
+import {Command} from "../../model/command";
+import {Injectable} from "@angular/core";
 import {HoverableComponent} from "../../model/component/hoverable.component";
-import {Event, InputService} from "../input.service";
-import {EntityService} from "../entity.service";
 import {PointComponent} from "../../model/component/render/point.component";
-import {LineComponent} from "../../model/component/render/line.component";
-import {Command} from "../command";
 import {Point} from "../../model/point";
+import {LineComponent} from "../../model/component/render/line.component";
+import {Renderable} from "../../model/component/render/renderable";
 
+@Injectable()
 export class PathModeService implements Mode {
 
-    private _edges: Entity[] = [];
-    private _points: Entity[] = [];
-
-    private _newEdge: Entity;
-    private _newPointFrom: Entity;
-    private _newPointTo: Entity;
-
     constructor(
-        private http: HttpClient,
-        private inputService: InputService,
-        private entityService: EntityService
-    ) {}
+        private viewerService: ViewerService
+    ) {
+        this.createPoint(10*1024, 10*1024);
+        this.createPoint(12*1024, 10*1024);
+        this.createPoint(12*1024, 12*1024);
+        this.createPoint(10*1024, 12*1024);
+        this.createLine(10*1024, 10*1024, 12*1024, 10*1024);
+        this.createLine(12*1024, 10*1024, 12*1024, 12*1024);
+        this.createLine(12*1024, 12*1024, 10*1024, 12*1024);
+        this.createLine(10*1024, 12*1024, 10*1024, 10*1024);
+    }
 
     commands(): Command[] {
         return [
-            new Command('', '', this.beginAddingEdge),
-            new Command('', '', this.remove),
-            new Command('', '', this.cancel),
-            new Command('', '', this.apply)
+            new Command('','Delete', '', 'Delete', () => this.remove())
         ];
     }
 
-    listener(event: Event): () => void {
-        switch (event) {
-            case "CANCEL":
-                return this.cancelAddingEdge;
-            case "CLICK":
-                return this.onTargetSelected;
-            case "MOVEMENT":
-                return this.onMove;
-            case "SELECTION":
-                return this.onPointSelected;
-            default:
-        }
+    remove() {
+        this.viewerService.queryEntities(entity => {
+            let selectable = entity.getComponent(SelectableComponent);
+            return selectable && selectable.selected;
+        }).forEach(entity => this.viewerService.removeEntity(entity.id));
     }
 
-    private load() {
-        this.http.get<any>(environment.apiUrl + '/path')
-            .subscribe(result => {
-                for (let edge of result) {
-                    let edgeEntity = this.entityService.createEntity();
-                    let line = new LineComponent();
-                    line.from = new Point(edge.from);
-                    line.to = new Point(edge.to);
-                    edgeEntity.addComponent(line);
-                    edgeEntity.addComponent(new SelectableComponent());
-                    edgeEntity.addComponent(new HoverableComponent());
-                    this._edges.push(edgeEntity);
-                }
-            })
+    createPoint(x: number, y: number) {
+        let entity = this.viewerService.createEntity();
+        entity.addComponent(new SelectableComponent());
+        entity.addComponent(new HoverableComponent());
+        let point = new PointComponent();
+        point.color = '#000000';
+        point.size = 450;
+        point.position = new Point(x, y);
+        entity.addComponent(point, Renderable);
     }
 
-    private apply() {
-        this.cancel();
-    }
-
-    private cancel() {
-
-    }
-
-    private isAddingEdge(): boolean {
-        return this._newEdge != null;
-    }
-
-    private beginAddingEdge() {
-        this._edges.forEach(edge => {
-            edge.removeComponent(SelectableComponent);
-            edge.removeComponent(HoverableComponent);
-        });
-        this._newEdge = this.entityService.createEntity();
-    }
-
-    private completeAddingEdge() {
-        this._edges.push(this._newEdge);
-        this.cancelAddingEdge();
-    }
-
-    private cancelAddingEdge() {
-        if (!this.isAddingEdge()) {
-            return;
-        }
-        this._newEdge = null;
-        this._newPointFrom = null;
-        this._newPointTo = null;
-    }
-
-    private onTargetSelected() {
-        if (!this.isAddingEdge()) {
-            return;
-        }
-        let position = null;
-        let point = this.entityService.createEntity();
-        point.getComponent(PointComponent).position = position;
-
-        this.handlePointSelected(point);
-    }
-
-    private onPointSelected() {
-        if (!this.isAddingEdge()) {
-            return;
-        }
-
-        let point = this.entityService.entities()
-            .find(entity => {
-                let selectableComponent = entity.getComponent(SelectableComponent);
-                return selectableComponent && selectableComponent.selected;
-            });
-        if (!point) {
-            return;
-        }
-
-        this.handlePointSelected(point);
-    }
-
-    private handlePointSelected(point: Entity) {
-        let pointComponent = point.getComponent(PointComponent);
-        let lineComponent = this._newEdge.getComponent(LineComponent);
-
-        if (this._newPointFrom == null) {
-            this._newPointFrom = point;
-            lineComponent.from = pointComponent.position;
-        } else {
-            this._newPointTo = point;
-            lineComponent.to = pointComponent.position;
-            this.completeAddingEdge();
-        }
-    }
-
-    private remove() {
-        this._edges = this._edges.filter(edge => !edge.getComponent(SelectableComponent).selected);
-        this._points = this._points.filter(point => !point.getComponent(SelectableComponent).selected);
-    }
-
-    private onMove() {
-        if (this.isAddingEdge()) {
-            return;
-        }
-        // all non selected but linked entities should be updated
+    createLine(fromX: number, fromY: number, toX: number, toY: number) {
+        let entity = this.viewerService.createEntity();
+        entity.addComponent(new SelectableComponent());
+        entity.addComponent(new HoverableComponent());
+        let line = new LineComponent();
+        line.color = '#000000'
+        line.width = 100;
+        line.from = new Point(fromX, fromY);
+        line.to = new Point(toX, toY);
+        entity.addComponent(line, Renderable);
     }
 
 }

@@ -1,4 +1,4 @@
-import {Injectable, Type} from "@angular/core";
+import {Injectable, Predicate, Type} from "@angular/core";
 import {Viewport} from "../model/viewport";
 import {Point} from "../model/point";
 import {Mouse} from "../model/mouse";
@@ -7,6 +7,7 @@ import {Renderable} from "../model/component/render/renderable";
 import {SelectableComponent} from "../model/component/selectable.component";
 import {HoverableComponent} from "../model/component/hoverable.component";
 import {Box} from "../model/box";
+import {Mode} from "./mode/mode.service";
 
 @Injectable()
 export class ViewerService {
@@ -19,7 +20,15 @@ export class ViewerService {
     private mouse: Mouse = new Mouse();
 
     private nextEntityId: number = 1;
-    private entities: Entity[] = [];
+    private entities: Map<number, Entity> = new Map<number, Entity>();
+
+    private _mode: Mode;
+
+    // ##################################################
+    // #                                                #
+    // #  Properties                                    #
+    // #                                                #
+    // ##################################################
 
     get canvas(): CanvasRenderingContext2D {
         return this._canvas;
@@ -29,7 +38,15 @@ export class ViewerService {
         this._canvas = value;
     }
 
-// ##################################################
+    get mode(): Mode {
+        return this._mode;
+    }
+
+    set mode(value: Mode) {
+        this._mode = value;
+    }
+
+    // ##################################################
     // #                                                #
     // #  Handlers                                      #
     // #                                                #
@@ -86,6 +103,13 @@ export class ViewerService {
             this.zoomIn();
         } else {
             this.zoomOut();
+        }
+    }
+
+    onKeyUp(event: KeyboardEvent) {
+        let command = this.mode.commands().find(command => command.enabled && command.key == event.key);
+        if (command) {
+            command.perform();
         }
     }
 
@@ -176,12 +200,26 @@ export class ViewerService {
 
     createEntity(): Entity {
         let entity = new Entity(this.nextEntityId++);
-        this.entities.push(entity);
+        this.entities.set(entity.id, entity);
         return entity;
     }
 
-    queryEntities<T>(componentType: Type<T>): Entity[] {
-        return this.entities.filter(entity => entity.getComponent(componentType))
+    queryEntitiesByComponent<T>(component: Type<T>) {
+        return this.queryEntities((entity: Entity) => entity.getComponent(component) != null);
+    }
+
+    queryEntities(predicate: Predicate<Entity>): Entity[] {
+        let result: Entity[] = [];
+        for (let entity of this.entities.values()) {
+            if (predicate(entity)) {
+                result.push(entity);
+            }
+        }
+        return result;
+    }
+
+    removeEntity(id: number) {
+        this.entities.delete(id);
     }
 
     // ##################################################
@@ -201,7 +239,7 @@ export class ViewerService {
         }
 
         let wasSelected = false;
-        for (let entity of this.entities) {
+        for (let entity of this.entities.values()) {
             let renderable = entity.getComponent(Renderable);
             let selectableComponent = entity.getComponent(SelectableComponent);
             if (!selectableComponent) {
@@ -231,7 +269,7 @@ export class ViewerService {
             this.mouse.cursor.add(ViewerService.CURSOR_BOX)
         );
 
-        for (let entity of this.entities) {
+        for (let entity of this.entities.values()) {
             let renderable = entity.getComponent(Renderable);
             let hoverableComponent = entity.getComponent(HoverableComponent);
             if (!hoverableComponent) {

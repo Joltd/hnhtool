@@ -3,6 +3,7 @@ import {WorldViewerComponent} from "./component/world-viewer/world-viewer.compon
 import {CommonModule} from "@angular/common";
 import {ViewerService} from "./service/viewer.service";
 import {RenderService} from "./service/render.service";
+import {PathModeService} from "./service/mode/path-mode.service";
 
 @NgModule({
     declarations: [WorldViewerComponent],
@@ -12,7 +13,8 @@ import {RenderService} from "./service/render.service";
     ],
     providers: [
         ViewerService,
-        RenderService
+        RenderService,
+        PathModeService
     ]
 })
 export class WorldManagementModule {}

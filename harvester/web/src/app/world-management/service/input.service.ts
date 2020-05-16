@@ -89,17 +89,17 @@ export class InputService {
     }
 
     private fireEvent(event: Event) {
-        let currentMode = this.modeService.getCurrentMode();
-        if (!currentMode) {
-            return;
-        }
-
-        let listener = currentMode.listener(event);
-        if (!listener) {
-            return;
-        }
-
-        listener();
+        // let currentMode = this.modeService.getCurrentMode();
+        // if (!currentMode) {
+        //     return;
+        // }
+        //
+        // let listener = currentMode.listener(event);
+        // if (!listener) {
+        //     return;
+        // }
+        //
+        // listener();
     }
 
     private handleHovering() {

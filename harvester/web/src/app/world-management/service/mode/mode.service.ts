@@ -1,5 +1,4 @@
-import {Event} from "../input.service";
-import {Command} from "../command";
+import {Command} from "../../model/command";
 
 export class ModeService {
 
@@ -24,7 +23,5 @@ export class ModeService {
 }
 
 export interface Mode {
-    listener(event: Event): () => void;
-
     commands(): Command[];
 }

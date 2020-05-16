@@ -1,8 +1,7 @@
-import {Command} from "../command";
+import {Command} from "../../model/command";
 import {Event} from "../input.service";
-import {Mode} from "./mode.service";
 
-export class BaseModeService implements Mode {
+export class BaseModeService {
     listener(event: Event): () => void {
         return () => {};
     }

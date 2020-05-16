@@ -2,10 +2,8 @@ import {Component, ElementRef, NgZone, OnInit, ViewChild} from "@angular/core";
 import {Point} from "../../model/point";
 import {ViewerService} from "../../service/viewer.service";
 import {Renderable} from "../../model/component/render/renderable";
-import {PointComponent} from "../../model/component/render/point.component";
-import {SelectableComponent} from "../../model/component/selectable.component";
-import {HoverableComponent} from "../../model/component/hoverable.component";
 import {RenderService} from "../../service/render.service";
+import {PathModeService} from "../../service/mode/path-mode.service";
 
 @Component({
     selector: 'world-viewer',
@@ -21,19 +19,14 @@ export class WorldViewerComponent implements OnInit {
     constructor(
         private ngZone: NgZone,
         private viewerService: ViewerService,
-        private renderService: RenderService
+        private renderService: RenderService,
+        private pathModeService: PathModeService
     ) {}
 
     ngOnInit(): void {
         this.context = this.canvas.nativeElement.getContext('2d');
         this.viewerService.canvas = this.context;
-
-        let entity = this.viewerService.createEntity();
-        let pointComponent = new PointComponent();
-        pointComponent.position = new Point(10000, 10000);
-        entity.addComponent(pointComponent, Renderable);
-        entity.addComponent(new SelectableComponent());
-        entity.addComponent(new HoverableComponent());
+        this.viewerService.mode = this.pathModeService;
 
         this.ngZone.runOutsideAngular(() => {
             let loop = () => {
@@ -55,13 +48,13 @@ export class WorldViewerComponent implements OnInit {
         this.renderGrid();
         this.renderSelectionArea();
 
-        for (let entity of this.viewerService.queryEntities(Renderable)) {
+        for (let entity of this.viewerService.queryEntitiesByComponent(Renderable)) {
             this.renderService.render(entity);
         }
     }
 
     renderGrid() {
-        let position = this.viewerService.positionWorldToScreen(this.viewerService.viewportOffset().round(1024));
+        let position = this.viewerService.positionWorldToScreen(this.viewerService.viewportOffset().round(1024).add(512, 512));
         let size = this.viewerService.sizeWorldToScreen(this.viewerService.viewportSize());
         let step = this.viewerService.sizeWorldToScreen(new Point(1024, 1024));
 
@@ -113,6 +106,10 @@ export class WorldViewerComponent implements OnInit {
 
     onMouseWheel(event: WheelEvent) {
         this.ngZone.runOutsideAngular(() => this.viewerService.onMouseWheel(event));
+    }
+
+    onKeyUp(event: KeyboardEvent) {
+        this.ngZone.runOutsideAngular(() => this.viewerService.onKeyUp(event));
     }
 
 }

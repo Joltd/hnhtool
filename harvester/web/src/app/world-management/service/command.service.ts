@@ -1,4 +1,4 @@
-import {Command} from "./command";
+import {Command} from "../model/command";
 import {ModeService} from "./mode/mode.service";
 
 export class CommandService {

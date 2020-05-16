@@ -3,9 +3,10 @@
 <!--        <i class="material-icons">{{command.icon}}</i>-->
 <!--    </div>-->
 <!--</div>-->
-<canvas #canvas
+<canvas #canvas tabindex="1"
         (mousemove)="onMouseMove($event)"
         (mousedown)="onMouseDown($event)"
         (mouseup)="onMouseUp($event)"
         (mousewheel)="onMouseWheel($event)"
+        (keyup)="onKeyUp($event)"
 ></canvas>
