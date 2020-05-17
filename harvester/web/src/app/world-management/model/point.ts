@@ -46,4 +46,8 @@ export class Point {
             Math.floor(this.y / value) * value
         );
     }
+
+    toString(): string {
+        return '(' + this.x + ';' + this.y + ')';
+    }
 }

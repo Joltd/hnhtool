@@ -8,9 +8,12 @@ import {PointComponent} from "../../model/component/render/point.component";
 import {Point} from "../../model/point";
 import {LineComponent} from "../../model/component/render/line.component";
 import {Renderable} from "../../model/component/render/renderable";
+import {Entity} from "../../model/entity";
 
 @Injectable()
 export class PathModeService implements Mode {
+
+    private links: Map<string, Entity[]> = new Map<string, Entity[]>();
 
     constructor(
         private viewerService: ViewerService
@@ -35,7 +38,36 @@ export class PathModeService implements Mode {
         this.viewerService.queryEntities(entity => {
             let selectable = entity.getComponent(SelectableComponent);
             return selectable && selectable.selected;
-        }).forEach(entity => this.viewerService.removeEntity(entity.id));
+        }).forEach(entity => {
+            if (entity.getComponent(PointComponent)) {
+                this.removeVertex(entity);
+            } else if (entity.getComponent(LineComponent)) {
+                this.removeEdge(entity);
+            }
+        });
+    }
+
+    private removeEdge(entity: Entity) {
+        this.viewerService.removeEntity(entity.id);
+
+        let line = entity.getComponent(LineComponent);
+        this.removeLink(line.from, entity.id);
+        this.removeLink(line.to, entity.id);
+    }
+
+    private removeVertex(entity: Entity) {
+        this.viewerService.removeEntity(entity.id);
+
+        let point = entity.getComponent(PointComponent);
+        let linkedEntities = this.links.get(point.position.toString());
+        this.links.delete(point.position.toString());
+        for (let linkedEntity of linkedEntities) {
+            if (linkedEntity.id == entity.id) {
+                continue;
+            }
+
+            this.removeEdge(linkedEntity);
+        }
     }
 
     createPoint(x: number, y: number) {
@@ -47,6 +79,8 @@ export class PathModeService implements Mode {
         point.size = 450;
         point.position = new Point(x, y);
         entity.addComponent(point, Renderable);
+
+        this.addLink(point.position, entity);
     }
 
     createLine(fromX: number, fromY: number, toX: number, toY: number) {
@@ -59,6 +93,30 @@ export class PathModeService implements Mode {
         line.from = new Point(fromX, fromY);
         line.to = new Point(toX, toY);
         entity.addComponent(line, Renderable);
+
+        this.addLink(line.from, entity);
+        this.addLink(line.to, entity);
     }
 
+    private addLink(point: Point, entity: Entity) {
+        let links = this.links.get(point.toString());
+        if (!links) {
+            links = [];
+            this.links.set(point.toString(), links);
+        }
+
+        links.push(entity);
+    }
+
+    private removeLink(point: Point, id: number) {
+        let links = this.links.get(point.toString());
+        if (!links) {
+            return
+        }
+
+        let index = links.findIndex(entity => entity.id == id);
+        if (index != -1) {
+            links.splice(index, 1);
+        }
+    }
 }
