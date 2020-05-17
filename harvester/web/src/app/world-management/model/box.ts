@@ -15,4 +15,9 @@ export class Box {
             && point.y >= this.from.y
             && point.y <= this.to.y;
     }
+
+    isOverlaps(box: Box): boolean {
+        return (this.to.x >= box.from.x && box.to.x >= this.from.x)
+            && (this.to.y >= box.from.y && box.to.y >= this.from.y);
+    }
 }

@@ -7,10 +7,14 @@ export class PointComponent extends Renderable {
     private _position: Point = new Point(0,0);
     private _style: string = 'circle';
     private _color: string = '#0000FF';
-    private _size: number = 1000;
+    private _size: number = 500;
 
     isIntersect(box: Box): boolean {
-        return box.isContains(this._position);
+        let boundingBox = new Box(
+            this.position.sub(this.size, this.size),
+            this.position.add(this.size, this.size)
+        );
+        return box.isOverlaps(boundingBox);
     }
 
     get position(): Point {

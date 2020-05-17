@@ -15,14 +15,14 @@ export class PathModeService implements Mode {
     constructor(
         private viewerService: ViewerService
     ) {
-        this.createPoint(10*1024, 10*1024);
-        this.createPoint(12*1024, 10*1024);
-        this.createPoint(12*1024, 12*1024);
-        this.createPoint(10*1024, 12*1024);
         this.createLine(10*1024, 10*1024, 12*1024, 10*1024);
         this.createLine(12*1024, 10*1024, 12*1024, 12*1024);
         this.createLine(12*1024, 12*1024, 10*1024, 12*1024);
         this.createLine(10*1024, 12*1024, 10*1024, 10*1024);
+        this.createPoint(10*1024, 10*1024);
+        this.createPoint(12*1024, 10*1024);
+        this.createPoint(12*1024, 12*1024);
+        this.createPoint(10*1024, 12*1024);
     }
 
     commands(): Command[] {

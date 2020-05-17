@@ -10,7 +10,18 @@ export class LineComponent extends Renderable {
     private _width: number = 100;
 
     isIntersect(box: Box): boolean {
-        return box.isContains(this._from) || box.isContains(this._to);
+        return this.isIntersectLine(box.from.x, box.from.y, box.to.x, box.from.y)
+            || this.isIntersectLine(box.to.x, box.from.y, box.to.x, box.to.y)
+            || this.isIntersectLine(box.to.x, box.to.y, box.from.x, box.to.y)
+            || this.isIntersectLine(box.from.x, box.to.y, box.from.x, box.from.y)
+            || box.isContains(this.from)
+            || box.isContains(this.to);
+    }
+
+    isIntersectLine(fromX: number, fromY: number, toX: number, toY: number): boolean {
+        let uA = ((toX-fromX)*(this.from.y-fromY) - (toY-fromY)*(this.from.x-fromX)) / ((toY-fromY)*(this.to.x-this.from.x) - (toX-fromX)*(this.to.y-this.from.y));
+        let uB = ((this.to.x-this.from.x)*(this.from.y-fromY) - (this.to.y-this.from.y)*(this.from.x-fromX)) / ((toY-fromY)*(this.to.x-this.from.x) - (toX-fromX)*(this.to.y-this.from.y));
+        return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
     }
 
     get from(): Point {
