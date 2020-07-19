@@ -8,7 +8,25 @@ export class Point {
             this.y = value.y;
         } else {
             this.x = value;
-            this.y = y;
+            this.y = y !== undefined
+                ? y
+                : value;
+        }
+    }
+
+    withX(value: number | Point) {
+        if (value instanceof Point) {
+            return new Point(value.x, this.y);
+        } else {
+            return new Point(value, this.y);
+        }
+    }
+
+    withY(value: number | Point) {
+        if (value instanceof Point) {
+            return new Point(this.x, value.y);
+        } else {
+            return new Point(this.x, value);
         }
     }
 
@@ -20,7 +38,7 @@ export class Point {
         if (value instanceof Point) {
             return new Point(this.x + value.x, this.y + value.y);
         } else {
-            return new Point(this.x + value, this.y + y);
+            return new Point(this.x + value, this.y + (y !== undefined ? y : value));
         }
     }
 
@@ -28,7 +46,7 @@ export class Point {
         if (value instanceof Point) {
             return new Point(this.x - value.x, this.y - value.y);
         } else {
-            return new Point(this.x - value, this.y - y);
+            return new Point(this.x - value, this.y - (y !== undefined ? y : value));
         }
     }
 
@@ -42,9 +60,9 @@ export class Point {
 
     round(value: number) {
         return new Point(
-            Math.floor(this.x / value) * value,
-            Math.floor(this.y / value) * value
-        );
+            this.x >= 0 ? Math.floor(this.x / value) : Math.ceil(this.x / value),
+            this.y >= 0 ? Math.floor(this.y / value) : Math.ceil(this.y / value)
+        ).mul(value);
     }
 
     toString(): string {

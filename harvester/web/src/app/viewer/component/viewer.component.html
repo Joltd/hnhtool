@@ -1,0 +1,21 @@
+<div>
+    <div [ngSwitch]="this.warehouseService.mode">
+        <ng-container *ngSwitchCase="'WAREHOUSE'">
+            <a (click)="this.warehouseService.add()"><i class="material-icons c-pointer">add</i></a>
+            <a (click)="this.warehouseService.edit()"><i class="material-icons c-pointer">edit</i></a>
+        </ng-container>
+        <ng-container *ngSwitchCase="'CELL'">
+            <a (click)="this.warehouseService.startAddCell()"><i class="material-icons c-pointer">add</i></a>
+            <a (click)="this.warehouseService.removeCell()"><i class="material-icons c-pointer">remove</i></a>
+            <a (click)="this.warehouseService.apply()"><i class="material-icons c-pointer">done</i></a>
+            <a (click)="this.warehouseService.cancel()"><i class="material-icons c-pointer">close</i></a>
+        </ng-container>
+    </div>
+</div>
+<canvas #canvas tabindex="1"
+        (mousemove)="runOutside($event, onMouseMove)"
+        (mousedown)="runOutside($event, onMouseDown)"
+        (mouseup)="runOutside($event, onMouseUp)"
+        (mousewheel)="runOutside($event, onMouseWheel)"
+        (keyup)="runOutside($event, onKeyUp)"
+></canvas>

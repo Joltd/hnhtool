@@ -8,7 +8,7 @@ import {ResourceManagementModule} from "./resource-management/resource-managemen
 import {CoreModule} from "./core/core.module";
 import {ErrorInterceptor} from "./core/error-hub/service/error-interceptor";
 import {AgentManagementModule} from "./agent-management/agent-management.module";
-import {WorldManagementModule} from "./world-management/world-management.module";
+import {ViewerModule} from "./viewer/viewer.module";
 
 @NgModule({
   declarations: [
@@ -21,7 +21,7 @@ import {WorldManagementModule} from "./world-management/world-management.module"
     CoreModule,
     ResourceManagementModule,
     AgentManagementModule,
-    WorldManagementModule
+    ViewerModule
   ],
   providers: [
     {
