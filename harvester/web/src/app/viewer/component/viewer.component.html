@@ -1,5 +1,5 @@
 <div>
-    <div [ngSwitch]="this.warehouseService.mode">
+    <div [ngSwitch]="this.viewerService.mode">
         <ng-container *ngSwitchCase="'WAREHOUSE'">
             <a (click)="this.warehouseService.add()"><i class="material-icons c-pointer">add</i></a>
             <a (click)="this.warehouseService.edit()"><i class="material-icons c-pointer">edit</i></a>

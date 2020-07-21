@@ -2,6 +2,7 @@ import {Injectable} from "@angular/core";
 import {Point} from "../model/point";
 import {Box} from "../model/box";
 import {Entity} from "../model/entity";
+import {BehaviorSubject} from "rxjs";
 
 @Injectable()
 export class ViewerService {
@@ -18,10 +19,23 @@ export class ViewerService {
     private _hasSelection: boolean = false;
     private _isMovement: boolean = false;
 
-    private _listeners: Map<EventType, () => unknown> = new Map();
+    private _mode: Mode = 'COMMON';
+
+    private _onClick: () => void = () => {};
+    private _onHover: (entity: Entity[]) => void = () => {};
+    private _onCancel: () => void = () => {};
+    private _onModeChanged: BehaviorSubject<Mode> = new BehaviorSubject<Mode>('COMMON');
 
     debug() {
         debugger;
+    }
+
+    get mode(): Mode {
+        return this._mode;
+    }
+    set mode(value: Mode) {
+        this._mode = value;
+        this.onModeChanged.next(value);
     }
 
     get viewport(): Viewport {
@@ -107,22 +121,23 @@ export class ViewerService {
     // #                                                #
     // ##################################################
 
-    setListener(type: EventType, callback: () => unknown) {
-        this._listeners.set(type, callback);
+    set onClick(value: () => void) {
+        this._onClick = value ? value : () => {};
     }
 
-    removeListener(type: EventType) {
-        this._listeners.delete(type);
+    set onHover(value: (entity: Entity[]) => void) {
+        this._onHover = value ? value : () => {};
     }
 
-    fireEvent(type: EventType) {
-        let callback = this._listeners.get(type);
-        if (callback) {
-            callback();
-        }
+    set onCancel(value: () => void) {
+        this._onCancel = value ? value : () => {};
     }
 
-    // ##################################################
+    get onModeChanged(): BehaviorSubject<Mode> {
+        return this._onModeChanged;
+    }
+
+// ##################################################
     // #                                                #
     // #  Conversation                                  #
     // #                                                #
@@ -160,7 +175,7 @@ export class ViewerService {
     
 }
 
-type EventType = 'CLICK';
+type EventType = 'CLICK' | 'HOVER' | 'CANCEL';
 
 class Viewport {
     private _offset: Point = new Point(0,0);
@@ -261,3 +276,5 @@ class Mouse {
         );
     }
 }
+
+export type Mode = 'COMMON' | 'WAREHOUSE' | 'CELL' | 'PATH';

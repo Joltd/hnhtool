@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {ViewerService} from "./viewer.service";
+import {Mode, ViewerService} from "./viewer.service";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 import {Entity} from "../model/entity";
 import {Point} from "../model/point";
@@ -11,8 +11,6 @@ import {Cell, Warehouse} from "../model/warehouse";
 @Injectable()
 export class WarehouseService {
 
-    private _mode: Mode = 'WAREHOUSE';
-
     private _warehouses: Entity[] = [];
 
     private _warehouse: Entity;
@@ -22,13 +20,18 @@ export class WarehouseService {
     constructor(
         private http: HttpClient,
         private viewerService: ViewerService
-    ) {}
-
-    get mode(): Mode {
-        return this._mode;
+    ) {
+        this.viewerService.onModeChanged.subscribe((mode) => this.onModeChanged(mode));
     }
-    set mode(value: Mode) {
-        this._mode = value;
+
+    private onModeChanged(mode: Mode) {
+        if (mode == 'COMMON') {
+
+        } else if (mode == 'WAREHOUSE') {
+
+        } else if (mode == 'CELL') {
+
+        }
     }
 
     load() {
@@ -62,7 +65,7 @@ export class WarehouseService {
             entity.add(new Disabled());
         }
 
-        this.mode = 'CELL';
+        this.viewerService.mode = 'CELL';
     }
 
     edit() {
@@ -90,7 +93,7 @@ export class WarehouseService {
             cellEntity.add(new Position()).value = cell.position;
         }
 
-        this.mode = 'CELL';
+        this.viewerService.mode = 'CELL';
     }
 
     startAddCell() {
@@ -98,7 +101,7 @@ export class WarehouseService {
         for (let cell of this._cells) {
             cell.add(Disabled);
         }
-        this.viewerService.setListener('CLICK', () => this.addCell());
+        this.viewerService.onClick = () => this.addCell();
     }
 
     addCell() {
@@ -106,7 +109,7 @@ export class WarehouseService {
             cell.remove(Disabled);
         }
         this.dummyToCell();
-        this.viewerService.removeListener('CLICK');
+        this.viewerService.onClick = null;
     }
 
     removeCell() {
@@ -143,7 +146,7 @@ export class WarehouseService {
             entity.remove(Disabled);
         }
 
-        this.mode = 'WAREHOUSE';
+        this.viewerService.mode = 'WAREHOUSE';
     }
 
     private createCell(): Entity {
@@ -181,4 +184,3 @@ export class WarehouseService {
 
 }
 
-export type Mode = 'WAREHOUSE' | 'CELL';

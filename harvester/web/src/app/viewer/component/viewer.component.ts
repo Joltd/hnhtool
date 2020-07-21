@@ -84,7 +84,7 @@ export class ViewerComponent implements OnInit {
                 this.viewerService.isMovement = false;
             } else {
                 this.handleSelection();
-                this.viewerService.fireEvent('CLICK');
+                this.viewerService.onClick();
             }
             this.viewerService.mouse.lmb = false;
             this.viewerService.mouse.worldCurrent = null;
@@ -93,6 +93,7 @@ export class ViewerComponent implements OnInit {
             this.viewerService.mouse.mmb = false;
             this.viewerService.mouse.screenCurrent = null;
         } else if (event.button == 2) {
+            this.viewerService.onCancel();
             this.viewerService.mouse.rmb = false;
         }
     }
@@ -102,7 +103,9 @@ export class ViewerComponent implements OnInit {
     }
 
     onKeyUp(event: KeyboardEvent) {
-
+        if (event.key == 'Escape') {
+            this.viewerService.onCancel();
+        }
     }
 
     // ##################################################
@@ -114,18 +117,27 @@ export class ViewerComponent implements OnInit {
     private handleHovering() {
         let area = this.viewerService.mouse.area;
 
+        let hovered: Entity[] = [];
+
         for (let entity of this.viewerService.entities) {
             let disabled = entity.get(Disabled);
 
             let hoverable = entity.get(Hoverable);
             if (hoverable) {
                 hoverable.value = this.isIntersect(entity, area) && !disabled;
+                if (hoverable.value) {
+                    hovered.push(entity);
+                }
             }
 
             let followCursor = entity.get(FollowCursor);
             if (followCursor && !disabled) {
                 ViewerComponent.setEntityPosition(entity, this.viewerService.mouse.worldCurrentRounded);
             }
+        }
+
+        if (hovered.length > 0) {
+            this.viewerService.onHover(hovered);
         }
     }
 
