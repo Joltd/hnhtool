@@ -57,6 +57,21 @@ export class RenderUtil {
         }
     }
 
+    static renderLine(
+        graphic: CanvasRenderingContext2D,
+        from: Point,
+        to: Point,
+        size: number,
+        color: string
+    ) {
+        graphic.strokeStyle = color;
+        graphic.lineWidth = size;
+        graphic.beginPath();
+        graphic.moveTo(from.x, from.y);
+        graphic.lineTo(to.x, to.y);
+        graphic.stroke();
+    }
+
 }
 
 export type PrimitiveType = "CIRCLE" | "RECT";

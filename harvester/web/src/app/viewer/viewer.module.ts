@@ -3,6 +3,7 @@ import {ViewerService} from "./service/viewer.service";
 import {WarehouseService} from "./service/warehouse.service";
 import {ViewerComponent} from "./component/viewer.component";
 import {CommonModule} from "@angular/common";
+import {PathService} from "./service/path.service";
 
 @NgModule({
     declarations: [ViewerComponent],
@@ -12,7 +13,8 @@ import {CommonModule} from "@angular/common";
     ],
     providers: [
         ViewerService,
-        WarehouseService
+        WarehouseService,
+        PathService
     ]
 })
 export class ViewerModule {}

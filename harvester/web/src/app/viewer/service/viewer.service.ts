@@ -3,6 +3,7 @@ import {Point} from "../model/point";
 import {Box} from "../model/box";
 import {Entity} from "../model/entity";
 import {BehaviorSubject} from "rxjs";
+import {Command} from "../model/command";
 
 @Injectable()
 export class ViewerService {
@@ -21,6 +22,8 @@ export class ViewerService {
 
     private _mode: Mode = 'COMMON';
 
+    private _commands: Command[] = [];
+
     private _onClick: () => void = () => {};
     private _onHover: (entity: Entity[]) => void = () => {};
     private _onCancel: () => void = () => {};
@@ -35,7 +38,18 @@ export class ViewerService {
     }
     set mode(value: Mode) {
         this._mode = value;
+        if (value == 'COMMON') {
+            this.commands = [];
+        }
         this.onModeChanged.next(value);
+    }
+
+    get commands(): Command[] {
+        return this._commands;
+    }
+
+    set commands(value: Command[]) {
+        this._commands = value;
     }
 
     get viewport(): Viewport {
@@ -104,6 +118,13 @@ export class ViewerService {
         return entity;
     }
 
+    addEntity(entity: Entity) {
+        let found = this._entities.find(_entity => _entity.id == entity.id);
+        if (!found) {
+            this._entities.push(entity);
+        }
+    }
+
     removeEntity(entity: Entity) {
         let index = this._entities.findIndex(_entity => _entity.id == entity.id);
         if (index >= 0) {
@@ -124,13 +145,22 @@ export class ViewerService {
     set onClick(value: () => void) {
         this._onClick = value ? value : () => {};
     }
+    get onClick(): () => void {
+        return this._onClick;
+    }
 
     set onHover(value: (entity: Entity[]) => void) {
         this._onHover = value ? value : () => {};
     }
+    get onHover(): (entity: Entity[]) => void {
+        return this._onHover;
+    }
 
     set onCancel(value: () => void) {
         this._onCancel = value ? value : () => {};
+    }
+    get onCancel(): () => void {
+        return this._onCancel;
     }
 
     get onModeChanged(): BehaviorSubject<Mode> {
@@ -174,8 +204,6 @@ export class ViewerService {
     }
     
 }
-
-type EventType = 'CLICK' | 'HOVER' | 'CANCEL';
 
 class Viewport {
     private _offset: Point = new Point(0,0);

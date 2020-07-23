@@ -65,6 +65,10 @@ export class Point {
         ).mul(value);
     }
 
+    equals(value: Point) {
+        return value?.x == this.x && value?.y == this.y;
+    }
+
     toString(): string {
         return '(' + this.x + ';' + this.y + ')';
     }

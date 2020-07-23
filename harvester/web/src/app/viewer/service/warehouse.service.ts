@@ -1,12 +1,11 @@
 import {Injectable} from "@angular/core";
-import {Mode, ViewerService} from "./viewer.service";
+import {ViewerService} from "./viewer.service";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 import {Entity} from "../model/entity";
 import {Point} from "../model/point";
 import {HttpClient} from "@angular/common/http";
-import {environment} from "../../../environments/environment";
-import {map} from "rxjs/operators";
 import {Cell, Warehouse} from "../model/warehouse";
+import {Command} from "../model/command";
 
 @Injectable()
 export class WarehouseService {
@@ -21,28 +20,34 @@ export class WarehouseService {
         private http: HttpClient,
         private viewerService: ViewerService
     ) {
-        this.viewerService.onModeChanged.subscribe((mode) => this.onModeChanged(mode));
+        this.viewerService.onModeChanged.subscribe((mode) => {
+            if (mode == 'COMMON') {
+                this.viewerService.commands.push(new Command('storefront', () => this.enter()));
+            }
+        });
     }
 
-    private onModeChanged(mode: Mode) {
-        if (mode == 'COMMON') {
-
-        } else if (mode == 'WAREHOUSE') {
-
-        } else if (mode == 'CELL') {
-
+    enter() {
+        this.viewerService.commands = [
+            new Command('add', () => this.add()),
+            new Command('edit', () => this.edit()),
+            new Command('remove', () => this.remove()),
+            new Command('done', () => this.done())
+        ];
+        for (let warehouse of this._warehouses) {
+            warehouse.add(new Hoverable());
+            warehouse.add(new Selectable());
         }
     }
 
     load() {
-        this.http.get<any[]>(environment + '/warehouse')
-            .pipe(map(result => result.map(entry => this.toWarehouseEntity(entry))))
-            .subscribe(result => this._warehouses = result);
+        // this.http.get<any[]>(environment + '/warehouse')
+        //     .pipe(map(result => result.map(entry => this.toWarehouseEntity(entry))))
+        //     .subscribe(result => this._warehouses = result);
     }
 
     private toWarehouseEntity(entry: any) {
         let entity = this.viewerService.createEntity();
-        entity.add(new Selectable());
         let warehouse = entity.add(new Warehouse());
         warehouse.id = entry.id;
         warehouse.cells = entry.cells.map(cellEntry => {
@@ -54,6 +59,12 @@ export class WarehouseService {
         return entity;
     }
 
+    // ##################################################
+    // #                                                #
+    // #  Warehouse                                     #
+    // #                                                #
+    // ##################################################
+
     add() {
         this._warehouse = this.viewerService.createEntity();
         this._warehouse.add(new Warehouse());
@@ -61,7 +72,7 @@ export class WarehouseService {
         this._warehouse.add(new Selectable());
         this._warehouses.push(this._warehouse);
 
-        for (let entity of this.viewerService.entities) {
+        for (let entity of this._warehouses) {
             entity.add(new Disabled());
         }
 
@@ -94,7 +105,32 @@ export class WarehouseService {
         }
 
         this.viewerService.mode = 'CELL';
+
+        this.viewerService.commands = [
+            new Command('add', () => this.startAddCell()),
+            new Command('remove', () => this.removeCell()),
+            new Command('done', () => this.apply()),
+            new Command('close', () => this.cancel())
+        ];
     }
+
+    remove() {
+
+    }
+
+    done() {
+        for (let warehouse of this._warehouses) {
+            warehouse.remove(Hoverable);
+            warehouse.remove(Selectable);
+        }
+        this.viewerService.mode = 'COMMON';
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Cell                                          #
+    // #                                                #
+    // ##################################################
 
     startAddCell() {
         this.createDummy();
@@ -148,6 +184,8 @@ export class WarehouseService {
 
         this.viewerService.mode = 'WAREHOUSE';
     }
+
+    //
 
     private createCell(): Entity {
         let cell = this.viewerService.createEntity();

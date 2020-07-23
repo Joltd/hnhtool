@@ -4,9 +4,11 @@ import {Entity} from "../model/entity";
 import {Box} from "../model/box";
 import {Delta, Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 import {ViewerService} from "../service/viewer.service";
-import {WarehouseService} from "../service/warehouse.service";
 import {RenderUtil} from "../service/render-util";
 import {Warehouse} from "../model/warehouse";
+import {WarehouseService} from "../service/warehouse.service";
+import {PathService} from "../service/path.service";
+import {Path} from "../model/path";
 
 @Component({
     selector: 'viewer',
@@ -23,10 +25,14 @@ export class ViewerComponent implements OnInit {
     constructor(
         private ngZone: NgZone,
         public viewerService: ViewerService,
-        public warehouseService: WarehouseService
+        private warehouseService: WarehouseService,
+        private pathService: PathService
     ) {}
 
     ngOnInit(): void {
+        this.warehouseService.load();
+        this.pathService.load();
+
         this.graphic = this.canvas.nativeElement.getContext('2d');
 
         this.ngZone.runOutsideAngular(() => {
@@ -281,10 +287,12 @@ export class ViewerComponent implements OnInit {
 
     private renderEntities() {
         for (let entity of this.viewerService.entities) {
-            if (entity.get(Primitive)) {
+            if (entity.has(Primitive)) {
                 this.renderPrimitive(entity);
-            } else if (entity.get(Warehouse)) {
+            } else if (entity.has(Warehouse)) {
                 this.renderWarehouse(entity);
+            } else if (entity.has(Path)) {
+                this.renderPath(entity);
             }
 
             if (entity.has(Disabled)) {
@@ -327,6 +335,19 @@ export class ViewerComponent implements OnInit {
                 entity.get(Hoverable)?.value,
                 entity.has(Disabled)
             );
+        }
+    }
+
+    private renderPath(entity: Entity) {
+        let path = entity.get(Path);
+        for (let edge of path.edges) {
+            RenderUtil.renderLine(
+                this.graphic,
+                this.viewerService.positionWorldToScreen(edge.from.value),
+                this.viewerService.positionWorldToScreen(edge.to.value),
+                this.viewerService.sizeWorldToScreen(100).x,
+                '#FFFF00'
+            )
         }
     }
 
