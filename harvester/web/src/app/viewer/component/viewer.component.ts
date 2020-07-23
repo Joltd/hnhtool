@@ -67,6 +67,7 @@ export class ViewerComponent implements OnInit {
 
         } else {
             this.viewerService.mouse.worldCurrent = this.viewerService.positionScreenToWorld(event.offsetX, event.offsetY);
+            // console.log(this.viewerService.mouse.worldCurrent);
             this.handleHovering();
         }
     }
@@ -105,6 +106,27 @@ export class ViewerComponent implements OnInit {
     }
 
     onMouseWheel(event: WheelEvent) {
+        this.viewerService.moveViewportTo(this.viewerService.mouse.worldCurrent);
+
+        let viewport = this.viewerService.viewport;
+        let prevZoom = ViewerService.ZOOM_LEVELS[viewport.zoom];
+
+        if (event.deltaY < 0) {
+            if (viewport.zoom == 0) {
+                return;
+            }
+            viewport.zoom--;
+        } else {
+            if (viewport.zoom == ViewerService.ZOOM_LEVELS.length - 1) {
+                return;
+            }
+            viewport.zoom++;
+        }
+
+        let newZoom = ViewerService.ZOOM_LEVELS[viewport.zoom];
+        let prevSize = viewport.size;
+        let newSize = prevSize.mul(newZoom).div(prevZoom);
+        viewport.offset = viewport.offset.add(prevSize.sub(newSize).div(2));
 
     }
 

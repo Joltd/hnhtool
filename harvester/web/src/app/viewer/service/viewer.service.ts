@@ -52,12 +52,6 @@ export class ViewerService {
         this._commands = value;
     }
 
-    get viewport(): Viewport {
-        return this._viewport;
-    }
-    set viewport(value: Viewport) {
-        this._viewport = value;
-    }
 
     get mouse(): Mouse {
         return this._mouse;
@@ -66,15 +60,6 @@ export class ViewerService {
         this._mouse = value;
     }
 
-    resizeViewport(screenWidth: number, screenHeight: number) {
-        this._viewport.size = this.sizeScreenToWorld(screenWidth, screenHeight);
-    }
-
-    moveViewport(screenDelta: Point) {
-        this.viewport.offset = this.sizeScreenToWorld(screenDelta)
-            .negate()
-            .add(this.viewport.offset);
-    }
 
     get selectionArea(): Box {
         if (!this.mouse.worldOrigin) {
@@ -104,6 +89,34 @@ export class ViewerService {
     }
     set isMovement(value: boolean) {
         this._isMovement = value;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Viewport                                      #
+    // #                                                #
+    // ##################################################
+
+    get viewport(): Viewport {
+        return this._viewport;
+    }
+    set viewport(value: Viewport) {
+        this._viewport = value;
+    }
+
+    resizeViewport(screenWidth: number, screenHeight: number) {
+        this.viewport.size = this.sizeScreenToWorld(screenWidth, screenHeight);
+    }
+
+    moveViewport(screenDelta: Point) {
+        this.viewport.offset = this.sizeScreenToWorld(screenDelta)
+            .negate()
+            .add(this.viewport.offset);
+    }
+
+    moveViewportTo(worldPoint: Point) {
+        console.log(this.viewport.size);
+        this.viewport.offset = worldPoint.sub(this.viewport.size.div(2));
     }
 
     // ##################################################
@@ -167,7 +180,7 @@ export class ViewerService {
         return this._onModeChanged;
     }
 
-// ##################################################
+    // ##################################################
     // #                                                #
     // #  Conversation                                  #
     // #                                                #
@@ -176,21 +189,21 @@ export class ViewerService {
     sizeScreenToWorld(screenWidth: number | Point, screenHeight?: number): Point {
         return ViewerService.toPoint(screenWidth, screenHeight)
             .mul(ViewerService.MULTIPLIER)
-            .mul(ViewerService.ZOOM_LEVELS[this._viewport.zoom]);
+            .mul(ViewerService.ZOOM_LEVELS[this.viewport.zoom]);
     }
 
     sizeWorldToScreen(worldWidth: number | Point, worldHeight?: number): Point {
         return ViewerService.toPoint(worldWidth, worldHeight)
             .div(ViewerService.MULTIPLIER)
-            .div(ViewerService.ZOOM_LEVELS[this._viewport.zoom]);
+            .div(ViewerService.ZOOM_LEVELS[this.viewport.zoom]);
     }
 
     positionScreenToWorld(screenX: number | Point, screenY?: number): Point {
-        return this.sizeScreenToWorld(screenX, screenY).add(this._viewport.offset);
+        return this.sizeScreenToWorld(screenX, screenY).add(this.viewport.offset);
     }
 
     positionWorldToScreen(worldX: number | Point, worldY?: number): Point {
-        return this.sizeWorldToScreen(ViewerService.toPoint(worldX, worldY).sub(this._viewport.offset));
+        return this.sizeWorldToScreen(ViewerService.toPoint(worldX, worldY).sub(this.viewport.offset));
     }
 
     private static toPoint(value: number | Point, y?: number): Point {
