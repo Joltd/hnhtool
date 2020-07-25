@@ -29,7 +29,7 @@ public class KnownObjectController {
     }
 
     @GetMapping
-    public List<KnownObject> list(
+    public List<KnownObjectRecord> list(
             @RequestParam("spaceId") final Long spaceId,
             @RequestParam("fromX") final Integer fromX,
             @RequestParam("fromY") final Integer fromY,
@@ -38,11 +38,11 @@ public class KnownObjectController {
     ) {
         return knownObjectRepository.findObjectsInArea(spaceId, fromX, fromY, toX, toY)
                 .stream()
-                .map(knownObject -> new KnownObject(knownObject.getPosition(), knownObject.getResource().getName()))
+                .map(knownObject -> new KnownObjectRecord(knownObject.getPosition(), knownObject.getResource().getName()))
                 .collect(Collectors.toList());
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public static record KnownObject(IntPoint position, String resource) {}
+    public static record KnownObjectRecord(IntPoint position, String resource) {}
 
 }

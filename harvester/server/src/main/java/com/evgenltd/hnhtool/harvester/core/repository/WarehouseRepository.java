@@ -2,13 +2,13 @@ package com.evgenltd.hnhtool.harvester.core.repository;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Warehouse;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 23-03-2020 22:39</p>
- */
+import java.util.List;
+
+@Repository
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
+
+    List<Warehouse> findBySpaceId(Long spaceId);
+
 }

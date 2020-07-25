@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
  * <p>Author:  lebed</p>
  * <p>Created: 10-04-2020 00:04</p>
  */
+@Repository
 public interface ResourceGroupRepository extends JpaRepository<ResourceGroup, Long> {
 
     default ResourceGroup loadById(Long id) {

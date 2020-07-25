@@ -21,6 +21,10 @@ public class Path {
     @Id
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "space_id")
+    private Space space;
+
     @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
     @Columns(columns = {@Column(name = "fromX"), @Column(name = "fromY")})
     private IntPoint from;
@@ -34,6 +38,13 @@ public class Path {
     }
     public void setId(final Long id) {
         this.id = id;
+    }
+
+    public Space getSpace() {
+        return space;
+    }
+    public void setSpace(final Space space) {
+        this.space = space;
     }
 
     public IntPoint getFrom() {

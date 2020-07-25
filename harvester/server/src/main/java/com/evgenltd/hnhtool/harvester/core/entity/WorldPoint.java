@@ -2,13 +2,6 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 
 import com.evgenltd.hnhtools.entity.IntPoint;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-12-2019 01:47</p>
- */
 public class WorldPoint {
 
     private Space space;

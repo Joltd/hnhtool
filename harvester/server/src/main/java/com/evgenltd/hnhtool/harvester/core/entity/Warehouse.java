@@ -19,6 +19,10 @@ public class Warehouse {
     @Id
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "space_id")
+    private Space space;
+
     @OneToMany(mappedBy = "warehouse")
     private Set<WarehouseCell> cells = new HashSet<>();
 
@@ -27,6 +31,13 @@ public class Warehouse {
     }
     public void setId(final Long id) {
         this.id = id;
+    }
+
+    public Space getSpace() {
+        return space;
+    }
+    public void setSpace(final Space space) {
+        this.space = space;
     }
 
     public Set<WarehouseCell> getCells() {

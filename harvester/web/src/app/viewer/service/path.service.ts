@@ -21,7 +21,6 @@ export class PathService {
         private viewerService: ViewerService
     ) {
         this.viewerService.onModeChanged.subscribe((mode) => {
-            console.log('PathService');
             if (mode == 'COMMON') {
                 this.viewerService.commands.push(new Command('timeline', () => this.enter()));
             }
