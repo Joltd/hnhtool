@@ -17,13 +17,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 03-12-2019 21:41</p>
- */
 @Service
 @Transactional
 public class KnownObjectService {

@@ -1,9 +1,8 @@
-import {HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
+import {HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse} from '@angular/common/http';
 import {Observable, throwError} from 'rxjs';
 import {Injectable} from '@angular/core';
 import {ErrorHubService} from "./error-hub.service";
-import {ErrorInfo} from "../model/ErrorInfo";
-import {catchError} from 'rxjs/operators';
+import {catchError, map} from 'rxjs/operators';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -20,10 +19,22 @@ export class ErrorInterceptor implements HttpInterceptor {
         req = req.clone({params});
 
         return next.handle(req)
-            .pipe(catchError(error => {
-                this.errorHubService.errors.push(new ErrorInfo(error));
-                return throwError(error);
-            }))
+            .pipe(
+                map((event: HttpEvent<any>) => {
+                    if (event instanceof HttpResponse) {
+                        let response = event.body;
+                        if (response.success) {
+                            return event.clone({body: response.value});
+                        } else {
+                            throw new Error(response.error);
+                        }
+                    }
+                }),
+                catchError(error => {
+                    this.errorHubService.registerError(error);
+                    return throwError(error);
+                })
+            );
     }
 
 }

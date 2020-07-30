@@ -15,13 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 25-11-2019 23:08</p>
- */
 @Service
 public class AgentServiceImpl implements AgentService {
 

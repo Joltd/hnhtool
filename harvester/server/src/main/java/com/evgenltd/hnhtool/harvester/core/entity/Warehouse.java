@@ -4,13 +4,6 @@ import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 23-03-2020 22:32</p>
- */
 @Entity
 @Table(name = "warehouses")
 public class Warehouse {

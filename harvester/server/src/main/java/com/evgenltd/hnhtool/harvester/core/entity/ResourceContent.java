@@ -2,13 +2,6 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 
 import javax.persistence.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 11-12-2019 00:00</p>
- */
 @Entity
 @Table(name = "resource_contents")
 public class ResourceContent {

@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.repository;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.record.Range;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,13 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 30-03-2019 23:52</p>
- */
 @Repository
 public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> {
 
@@ -64,5 +58,17 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     );
 
     List<KnownObject> findByParentIdAndPlace(final Long parentId, final KnownObject.Place place);
+
+    @Query("""
+            select new com.evgenltd.hnhtool.harvester.core.record.Range(
+                coalesce(min(ko.position.x), 0), 
+                coalesce(min(ko.position.y), 0),
+                coalesce(max(ko.position.x), 0), 
+                coalesce(max(ko.position.y), 0)
+            ) from KnownObject ko
+            where 
+                ko.space.id = ?1
+            """)
+    Range calculateRange(final Long spaceId);
 
 }

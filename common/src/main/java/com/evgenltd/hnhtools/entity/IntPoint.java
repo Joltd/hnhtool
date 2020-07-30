@@ -4,13 +4,6 @@ import com.evgenltd.hnhtools.common.Assert;
 
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 13-03-2019 00:02</p>
- */
 public final class IntPoint {
 
     private final int x;
@@ -49,12 +42,16 @@ public final class IntPoint {
         return add(-point.x, -point.y);
     }
 
-    public DoublePoint multiple(final DoublePoint point) {
+    public DoublePoint mul(final DoublePoint point) {
         return new DoublePoint(getX() * point.getX(), getY() * point.getY());
     }
 
-    public DoublePoint devide(final DoublePoint modifier) {
+    public DoublePoint div(final DoublePoint modifier) {
         return new DoublePoint(getX() / modifier.getX(), getY() / modifier.getY());
+    }
+
+    public DoublePoint div(final Number value) {
+        return asDouble().div(value);
     }
 
     public String asString() {

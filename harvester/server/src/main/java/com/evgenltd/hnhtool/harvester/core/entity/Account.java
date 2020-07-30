@@ -2,13 +2,6 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 
 import javax.persistence.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 30-03-2019 23:36</p>
- */
 @Entity
 @Table(name = "accounts")
 public class Account {

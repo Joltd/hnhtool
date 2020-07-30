@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
-
 public class Response<T> {
     private T value;
     private boolean success;

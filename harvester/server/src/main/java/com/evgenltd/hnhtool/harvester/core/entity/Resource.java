@@ -6,13 +6,6 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 03-12-2019 00:38</p>
- */
 @Entity
 @Table(name = "resources")
 public class Resource {

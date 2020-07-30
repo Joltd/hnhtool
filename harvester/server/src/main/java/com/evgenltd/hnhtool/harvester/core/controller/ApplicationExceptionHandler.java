@@ -12,11 +12,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.nio.file.AccessDeniedException;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 15:06
- */
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 

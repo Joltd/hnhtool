@@ -43,12 +43,16 @@ public class DoublePoint {
         return sub(point.getX(), point.getY());
     }
 
-    public DoublePoint multiple(final DoublePoint point) {
+    public DoublePoint mul(final DoublePoint point) {
         return new DoublePoint(getX() * point.getX(), getY() * point.getY());
     }
 
-    public DoublePoint devide(final DoublePoint doublePoint) {
+    public DoublePoint div(final DoublePoint doublePoint) {
         return new DoublePoint(x / doublePoint.getX(), y / doublePoint.getY());
+    }
+
+    public DoublePoint div(final Number value) {
+        return new DoublePoint(x / value.doubleValue(), y / value.doubleValue());
     }
 
     public IntPoint asIntPoint() {

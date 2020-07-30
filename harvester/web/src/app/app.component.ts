@@ -1,4 +1,6 @@
 import {Component} from '@angular/core';
+import {HttpClient} from "@angular/common/http";
+import {environment} from "../environments/environment";
 
 @Component({
   selector: 'app-root',
@@ -8,10 +10,18 @@ import {Component} from '@angular/core';
 export class AppComponent {
   collapsed: boolean;
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   toggleCollapsed() {
     this.collapsed = !this.collapsed;
+  }
+
+  error() {
+    this.http.get(environment.apiUrl + '/test/error').subscribe(() => {});
+  }
+
+  success() {
+    this.http.get(environment.apiUrl + '/test/success').subscribe((result) => alert(result));
   }
 
 }

@@ -7,8 +7,8 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "paths")
-public class Path {
+@Table(name = "preferences")
+public class Preferences {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -19,12 +19,10 @@ public class Path {
     private Space space;
 
     @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
-    @Columns(columns = {@Column(name = "fromX"), @Column(name = "fromY")})
-    private IntPoint from;
+    @Columns(columns = {@Column(name = "offsetX"), @Column(name = "offsetY")})
+    private IntPoint offset;
 
-    @Type(type = "com.evgenltd.hnhtool.harvester.core.component.type.IntPointType")
-    @Columns(columns = {@Column(name = "toX"), @Column(name = "toY")})
-    private IntPoint to;
+    private Integer zoom;
 
     public Long getId() {
         return id;
@@ -40,18 +38,18 @@ public class Path {
         this.space = space;
     }
 
-    public IntPoint getFrom() {
-        return from;
+    public IntPoint getOffset() {
+        return offset;
     }
-    public void setFrom(final IntPoint from) {
-        this.from = from;
+    public void setOffset(final IntPoint position) {
+        this.offset = position;
     }
 
-    public IntPoint getTo() {
-        return to;
+    public Integer getZoom() {
+        return zoom;
     }
-    public void setTo(final IntPoint to) {
-        this.to = to;
+    public void setZoom(final Integer zoom) {
+        this.zoom = zoom;
     }
 
 }

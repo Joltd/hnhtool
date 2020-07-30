@@ -25,13 +25,6 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 27-11-2019 23:03</p>
- */
 @Service
 @Transactional
 public class MatchingService {

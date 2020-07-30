@@ -6,6 +6,7 @@ import {CommonModule} from "@angular/common";
 import {PathService} from "./service/path.service";
 import {KnownObjectService} from "./service/known-object.service";
 import {SpaceService} from "./service/space.service";
+import {PreferencesService} from "./service/preferences.service";
 
 @NgModule({
     declarations: [ViewerComponent],
@@ -18,7 +19,8 @@ import {SpaceService} from "./service/space.service";
         WarehouseService,
         PathService,
         KnownObjectService,
-        SpaceService
+        SpaceService,
+        PreferencesService
     ]
 })
 export class ViewerModule {}

@@ -11,13 +11,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 04-12-2019 23:11</p>
- */
 @Service
 @Transactional
 public class ResourceService {

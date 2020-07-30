@@ -11,13 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 28-03-2020 19:58</p>
- */
 @RestController
 @RequestMapping("/known-object")
 public class KnownObjectController {

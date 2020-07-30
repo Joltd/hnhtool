@@ -10,13 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-04-2020 13:04</p>
- */
 @RestController
 @RequestMapping("/agent")
 public class AgentController {

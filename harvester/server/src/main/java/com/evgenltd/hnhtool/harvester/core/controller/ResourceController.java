@@ -13,13 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 31-03-2020 23:58</p>
- */
 @RestController
 @RequestMapping("/resource")
 public class ResourceController {

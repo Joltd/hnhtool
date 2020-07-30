@@ -20,4 +20,5 @@ public class WorldPoint {
     public void setPosition(final IntPoint position) {
         this.position = position;
     }
+
 }

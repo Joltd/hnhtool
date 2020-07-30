@@ -2,13 +2,6 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 
 import javax.persistence.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 30-03-2019 22:54</p>
- */
 @Entity
 @Table(name = "spaces")
 public class Space {

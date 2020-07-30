@@ -10,13 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 10-04-2020 00:04</p>
- */
 @Repository
 public interface ResourceGroupRepository extends JpaRepository<ResourceGroup, Long> {
 

@@ -9,13 +9,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 30-03-2019 22:59</p>
- */
 @Entity
 @Table(name = "known_objects")
 public class KnownObject {

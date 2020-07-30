@@ -4,13 +4,6 @@ import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 03-12-2019 23:58</p>
- */
 @Entity
 @Table(name = "resource_groups")
 public class ResourceGroup {

@@ -12,13 +12,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 25-11-2019 23:16</p>
- */
 @Service
 public class AccountService {
 

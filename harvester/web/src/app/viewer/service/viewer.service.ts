@@ -4,6 +4,8 @@ import {Box} from "../model/box";
 import {Entity} from "../model/entity";
 import {BehaviorSubject} from "rxjs";
 import {Command} from "../model/command";
+import {environment} from "../../../environments/environment";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable()
 export class ViewerService {
@@ -16,6 +18,7 @@ export class ViewerService {
     private _mouse: Mouse = new Mouse();
     private _entityIdentity: number = 1;
     private _entities: Entity[] = [];
+    private _space: number;
 
     private _hasSelection: boolean = false;
     private _isMovement: boolean = false;
@@ -29,8 +32,15 @@ export class ViewerService {
     private _onCancel: () => void = () => {};
     private _onModeChanged: BehaviorSubject<Mode> = new BehaviorSubject<Mode>('COMMON');
 
-    debug() {
-        debugger;
+    constructor(private http: HttpClient) {}
+
+    load() {
+        this.http.get<any>(environment.apiUrl + '/preferences')
+            .subscribe(result => {
+                this._space = result.spaceId;
+                this._viewport.offset = new Point(result.offset.x, result.offset.y);
+                this._viewport.zoom = result.zoom;
+            });
     }
 
     get mode(): Mode {

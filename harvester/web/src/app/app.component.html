@@ -11,5 +11,11 @@
     <div class="nav-item">
         <a class="nav-link" [class.collapsed]="collapsed" routerLink="/world"><i class="material-icons">map</i>Works</a>
     </div>
+    <div class="nav-item">
+        <a class="nav-link" [class.collapsed]="collapsed" (click)="error()"><i class="material-icons">bug_report</i>Error</a>
+    </div>
+    <div class="nav-item">
+        <a class="nav-link" [class.collapsed]="collapsed" (click)="success()"><i class="material-icons">bug_report</i>Success</a>
+    </div>
 </aside>
 <router-outlet></router-outlet>
