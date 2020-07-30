@@ -3,7 +3,7 @@ import {Type} from "@angular/core";
 export class Entity {
 
     private readonly _id: number;
-    private components: Map<Type<any>, any> = new Map<Type<any>, any>();
+    private components: Map<string, any> = new Map<string, any>();
 
     constructor(id: number) {
         this._id = id;
@@ -14,20 +14,22 @@ export class Entity {
     }
 
     add<T extends any>(component: T): T {
-        this.components.set(component.constructor, component);
+        type A = typeof component;
+
+        this.components.set(component.constructor.name, component);
         return component;
     }
 
     remove<T extends any>(type: Type<T>) {
-        this.components.delete(type);
+        this.components.delete(type.name);
     }
 
     get<T extends any>(type: Type<T>): T {
-        return <T> this.components.get(type);
+        return <T> this.components.get(type.name);
     }
 
     has<T extends any>(type: Type<T>): boolean {
-        return this.components.has(type);
+        return this.components.has(type.name);
     }
 
 }
