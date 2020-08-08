@@ -5,6 +5,10 @@ public class Response<T> {
     private boolean success;
     private String error;
 
+    public Response() {
+        this.success = true;
+    }
+
     public Response(final T value) {
         this.value = value;
         this.success = true;

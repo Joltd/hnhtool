@@ -2,22 +2,26 @@ package com.evgenltd.hnhtool.harvester.core.controller;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Preferences;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
+import com.evgenltd.hnhtool.harvester.core.repository.SpaceRepository;
 import com.evgenltd.hnhtool.harvester.core.service.PreferencesService;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/preferences")
 public class PreferencesController {
 
+    private final SpaceRepository spaceRepository;
     private final PreferencesService preferencesService;
 
     public PreferencesController(
+            final SpaceRepository spaceRepository,
             final PreferencesService preferencesService
     ) {
+        this.spaceRepository = spaceRepository;
         this.preferencesService = preferencesService;
     }
 
@@ -33,7 +37,22 @@ public class PreferencesController {
         ));
     }
 
+    @PostMapping
+    public Response<Void> update(@RequestBody final PreferencesRecord preferencesRecord) {
+        final Optional<Space> spaceHolder = spaceRepository.findById(preferencesRecord.space());
+        if (spaceHolder.isEmpty()) {
+            return new Response<>("Space [%s] not found", preferencesRecord.space());
+        }
+        preferencesService.update(
+                spaceHolder.get(),
+                preferencesRecord.offset(),
+                preferencesRecord.zoom()
+
+        );
+        return new Response<>();
+    }
+
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    record PreferencesRecord(Long id, Long spaceId, IntPoint offset, Integer zoom) {}
+    record PreferencesRecord(Long id, Long space, IntPoint offset, Integer zoom) {}
 
 }

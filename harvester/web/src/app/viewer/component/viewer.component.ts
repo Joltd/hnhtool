@@ -9,6 +9,7 @@ import {Warehouse} from "../model/warehouse";
 import {WarehouseService} from "../service/warehouse.service";
 import {PathService} from "../service/path.service";
 import {Path} from "../model/path";
+import {KnownObjectService} from "../service/known-object.service";
 
 @Component({
     selector: 'viewer',
@@ -25,6 +26,7 @@ export class ViewerComponent implements OnInit {
     constructor(
         private ngZone: NgZone,
         public viewerService: ViewerService,
+        private knownObjectService: KnownObjectService,
         private warehouseService: WarehouseService,
         private pathService: PathService
     ) {}
@@ -32,6 +34,7 @@ export class ViewerComponent implements OnInit {
     ngOnInit(): void {
         this.viewerService.load()
             .subscribe(() => {
+                this.knownObjectService.load();
                 this.warehouseService.load();
                 this.pathService.load();
             })

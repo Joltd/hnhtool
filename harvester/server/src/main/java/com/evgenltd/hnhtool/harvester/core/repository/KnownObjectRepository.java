@@ -17,7 +17,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
         return findById(id).orElseThrow(() -> new ApplicationException("There is no entry [%s]", id));
     }
 
-    Optional<KnownObject> findByResourceName(final String resourceName);
+    Optional<KnownObject> findByResourceName(String resourceName);
 
     @SuppressWarnings("JpaQlInspection")
     @Query("""
@@ -32,7 +32,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
                 and ko.position.y <= ?5
                 and r.visual = 'PROP'
             """)
-    List<KnownObject> findObjectsInArea(final Long spaceId, final Integer x1, final Integer y1, final Integer x2, final Integer y2);
+    List<KnownObject> findObjectsInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
 
     @SuppressWarnings("JpaQlInspection")
     @Query("""
@@ -57,7 +57,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
             final Integer secondY
     );
 
-    List<KnownObject> findByParentIdAndPlace(final Long parentId, final KnownObject.Place place);
+    List<KnownObject> findByParentIdAndPlace(Long parentId, KnownObject.Place place);
 
     @Query("""
             select new com.evgenltd.hnhtool.harvester.core.record.Range(
@@ -69,6 +69,8 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
             where 
                 ko.space.id = ?1
             """)
-    Range calculateRange(final Long spaceId);
+    Range calculateRange(Long spaceId);
+
+    List<KnownObject> findBySpaceId(Long spaceId);
 
 }

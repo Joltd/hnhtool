@@ -33,12 +33,31 @@ export class ViewerService {
     private _onCancel: () => void = () => {};
     private _onModeChanged: BehaviorSubject<Mode> = new BehaviorSubject<Mode>('COMMON');
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        this.scheduleSavePreferences(this.space, this._viewport.offset, this._viewport.zoom);
+    }
+
+    private scheduleSavePreferences(space: number, offset: Point, zoom: number) {
+        setTimeout(
+            () => {
+                if (this.space != space || !this._viewport.offset.equals(offset) || this._viewport.zoom != zoom) {
+                    let toSave = {
+                        space: this.space,
+                        offset: this._viewport.offset,
+                        zoom: this._viewport.zoom
+                    }
+                    this.http.post(environment.apiUrl + '/preferences', toSave).subscribe();
+                }
+                this.scheduleSavePreferences(this.space, this._viewport.offset, this._viewport.zoom);
+            },
+            1000
+        )
+    }
 
     load(): Observable<void> {
         return this.http.get<any>(environment.apiUrl + '/preferences')
             .pipe(tap(result => {
-                this._space = result.spaceId;
+                this._space = result.space;
                 this._viewport.offset = new Point(result.offset.x, result.offset.y);
                 this._viewport.zoom = result.zoom;
             }));
