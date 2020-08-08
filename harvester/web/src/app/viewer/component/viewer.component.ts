@@ -292,7 +292,7 @@ export class ViewerComponent implements OnInit {
     }
 
     private renderGrid() {
-        let position = this.viewerService.positionWorldToScreen(this.viewerService.viewport.offset.round(ViewerService.GRID_STEP).add(ViewerService.GRID_STEP / 2));
+        let position = this.viewerService.positionWorldToScreen(this.viewerService.viewport.offset.round(ViewerService.GRID_STEP));
         let size = this.viewerService.sizeWorldToScreen(this.viewerService.viewport.size);
         let step = this.viewerService.sizeWorldToScreen(new Point(ViewerService.GRID_STEP));
 

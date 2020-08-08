@@ -328,10 +328,10 @@ class Mouse {
     set worldCurrent(value: Point) {
         this._worldCurrent = value;
         if (value) {
-            this._worldCurrentRounded = value.add(
-                (value.x >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2,
-                (value.y >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2
-            ).round(ViewerService.GRID_STEP);
+            this._worldCurrentRounded = value.round(ViewerService.GRID_STEP).add(
+                    (value.x >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2,
+                    (value.y >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2
+            );
         } else {
             this._worldCurrentRounded = null;
         }

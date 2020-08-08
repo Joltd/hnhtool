@@ -123,7 +123,18 @@ export class WarehouseService {
     }
 
     remove() {
-
+        let newWarehouses = [];
+        for (let entity of this._warehouses) {
+            let warehouse = entity.get(Warehouse);
+            let selectable = entity.get(Selectable);
+            if (selectable && selectable.value) {
+                this.http.delete(environment.apiUrl + '/warehouse/' + warehouse.id).subscribe();
+                this.viewerService.removeEntity(entity);
+            } else {
+                newWarehouses.push(entity);
+            }
+        }
+        this._warehouses = newWarehouses;
     }
 
     done() {

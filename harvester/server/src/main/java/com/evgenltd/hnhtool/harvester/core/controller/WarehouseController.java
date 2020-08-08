@@ -95,8 +95,9 @@ public class WarehouseController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable("id") final Long id) {
+    public Response<Void> delete(@PathVariable("id") final Long id) {
         warehouseRepository.deleteById(id);
+        return new Response<>();
     }
 
     private WarehouseRecord toWarehouseRecord(final Warehouse warehouse) {
