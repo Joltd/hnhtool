@@ -75,6 +75,7 @@ public class WarehouseController {
 
         for (final WarehouseCellRecord warehouseCellRecord : warehouseRecord.cells()) {
             final WarehouseCell warehouseCell = toWarehouseCell(warehouseCellRecord);
+            warehouseCell.setWarehouse(warehouse);
             index.put(warehouseCell.getPosition(), warehouseCell);
         }
 
@@ -88,8 +89,9 @@ public class WarehouseController {
         warehouse.getCells().clear();
         warehouse.getCells().addAll(index.values());
 
-        final WarehouseRecord saved = toWarehouseRecord(warehouse);
-        return new Response<>(saved);
+        final Warehouse saved = warehouseRepository.save(warehouse);
+
+        return new Response<>(toWarehouseRecord(saved));
     }
 
     @DeleteMapping("/{id}")
@@ -118,12 +120,13 @@ public class WarehouseController {
     }
 
     private Warehouse toWarehouse(final WarehouseRecord warehouseRecord, final Space space) {
+        final Warehouse warehouse = new Warehouse();
+        warehouse.setSpace(space);
         final Set<WarehouseCell> cells = warehouseRecord.cells()
                 .stream()
                 .map(this::toWarehouseCell)
+                .peek(cell -> cell.setWarehouse(warehouse))
                 .collect(Collectors.toSet());
-        final Warehouse warehouse = new Warehouse();
-        warehouse.setSpace(space);
         warehouse.setCells(cells);
         return warehouse;
     }

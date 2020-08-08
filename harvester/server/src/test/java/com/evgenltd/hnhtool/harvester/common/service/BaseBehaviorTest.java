@@ -21,13 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 03-04-2019 21:03</p>
- */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
 public class BaseBehaviorTest {

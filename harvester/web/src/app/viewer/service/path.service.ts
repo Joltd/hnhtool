@@ -28,8 +28,8 @@ export class PathService {
     }
 
     load() {
-        this._path = this.viewerService.createEntity();
-        this._path.add(new Path());
+        // this._path = this.viewerService.createEntity();
+        // this._path.add(new Path());
     }
 
     enter() {

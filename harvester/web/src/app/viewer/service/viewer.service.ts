@@ -2,10 +2,11 @@ import {Injectable} from "@angular/core";
 import {Point} from "../model/point";
 import {Box} from "../model/box";
 import {Entity} from "../model/entity";
-import {BehaviorSubject} from "rxjs";
+import {BehaviorSubject, Observable} from "rxjs";
 import {Command} from "../model/command";
 import {environment} from "../../../environments/environment";
 import {HttpClient} from "@angular/common/http";
+import {tap} from "rxjs/operators";
 
 @Injectable()
 export class ViewerService {
@@ -34,13 +35,17 @@ export class ViewerService {
 
     constructor(private http: HttpClient) {}
 
-    load() {
-        this.http.get<any>(environment.apiUrl + '/preferences')
-            .subscribe(result => {
+    load(): Observable<void> {
+        return this.http.get<any>(environment.apiUrl + '/preferences')
+            .pipe(tap(result => {
                 this._space = result.spaceId;
                 this._viewport.offset = new Point(result.offset.x, result.offset.y);
                 this._viewport.zoom = result.zoom;
-            });
+            }));
+    }
+
+    get space(): number {
+        return this._space;
     }
 
     get mode(): Mode {
@@ -62,14 +67,12 @@ export class ViewerService {
         this._commands = value;
     }
 
-
     get mouse(): Mouse {
         return this._mouse;
     }
     set mouse(value: Mouse) {
         this._mouse = value;
     }
-
 
     get selectionArea(): Box {
         if (!this.mouse.worldOrigin) {
@@ -125,7 +128,6 @@ export class ViewerService {
     }
 
     moveViewportTo(worldPoint: Point) {
-        console.log(this.viewport.size);
         this.viewport.offset = worldPoint.sub(this.viewport.size.div(2));
     }
 
@@ -307,7 +309,10 @@ class Mouse {
     set worldCurrent(value: Point) {
         this._worldCurrent = value;
         if (value) {
-            this._worldCurrentRounded = value.add(ViewerService.GRID_STEP / 2).round(ViewerService.GRID_STEP);
+            this._worldCurrentRounded = value.add(
+                (value.x >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2,
+                (value.y >= 0 ? 1 : -1) * ViewerService.GRID_STEP / 2
+            ).round(ViewerService.GRID_STEP);
         } else {
             this._worldCurrentRounded = null;
         }

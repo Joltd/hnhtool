@@ -16,7 +16,7 @@ public class Warehouse {
     @JoinColumn(name = "space_id")
     private Space space;
 
-    @OneToMany(mappedBy = "warehouse")
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private Set<WarehouseCell> cells = new HashSet<>();
 
     public Long getId() {

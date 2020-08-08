@@ -4,6 +4,7 @@ import com.evgenltd.hnhtool.harvester.core.entity.Preferences;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.service.PreferencesService;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +33,7 @@ public class PreferencesController {
         ));
     }
 
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     record PreferencesRecord(Long id, Long spaceId, IntPoint offset, Integer zoom) {}
 
 }

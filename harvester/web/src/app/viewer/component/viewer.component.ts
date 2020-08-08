@@ -30,8 +30,11 @@ export class ViewerComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.warehouseService.load();
-        this.pathService.load();
+        this.viewerService.load()
+            .subscribe(() => {
+                this.warehouseService.load();
+                this.pathService.load();
+            })
 
         this.graphic = this.canvas.nativeElement.getContext('2d');
 
@@ -67,7 +70,6 @@ export class ViewerComponent implements OnInit {
 
         } else {
             this.viewerService.mouse.worldCurrent = this.viewerService.positionScreenToWorld(event.offsetX, event.offsetY);
-            // console.log(this.viewerService.mouse.worldCurrent);
             this.handleHovering();
         }
     }

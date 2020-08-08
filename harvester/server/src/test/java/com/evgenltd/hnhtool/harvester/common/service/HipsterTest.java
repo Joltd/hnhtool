@@ -10,13 +10,6 @@ import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.SearchProblem;
 import org.junit.Test;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 04-04-2019 22:05</p>
- */
 public class HipsterTest {
 
     @Test

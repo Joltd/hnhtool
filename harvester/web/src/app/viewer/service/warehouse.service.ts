@@ -3,9 +3,11 @@ import {ViewerService} from "./viewer.service";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 import {Entity} from "../model/entity";
 import {Point} from "../model/point";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {Cell, Warehouse} from "../model/warehouse";
 import {Command} from "../model/command";
+import {environment} from "../../../environments/environment";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class WarehouseService {
@@ -23,17 +25,27 @@ export class WarehouseService {
         this.viewerService.onModeChanged.subscribe((mode) => {
             if (mode == 'COMMON') {
                 this.viewerService.commands.push(new Command('storefront', () => this.enter()));
+            } else if (mode == 'WAREHOUSE') {
+                this.viewerService.commands = [
+                    new Command('add', () => this.add()),
+                    new Command('edit', () => this.edit()),
+                    new Command('remove', () => this.remove()),
+                    new Command('done', () => this.done())
+                ];
+            } else if (mode == 'CELL') {
+                this.viewerService.commands = [
+                    new Command('add', () => this.startAddCell()),
+                    new Command('remove', () => this.removeCell()),
+                    new Command('done', () => this.apply()),
+                    new Command('close', () => this.cancel())
+                ];
             }
         });
     }
 
     enter() {
-        this.viewerService.commands = [
-            new Command('add', () => this.add()),
-            new Command('edit', () => this.edit()),
-            new Command('remove', () => this.remove()),
-            new Command('done', () => this.done())
-        ];
+        this.viewerService.mode = 'WAREHOUSE';
+
         for (let warehouse of this._warehouses) {
             warehouse.add(new Hoverable());
             warehouse.add(new Selectable());
@@ -41,9 +53,11 @@ export class WarehouseService {
     }
 
     load() {
-        // this.http.get<any[]>(environment + '/warehouse')
-        //     .pipe(map(result => result.map(entry => this.toWarehouseEntity(entry))))
-        //     .subscribe(result => this._warehouses = result);
+        let params = new HttpParams()
+            .set('space', this.viewerService.space.toString());
+        this.http.get<any[]>(environment.apiUrl + '/warehouse', {params})
+            .pipe(map(result => result.map(entry => this.toWarehouseEntity(entry))))
+            .subscribe(result => this._warehouses = result);
     }
 
     private toWarehouseEntity(entry: any) {
@@ -77,6 +91,7 @@ export class WarehouseService {
         }
 
         this.viewerService.mode = 'CELL';
+
     }
 
     edit() {
@@ -105,13 +120,6 @@ export class WarehouseService {
         }
 
         this.viewerService.mode = 'CELL';
-
-        this.viewerService.commands = [
-            new Command('add', () => this.startAddCell()),
-            new Command('remove', () => this.removeCell()),
-            new Command('done', () => this.apply()),
-            new Command('close', () => this.cancel())
-        ];
     }
 
     remove() {
@@ -138,6 +146,10 @@ export class WarehouseService {
             cell.add(Disabled);
         }
         this.viewerService.onClick = () => this.addCell();
+        this.viewerService.onCancel = () => {
+            this.viewerService.removeEntity(this._dummy);
+            this._dummy = null;
+        }
     }
 
     addCell() {
@@ -145,7 +157,7 @@ export class WarehouseService {
             cell.remove(Disabled);
         }
         this.dummyToCell();
-        this.viewerService.onClick = null;
+        this.startAddCell();
     }
 
     removeCell() {
@@ -164,15 +176,36 @@ export class WarehouseService {
     apply() {
         let warehouse = this._warehouse.get(Warehouse);
         warehouse.cells = [];
+        let toSave = {
+            id: warehouse.id,
+            spaceId: this.viewerService.space,
+            cells: []
+        };
+
         for (let cellEntity of this._cells) {
             let cell = new Cell();
             cell.position = cellEntity.get(Position).value;
             warehouse.cells.push(cell);
+            toSave.cells.push({
+                x: cell.position.x,
+                y: cell.position.y
+            });
         }
-        this.cancel();
+
+        this.http.post<any>(environment.apiUrl + '/warehouse', toSave)
+            .subscribe((result) => {
+                warehouse.id = result.id;
+                this.cancel();
+            });
     }
 
     cancel() {
+        this.viewerService.onClick = null;
+        if (this._dummy) {
+            this.viewerService.removeEntity(this._dummy);
+            this._dummy = null;
+        }
+
         for (let cell of this._cells) {
             this.viewerService.removeEntity(cell);
         }

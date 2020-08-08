@@ -35,6 +35,8 @@ public class PreferencesService {
         Optional<Preferences> preferencesHolder = preferencesRepository.find();
         if (preferencesHolder.isEmpty()) {
             spaceRepository.findByType(Space.Type.SURFACE)
+                    .stream()
+                    .findFirst()
                     .ifPresentOrElse(
                             space -> switchToSpace(space.getId(), null),
                             () -> update(null, new IntPoint(0,0), 1)
