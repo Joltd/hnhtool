@@ -37,8 +37,8 @@ public class PathController {
         return new Response<>(result);
     }
 
-    @PostMapping("/{spaceId}")
-    public Response<List<PathRecord>> update(@PathVariable("spaceId") final Long spaceId, @RequestBody final List<PathRecord> pathRecords) {
+    @PostMapping
+    public Response<List<PathRecord>> update(@RequestParam("space") final Long spaceId, @RequestBody final List<PathRecord> pathRecords) {
 
         final Optional<Space> spaceHolder = spaceRepository.findById(spaceId);
         if (spaceHolder.isEmpty()) {
@@ -47,7 +47,7 @@ public class PathController {
 
         final Space space = spaceHolder.get();
 
-        final Set<Long> forDelete = pathRepository.findById(spaceId)
+        final Set<Long> forDelete = pathRepository.findBySpaceId(spaceId)
                 .stream()
                 .map(Path::getId)
                 .collect(Collectors.toSet());

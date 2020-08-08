@@ -1,10 +1,12 @@
 import {Injectable} from "@angular/core";
 import {Edge, Path} from "../model/path";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {ViewerService} from "./viewer.service";
 import {Entity} from "../model/entity";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 import {Command} from "../model/command";
+import {environment} from "../../../environments/environment";
+import {Point} from "../model/point";
 
 @Injectable()
 export class PathService {
@@ -23,23 +25,42 @@ export class PathService {
         this.viewerService.onModeChanged.subscribe((mode) => {
             if (mode == 'COMMON') {
                 this.viewerService.commands.push(new Command('timeline', () => this.enter()));
+            } else if (mode == 'PATH') {
+                this.viewerService.commands = [
+                    new Command('add', () => this.startAddNode()),
+                    new Command('remove', () => this.removeNode()),
+                    new Command('done', () => this.apply()),
+                    new Command('close', () => this.cancel())
+                ];
             }
         })
     }
 
     load() {
-        // this._path = this.viewerService.createEntity();
-        // this._path.add(new Path());
+        let params = new HttpParams().set('space', this.viewerService.space.toString());
+
+        this.http.get<any[]>(environment.apiUrl + '/path', {params})
+            .subscribe(result => {
+                this._path = this.viewerService.createEntity();
+                let path = this._path.add(new Path());
+                for (let entry of result) {
+                    let edge = new Edge();
+                    edge.id = entry.id;
+                    edge.from = this.createOrFindNode(entry.fromX, entry.fromY);
+                    edge.to = this.createOrFindNode(entry.toX, entry.toY);
+                    path.edges.push(edge)
+                }
+            });
     }
 
     enter() {
-        this.viewerService.commands = [
-            new Command('add', () => this.startAddNode()),
-            new Command('remove', () => this.removeNode()),
-            new Command('done', () => this.apply()),
-            new Command('close', () => this.cancel())
-        ];
         this.viewerService.mode = 'PATH';
+        for (let node of this._nodes) {
+            node.add(new Primitive());
+            node.add(new Hoverable());
+            node.add(new Selectable());
+            node.add(new Movement());
+        }
     }
 
     startAddNode() {
@@ -135,12 +156,31 @@ export class PathService {
     }
 
     apply() {
-        this.cancel();
+
+        let toSave = this._path.get(Path).edges.map(edge => {
+            return {
+                id: edge.id,
+                fromX: edge.from.value.x,
+                fromY: edge.from.value.y,
+                toX: edge.to.value.x,
+                toY: edge.to.value.y
+            }
+        })
+
+        let params = new HttpParams().set("space", this.viewerService.space.toString());
+
+        this.http.post(environment.apiUrl + '/path', toSave, {params}).subscribe(result => {
+            this.cancel();
+        });
+
     }
 
     cancel() {
         for (let node of this._nodes) {
-            this.viewerService.removeEntity(node);
+            node.remove(Primitive);
+            node.remove(Hoverable);
+            node.remove(Selectable);
+            node.remove(Movement);
         }
         this.viewerService.mode = 'COMMON';
     }
@@ -152,6 +192,25 @@ export class PathService {
             .edges
             .push(edge);
         return edge;
+    }
+
+    private createOrFindNode(x: number, y: number): Position {
+
+        let found = this._nodes.find(node => {
+            let position = node.get(Position);
+            return position.value.x == x && position.value.y == y;
+        });
+
+        if (found) {
+            return found.get(Position);
+        }
+
+        let node = this.viewerService.createEntity();
+        this._nodes.push(node);
+        node.add(new Position()).value = new Point(x, y);
+
+        return node.get(Position);
+
     }
 
 }
