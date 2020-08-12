@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -32,8 +31,8 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().scan();
 
-        final Warehouse warehouse = warehouseRepository.findById(19L).get();
-        final List<KnownObject> items = knownObjectRepository.findAllById(Arrays.asList(4250L, 4251L, 4252L, 4253L));
+        final Warehouse warehouse = warehouseRepository.findAll().stream().findFirst().get();
+        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(getAgent().getCharacterId(), KnownObject.Place.MAIN_INVENTORY);
 
         getStorekeeper().store(warehouse, items);
 
