@@ -2,13 +2,6 @@ package com.evgenltd.hnhtools.messagebroker;
 
 import com.evgenltd.hnhtools.common.ApplicationException;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 15:09</p>
- */
 public enum RelType {
     REL_MESSAGE_NEW_WIDGET(0),
     REL_MESSAGE_WIDGET_MESSAGE(1),

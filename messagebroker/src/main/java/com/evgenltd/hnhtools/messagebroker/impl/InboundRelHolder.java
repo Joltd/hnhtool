@@ -5,13 +5,6 @@ import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.util.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 12-03-2019 23:20</p>
- */
 final class InboundRelHolder {
 
     private Integer acknowledgeSequence = null;

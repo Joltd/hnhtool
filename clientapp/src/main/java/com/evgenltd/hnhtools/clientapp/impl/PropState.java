@@ -12,18 +12,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 19-11-2019 00:28</p>
- */
 final class PropState {
 
     private final Map<Long, PropImpl> index = new HashMap<>();
 
-    private ResourceState resourceState;
+    private final ResourceState resourceState;
 
     PropState(final ResourceState resourceState) {
         this.resourceState = resourceState;

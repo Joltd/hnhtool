@@ -5,13 +5,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-04-2020 14:09</p>
- */
 public class SomeTest {
 
     @Test

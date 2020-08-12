@@ -14,13 +14,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 20-11-2019 23:26</p>
- */
 public final class ItemWidgetImpl extends WidgetImpl implements ItemWidget {
 
     private static final String LABEL_NAME = "tt";

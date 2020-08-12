@@ -7,17 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 12-03-2019 23:27</p>
- */
 final class OutboundRelHolder {
 
     private Integer acknowledgeSequence = 0;
-    private List<RelRequest> awaiting = new ArrayList<>();
+    private final List<RelRequest> awaiting = new ArrayList<>();
 
     @UserThread
     void register(final int id, final String name, final Object... args) {

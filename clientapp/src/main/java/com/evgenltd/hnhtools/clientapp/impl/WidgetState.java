@@ -15,13 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 19-11-2019 00:28</p>
- */
 public final class WidgetState {
 
     private final Map<Integer, WidgetImpl> index = new HashMap<>();

@@ -7,13 +7,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 04-12-2019 00:07</p>
- */
 final class MatcherImpl {
 
     <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> MatchingResult<L, R> match(

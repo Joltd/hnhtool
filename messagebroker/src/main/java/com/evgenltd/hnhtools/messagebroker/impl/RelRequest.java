@@ -10,24 +10,18 @@ import com.evgenltd.hnhtools.util.ByteUtil;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 12-03-2019 23:14</p>
- */
+
 final class RelRequest {
 
     private static final long TIMEOUT = 10000;
 
-    private int id;
-    private int sequence;
-    private String name;
-    private Object[] args;
-    private long lastAttemptTime = System.currentTimeMillis();
+    private final int id;
+    private final int sequence;
+    private final String name;
+    private final Object[] args;
+    private final long lastAttemptTime = System.currentTimeMillis();
     private int attemptCount = 0;
-    private CountDownLatch latch = new CountDownLatch(1);
+    private final CountDownLatch latch = new CountDownLatch(1);
 
     RelRequest(final int id, final int sequence, final String name, final Object[] args) {
         this.id = id;

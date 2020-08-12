@@ -6,13 +6,6 @@ import org.junit.jupiter.api.Test;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-03-2019 01:26</p>
- */
 public class DataWriterTest {
 
     @Test

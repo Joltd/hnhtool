@@ -10,13 +10,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 22:21</p>
- */
 public class MessageColumnMarshaller {
 
     private static final Logger log = LogManager.getLogger(MessageColumnMarshaller.class);

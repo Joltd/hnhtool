@@ -9,13 +9,6 @@ import com.evgenltd.hnhtools.messagebroker.impl.message.MessageType;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-11-2019 23:03</p>
- */
 final class RelFragmentAssembly {
 
     private Builder builder = new Builder();

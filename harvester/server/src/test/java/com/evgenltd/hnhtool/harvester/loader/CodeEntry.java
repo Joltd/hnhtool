@@ -6,13 +6,6 @@ import com.evgenltd.hnhtools.message.DataReader;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 11-12-2019 00:35</p>
- */
 public final class CodeEntry extends AbstractLayer implements Layer {
 
     private static final int CLASS_NAME = 1;

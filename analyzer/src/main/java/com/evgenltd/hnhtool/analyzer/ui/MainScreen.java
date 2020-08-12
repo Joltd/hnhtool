@@ -21,13 +21,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 17:24</p>
- */
 public class MainScreen {
 
     public TableView<Message> messages;

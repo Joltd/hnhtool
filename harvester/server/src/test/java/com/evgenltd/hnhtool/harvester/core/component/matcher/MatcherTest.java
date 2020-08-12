@@ -10,13 +10,6 @@ import org.junit.Test;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 04-12-2019 00:12</p>
- */
 public class MatcherTest {
 
     @Test

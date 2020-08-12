@@ -5,13 +5,6 @@ import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 07-11-2019 00:16</p>
- */
 public interface ClientApp {
 
     List<Widget> getWidgets();

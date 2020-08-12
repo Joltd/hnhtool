@@ -9,13 +9,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.stream.Collectors;
 
-/**
- * <p>Class uses for loading text resources from classpath.</p>
- * <p></p>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 01:55</p>
- */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Resources {
 

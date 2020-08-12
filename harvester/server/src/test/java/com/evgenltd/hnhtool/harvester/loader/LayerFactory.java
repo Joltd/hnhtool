@@ -2,13 +2,6 @@ package com.evgenltd.hnhtool.harvester.loader;
 
 import com.evgenltd.hnhtools.message.DataReader;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 11-12-2019 00:44</p>
- */
 public class LayerFactory {
 
     public static Layer build(final DataReader reader) {

@@ -14,11 +14,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 14-02-2020 18:18
- */
 public class IntPointType implements CompositeUserType {
     @Override
     public String[] getPropertyNames() {

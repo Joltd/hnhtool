@@ -14,13 +14,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 10-03-2019 16:14</p>
- */
 public final class Message {
 
     private ObjectNode data;

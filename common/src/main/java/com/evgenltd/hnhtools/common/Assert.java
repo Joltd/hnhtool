@@ -2,13 +2,6 @@ package com.evgenltd.hnhtools.common;
 
 import org.jetbrains.annotations.Contract;
 
-/**
- * <p>Class for basic method arguments validation.</p>
- * <p></p>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 01:55</p>
- */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Assert {
 

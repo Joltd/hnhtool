@@ -7,13 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 10-03-2019 15:57</p>
- */
 final class ObjectDataHolder {
 
     private Map<Long,ObjectDataEntry> objectDataAcknowledge = new HashMap<>();

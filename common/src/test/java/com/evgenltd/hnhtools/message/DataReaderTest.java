@@ -5,13 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-03-2019 23:36</p>
- */
 public class DataReaderTest {
 
     @Test

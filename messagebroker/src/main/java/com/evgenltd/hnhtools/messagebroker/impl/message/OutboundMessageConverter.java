@@ -4,13 +4,6 @@ import com.evgenltd.hnhtools.message.DataReader;
 import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 23:25</p>
- */
 public final class OutboundMessageConverter {
 
     public OutboundMessageConverter() {}

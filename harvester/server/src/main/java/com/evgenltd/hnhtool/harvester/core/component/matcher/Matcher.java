@@ -8,13 +8,6 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 04-12-2019 01:31</p>
- */
 public final class Matcher {
 
     private static final Comparator<KnownObject> KNOWN_OBJECT_COMPARATOR = Comparator.comparing(KnownObject::getLost)

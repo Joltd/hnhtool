@@ -2,13 +2,6 @@ package com.evgenltd.hnhtools.entity;
 
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 27-03-2019 00:16</p>
- */
 public class DoublePoint {
 
     private double x;

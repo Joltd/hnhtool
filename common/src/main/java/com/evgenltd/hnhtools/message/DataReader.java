@@ -4,14 +4,6 @@ import com.evgenltd.hnhtools.util.ByteUtil;
 
 import java.nio.charset.StandardCharsets;
 
-
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 02:11</p>
- */
 public class DataReader {
 
     protected byte[] data;

@@ -7,13 +7,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 20-11-2019 21:40</p>
- */
 public final class StoreBoxWidgetImpl extends WidgetImpl implements StoreBoxWidget {
 
     private static final String CHANGE_NUMBER_NAME = "chnum";

@@ -7,13 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-11-2019 22:06</p>
- */
 public class MessageBrokerFactory {
 
     public static MessageBroker buildMessageBroker(

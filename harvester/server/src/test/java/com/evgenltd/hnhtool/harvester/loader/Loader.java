@@ -7,13 +7,6 @@ import com.evgenltd.hnhtools.message.DataReader;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-12-2019 01:17</p>
- */
 //@RunWith(SpringRunner.class)
 //@SpringBootTest(classes = Application.class)
 public class Loader {

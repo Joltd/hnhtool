@@ -4,13 +4,6 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 07-11-2019 01:56</p>
- */
 public class ParkTest {
 
     private static volatile boolean shutdown = false;

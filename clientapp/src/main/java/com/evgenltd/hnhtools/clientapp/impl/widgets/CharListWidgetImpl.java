@@ -10,13 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-04-2020 13:26</p>
- */
 public class CharListWidgetImpl extends WidgetImpl implements CharListWidget {
 
     private static final String ADD_NAME = "add";

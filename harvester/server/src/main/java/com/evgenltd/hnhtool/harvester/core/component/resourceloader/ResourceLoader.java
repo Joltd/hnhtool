@@ -14,13 +14,6 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 11-12-2019 00:09</p>
- */
 public class ResourceLoader {
 
     private static final String CERT_FILE = "/ressrv.crt";
@@ -28,7 +21,7 @@ public class ResourceLoader {
     private static final String SECURITY_PROTOCOL = "TLS";
     private static final String SECURITY_ALGORITHM = "PKIX";
 
-    private SSLContext sslContext;
+    private final SSLContext sslContext;
 
     public ResourceLoader() {
         try {

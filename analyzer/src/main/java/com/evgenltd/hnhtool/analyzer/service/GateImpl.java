@@ -20,13 +20,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 16:46</p>
- */
 public class GateImpl extends UnicastRemoteObject implements Lifecycle, Gate {
 
     private static final Logger log = LogManager.getLogger(GateImpl.class);

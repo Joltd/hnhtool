@@ -6,13 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 05-03-2019 00:19</p>
- */
 public class DataWriter {
 
     private List<Byte> data = new ArrayList<>(ByteUtil.WORD);

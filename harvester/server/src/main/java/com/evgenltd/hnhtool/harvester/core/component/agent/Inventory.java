@@ -7,13 +7,6 @@ import com.evgenltd.hnhtools.common.ApplicationException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 29-11-2019 02:50</p>
- */
 public class Inventory {
 
     private Long knownObjectId;

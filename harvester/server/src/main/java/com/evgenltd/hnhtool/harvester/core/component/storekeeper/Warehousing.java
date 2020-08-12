@@ -7,13 +7,6 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 23-03-2020 22:40</p>
- */
 public final class Warehousing {
 
     private final Set<IntPoint> freePoints = new HashSet<>();

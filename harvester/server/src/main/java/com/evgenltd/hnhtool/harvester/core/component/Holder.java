@@ -1,12 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.component;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 27-03-2020 22:21</p>
- */
 public class Holder<T> {
 
     private T value;

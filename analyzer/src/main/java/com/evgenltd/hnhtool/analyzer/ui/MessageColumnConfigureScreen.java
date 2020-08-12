@@ -8,13 +8,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 20:12</p>
- */
 public class MessageColumnConfigureScreen {
 
     public ListView<MessageColumn> columns;

@@ -4,13 +4,6 @@ import com.evgenltd.hnhtools.common.ApplicationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 02:04</p>
- */
 public enum MessageType {
     MESSAGE_TYPE_SESSION(0),
     MESSAGE_TYPE_REL(1),
@@ -22,7 +15,7 @@ public enum MessageType {
     MESSAGE_TYPE_OBJECT_ACKNOWLEDGE(7),
     MESSAGE_TYPE_CLOSE(8);
 
-    private int value;
+    private final int value;
 
     MessageType(final int value) {
         this.value = value;

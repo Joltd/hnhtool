@@ -3,13 +3,6 @@ package com.evgenltd.hnhtool.harvester.core.component.agent;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 26-11-2019 23:47</p>
- */
 public class Hand {
 
     private Long knownItemId;

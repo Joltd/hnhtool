@@ -6,13 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 28-02-2019 22:21</p>
- */
 public class MessageFilter {
 
     private List<Integer> acknowledgeToSkip = new ArrayList<>();

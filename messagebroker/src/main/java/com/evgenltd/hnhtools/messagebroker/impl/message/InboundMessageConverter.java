@@ -7,13 +7,6 @@ import com.evgenltd.hnhtools.util.ByteUtil;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 02:01</p>
- */
 public final class InboundMessageConverter {
 
     static final String MESSAGE_TYPE = "messageType";

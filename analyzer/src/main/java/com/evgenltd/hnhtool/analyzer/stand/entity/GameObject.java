@@ -1,12 +1,5 @@
 package com.evgenltd.hnhtool.analyzer.stand.entity;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 01-03-2019 00:00</p>
- */
 public class GameObject {
 
     private Long id;

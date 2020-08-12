@@ -2,13 +2,6 @@ package com.magenta.hnhtool.gate;
 
 import java.rmi.registry.LocateRegistry;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 13-03-2019 00:18</p>
- */
 public class Monitor {
 
     private static final long MAX_TIMEOUT = 2000L;

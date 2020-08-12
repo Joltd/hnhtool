@@ -6,13 +6,6 @@ import com.evgenltd.hnhtool.analyzer.stand.entity.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 28-02-2019 23:59</p>
- */
 public class Stand {
 
     private Map<Long, Resource> resourceIndex = new HashMap<>();

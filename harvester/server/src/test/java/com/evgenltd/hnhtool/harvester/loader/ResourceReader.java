@@ -6,13 +6,6 @@ import com.evgenltd.hnhtools.message.DataReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 11-12-2019 00:50</p>
- */
 public class ResourceReader {
 
     private static final byte[] signature = "Haven Resource 1".getBytes(Charset.forName("US-ASCII"));

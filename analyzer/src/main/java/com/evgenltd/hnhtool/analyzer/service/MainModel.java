@@ -20,13 +20,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 17:03</p>
- */
 public class MainModel implements Lifecycle {
 
     private static final Logger log  = LogManager.getLogger(MainModel.class);

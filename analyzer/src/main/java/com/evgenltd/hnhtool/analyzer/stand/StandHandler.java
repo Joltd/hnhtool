@@ -4,13 +4,6 @@ import com.evgenltd.hnhtool.analyzer.stand.entity.GameObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 01-03-2019 00:35</p>
- */
 public class StandHandler {
 
     private Stand stand;

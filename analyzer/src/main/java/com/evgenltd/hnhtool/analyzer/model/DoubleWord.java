@@ -5,13 +5,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 26-02-2019 01:14</p>
- */
 public class DoubleWord {
 
     private List<SimpleObjectProperty<Byte>> bytes = Arrays.asList(

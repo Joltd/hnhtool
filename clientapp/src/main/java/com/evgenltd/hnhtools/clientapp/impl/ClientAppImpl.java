@@ -16,13 +16,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 07-11-2019 00:58</p>
- */
 public final class ClientAppImpl implements ClientApp {
 
     private static final String PLAY_COMMAND = "play";

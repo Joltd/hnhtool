@@ -6,13 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import javafx.beans.property.*;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool</p>
- * <p>Author:  lebed</p>
- * <p>Created: 24-02-2019 20:05</p>
- */
 @JsonSerialize(using = MessageColumnMarshaller.Serializer.class)
 @JsonDeserialize(using = MessageColumnMarshaller.Deserializer.class)
 public class MessageColumn implements Cloneable {
