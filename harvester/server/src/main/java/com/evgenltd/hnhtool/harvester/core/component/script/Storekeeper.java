@@ -12,16 +12,9 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 26-03-2020 20:07</p>
- */
 public class Storekeeper {
 
-    private Agent agent;
+    private final Agent agent;
 
     public Storekeeper(final Agent agent) {
         this.agent = agent;
@@ -37,6 +30,7 @@ public class Storekeeper {
             final KnownObject item = entry.item();
 
             if (heap.get().getId() == null) {
+                agent.takeItemInHandFromInventory(item);
                 final Long heapId = agent.placeHeap(heap.get().getPosition());
                 final KnownObject newHeap = agent.getKnownObjectService().findById(heapId);
                 final WarehouseCell cell = warehouse.getCells()
@@ -50,6 +44,7 @@ public class Storekeeper {
                         ));
                 cell.setContainer(newHeap);
                 heap.set(newHeap);
+                continue;
             }
 
             agent.openHeap(heap.get());

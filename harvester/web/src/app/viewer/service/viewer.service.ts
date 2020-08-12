@@ -33,6 +33,8 @@ export class ViewerService {
     private _onCancel: () => void = () => {};
     private _onModeChanged: BehaviorSubject<Mode> = new BehaviorSubject<Mode>('COMMON');
 
+    private _tooltip: String[] = ['Test','Test2'];
+
     constructor(private http: HttpClient) {
         this.scheduleSavePreferences(this.space, this._viewport.offset, this._viewport.zoom);
     }
@@ -121,6 +123,14 @@ export class ViewerService {
     }
     set isMovement(value: boolean) {
         this._isMovement = value;
+    }
+
+    get tooltip(): String[] {
+        return this._tooltip;
+    }
+
+    set tooltip(value: String[]) {
+        this._tooltip = value;
     }
 
     // ##################################################

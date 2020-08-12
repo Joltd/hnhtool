@@ -22,7 +22,7 @@ public class KnownObjectController {
 
     @GetMapping
     public Response<List<KnownObjectRecord>> list(@RequestParam("space") final Long spaceId) {
-        final List<KnownObjectRecord> result = knownObjectRepository.findBySpaceId(spaceId)
+        final List<KnownObjectRecord> result = knownObjectRepository.findBySpaceIdAndLostIsFalse(spaceId)
                 .stream()
                 .map(knownObject -> new KnownObjectRecord(
                         knownObject.getPosition().getX(),

@@ -133,6 +133,10 @@ public final class Warehousing {
         }
 
         final ResourceGroup resourceGroup = item.getResource().getGroup();
+        if (resourceGroup == null) {
+            return null;
+        }
+
         final Resource heapResource = resourceGroup.getResources()
                 .stream()
                 .filter(Resource::isHeap)

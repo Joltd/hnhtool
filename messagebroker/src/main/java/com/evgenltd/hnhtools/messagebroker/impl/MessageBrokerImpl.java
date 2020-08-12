@@ -22,13 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-11-2019 22:06</p>
- */
 public final class MessageBrokerImpl implements MessageBroker {
 
     private static final Logger log = LogManager.getLogger(MessageBroker.class);

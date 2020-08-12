@@ -38,6 +38,7 @@ public class AgentImpl implements Agent {
 //    private static final String TRANSFER_COMMAND = "transfer";
 //    private static final String TRANSFER_EXT_COMMAND = "xfer";
     private static final String PLACE_COMMAND = "place";
+    private static final String FOCUS_COMMAND = "focus";
     private static final String CLOSE_COMMAND = "close";
 //    private static final String CONTEXT_MENU_COMMAND = "cl";
 
@@ -274,7 +275,7 @@ public class AgentImpl implements Agent {
         refreshState();
         final ItemWidget widget = getItemOrThrow(
                 knownItem.getResource().getName(),
-                knownItem.getPosition().sub(worldPoint.getPosition())
+                knownItem.getPosition()
         );
 
         hand.setKnownItemId(knownItem.getId());
@@ -483,8 +484,14 @@ public class AgentImpl implements Agent {
                 mapView.getId(),
                 ITEM_ACT_COMMAND,
                 SCREEN_POSITION,
-                character.getProp().getPosition(), // seems it's ignored by server
+                position, // seems it's ignored by server
                 0
+        );
+
+        clientApp.sendWidgetCommand(
+                gameUi.getId(),
+                FOCUS_COMMAND,
+                mapView.getId()
         );
 
         clientApp.sendWidgetCommand(

@@ -30,29 +30,44 @@ export class RenderUtil {
         }
 
         switch (type) {
-            case "CIRCLE":
+            case 'CIRCLE': {
                 graphic.beginPath();
                 graphic.arc(position.x, position.y, size, 0, 2 * Math.PI);
                 graphic.fill();
                 break;
-            case "RECT":
+            }
+            case 'RECT': {
                 let from = position.sub(size / 2);
                 graphic.fillRect(from.x, from.y, size, size);
                 break;
+            }
+            case 'STROKE_RECT': {
+                graphic.strokeStyle = graphic.fillStyle;
+                let from = position.sub(size / 2);
+                graphic.strokeRect(from.x, from.y, size, size);
+                break;
+            }
         }
 
         if (selected) {
             graphic.strokeStyle = RenderUtil.SELECTION;
             switch (type) {
-                case "CIRCLE":
+                case 'CIRCLE': {
                     graphic.beginPath();
                     graphic.arc(position.x, position.y, size, 0, 2 * Math.PI);
                     graphic.stroke();
                     break;
-                case "RECT":
+                }
+                case 'RECT': {
                     let from = position.sub(size / 2);
                     graphic.strokeRect(from.x, from.y, size, size);
                     break;
+                }
+                case 'STROKE_RECT': {
+                    let from = position.sub(size / 2);
+                    graphic.strokeRect(from.x, from.y, size, size);
+                    break;
+                }
             }
         }
     }
@@ -74,4 +89,4 @@ export class RenderUtil {
 
 }
 
-export type PrimitiveType = "CIRCLE" | "RECT";
+export type PrimitiveType = 'CIRCLE' | 'RECT' | 'STROKE_RECT';

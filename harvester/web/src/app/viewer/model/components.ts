@@ -82,3 +82,15 @@ export class Primitive {
     }
 
 }
+
+export class Tooltip {
+    private _value: (Entity) => String;
+
+    get value(): (Entity) => String {
+        return this._value;
+    }
+
+    set value(value: (Entity) => String) {
+        this._value = value;
+    }
+}

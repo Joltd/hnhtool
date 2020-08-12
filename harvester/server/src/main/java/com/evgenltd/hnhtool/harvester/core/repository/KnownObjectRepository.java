@@ -31,6 +31,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
                 and ko.position.x <= ?4
                 and ko.position.y <= ?5
                 and r.visual = 'PROP'
+                and ko.lost = false
             """)
     List<KnownObject> findObjectsInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
 
@@ -38,15 +39,15 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     @Query("""
             select f 
             from KnownObject f, KnownObject s
-            left join s.resource r 
             where
                 f.resource.name = ?1
                 and s.resource.name = ?4
-                and (s.position.x - f.position.y) = (?5 - ?2)
+                and (s.position.x - f.position.x) = (?5 - ?2)
                 and (s.position.y - f.position.y) = (?6 - ?3)
                 and f.lost = false
                 and s.lost = false
-                and r.visual = 'PROP'
+                and f.resource.visual = 'PROP'
+                and s.resource.visual = 'PROP'
             """)
     List<KnownObject> findObjectByPattern(
             final String firstResource,
@@ -71,6 +72,6 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
             """)
     Range calculateRange(Long spaceId);
 
-    List<KnownObject> findBySpaceId(Long spaceId);
+    List<KnownObject> findBySpaceIdAndLostIsFalse(Long spaceId);
 
 }

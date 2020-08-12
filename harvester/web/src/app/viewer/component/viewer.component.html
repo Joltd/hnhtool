@@ -12,3 +12,6 @@
         (keyup)="runOutside($event, onKeyUp)"
         (contextmenu)="$event.preventDefault()"
 ></canvas>
+<div #tooltip class="v-tooltip" [style.left.px]="tooltipPosition.x" [style.top.px]="tooltipPosition.y" [hidden]="viewerService.tooltip.length == 0">
+    <div *ngFor="let tooltip of viewerService.tooltip">{{tooltip}}</div>
+</div>

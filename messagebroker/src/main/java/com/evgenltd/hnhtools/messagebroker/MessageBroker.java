@@ -1,13 +1,5 @@
 package com.evgenltd.hnhtools.messagebroker;
 
-
-/**
- * <p></p>
- * <br/>
- * <p>Project: hnhtool-root</p>
- * <p>Author:  lebed</p>
- * <p>Created: 06-11-2019 21:40</p>
- */
 public interface MessageBroker {
 
     // ##################################################

@@ -1,10 +1,12 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
 import com.evgenltd.hnhtool.harvester.core.AgentService;
+import com.evgenltd.hnhtool.harvester.core.component.script.TestScript;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
 import com.evgenltd.hnhtool.harvester.core.service.AccountService;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,15 +19,18 @@ public class AgentController {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final AgentService agentService;
+    private final ObjectFactory<TestScript> testScriptFactory;
 
     public AgentController(
             final AccountRepository accountRepository,
             final AccountService accountService,
-            final AgentService agentService
+            final AgentService agentService,
+            final ObjectFactory<TestScript> testScriptFactory
     ) {
         this.accountRepository = accountRepository;
         this.accountService = accountService;
         this.agentService = agentService;
+        this.testScriptFactory = testScriptFactory;
     }
 
     @GetMapping
@@ -72,6 +77,13 @@ public class AgentController {
     public Response<List<String>> characterList(@PathVariable final Long id) {
         final Account account = accountService.findById(id);
         return new Response<>(agentService.loadCharacterList(account));
+    }
+
+    @PostMapping("/task")
+    public Response<Void> task() {
+        final TestScript testScript = testScriptFactory.getObject();
+        agentService.scheduleScriptExecution(testScript);
+        return new Response<>();
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

@@ -2,7 +2,17 @@ import {Component, ElementRef, NgZone, OnInit, ViewChild} from "@angular/core";
 import {Point} from "../model/point";
 import {Entity} from "../model/entity";
 import {Box} from "../model/box";
-import {Delta, Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
+import {
+    Delta,
+    Disabled,
+    FollowCursor,
+    Hoverable,
+    Movement,
+    Position,
+    Primitive,
+    Selectable,
+    Tooltip
+} from "../model/components";
 import {ViewerService} from "../service/viewer.service";
 import {RenderUtil} from "../service/render-util";
 import {Warehouse} from "../model/warehouse";
@@ -21,6 +31,11 @@ export class ViewerComponent implements OnInit {
     @ViewChild('canvas', {static: true})
     canvas: ElementRef;
 
+    @ViewChild('tooltip', {static: true})
+    tooltip: ElementRef;
+
+    tooltipPosition: Point = new Point(0,0);
+
     graphic: CanvasRenderingContext2D;
 
     constructor(
@@ -34,9 +49,9 @@ export class ViewerComponent implements OnInit {
     ngOnInit(): void {
         this.viewerService.load()
             .subscribe(() => {
-                this.knownObjectService.load();
                 this.warehouseService.load();
                 this.pathService.load();
+                this.knownObjectService.load();
             })
 
         this.graphic = this.canvas.nativeElement.getContext('2d');
@@ -73,7 +88,7 @@ export class ViewerComponent implements OnInit {
 
         } else {
             this.viewerService.mouse.worldCurrent = this.viewerService.positionScreenToWorld(event.offsetX, event.offsetY);
-            this.handleHovering();
+            this.handleHovering(event);
         }
     }
 
@@ -147,10 +162,11 @@ export class ViewerComponent implements OnInit {
     // #                                                #
     // ##################################################
 
-    private handleHovering() {
+    private handleHovering(event: MouseEvent) {
         let area = this.viewerService.mouse.area;
 
         let hovered: Entity[] = [];
+        let tooltips: String[] = [];
 
         for (let entity of this.viewerService.entities) {
             let disabled = entity.get(Disabled);
@@ -161,6 +177,11 @@ export class ViewerComponent implements OnInit {
                 if (hoverable.value) {
                     hovered.push(entity);
                 }
+
+                let tooltip = entity.get(Tooltip);
+                if (hoverable.value && tooltip) {
+                    tooltips.push(tooltip.value(entity));
+                }
             }
 
             let followCursor = entity.get(FollowCursor);
@@ -169,9 +190,30 @@ export class ViewerComponent implements OnInit {
             }
         }
 
+        this.setTooltipPosition(event);
+        this.viewerService.tooltip = tooltips;
+
         if (hovered.length > 0) {
             this.viewerService.onHover(hovered);
         }
+    }
+
+    private setTooltipPosition(event: MouseEvent) {
+        let x = event.pageX;
+        let y = event.pageY;
+        let canvasHalfWidth = this.canvas.nativeElement.clientWidth / 2;
+        let canvasHalfHeight = this.canvas.nativeElement.clientHeight / 2;
+        let tooltipWidth = this.tooltip.nativeElement.clientWidth;
+        let tooltipHeight = this.tooltip.nativeElement.clientHeight;
+        if (x > canvasHalfWidth) {
+            x = x - tooltipWidth
+        } else {
+        }
+        if (y > canvasHalfHeight) {
+            y = y - tooltipHeight;
+        } else {
+        }
+        this.tooltipPosition = new Point(x, y);
     }
 
     // ##################################################
@@ -355,9 +397,9 @@ export class ViewerComponent implements OnInit {
             RenderUtil.renderPrimitive(
                 this.graphic,
                 this.viewerService.positionWorldToScreen(cell.position),
-                "RECT",
-                this.viewerService.sizeWorldToScreen(500).x,
-                '#00004F',
+                'STROKE_RECT',
+                this.viewerService.sizeWorldToScreen(700).x,
+                '#BB0000',
                 entity.get(Selectable)?.value,
                 entity.get(Hoverable)?.value,
                 entity.has(Disabled)
