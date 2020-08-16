@@ -12,16 +12,8 @@ export class Path {
 }
 
 export class Edge {
-    private _id: number;
     private _from: Position;
     private _to: Position;
-
-    get id(): number {
-        return this._id;
-    }
-    set id(value: number) {
-        this._id = value;
-    }
 
     get from(): Position {
         return this._from;

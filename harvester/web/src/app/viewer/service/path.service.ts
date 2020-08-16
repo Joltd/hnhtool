@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {Edge, Path} from "../model/path";
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {ViewerService} from "./viewer.service";
 import {Entity} from "../model/entity";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
@@ -37,17 +37,14 @@ export class PathService {
     }
 
     load() {
-        let params = new HttpParams().set('space', this.viewerService.space.toString());
-
-        this.http.get<any[]>(environment.apiUrl + '/path', {params})
+        this.http.get<any[]>(environment.apiUrl + '/path')
             .subscribe(result => {
                 this._path = this.viewerService.createEntity();
                 let path = this._path.add(new Path());
                 for (let entry of result) {
                     let edge = new Edge();
-                    edge.id = entry.id;
-                    edge.from = this.createOrFindNode(entry.fromX, entry.fromY);
-                    edge.to = this.createOrFindNode(entry.toX, entry.toY);
+                    edge.from = this.createOrFindNode(entry.from.position);
+                    edge.to = this.createOrFindNode(entry.to.position);
                     path.edges.push(edge)
                 }
             });
@@ -159,17 +156,18 @@ export class PathService {
 
         let toSave = this._path.get(Path).edges.map(edge => {
             return {
-                id: edge.id,
-                fromX: edge.from.value.x,
-                fromY: edge.from.value.y,
-                toX: edge.to.value.x,
-                toY: edge.to.value.y
+                from: {
+                    spaceId: this.viewerService.space,
+                    position: edge.from.value
+                },
+                to: {
+                    spaceId: this.viewerService.space,
+                    position: edge.to.value
+                }
             }
         })
 
-        let params = new HttpParams().set("space", this.viewerService.space.toString());
-
-        this.http.post(environment.apiUrl + '/path', toSave, {params}).subscribe(result => {
+        this.http.post(environment.apiUrl + '/path', toSave).subscribe(result => {
             this.cancel();
         });
 
@@ -194,11 +192,11 @@ export class PathService {
         return edge;
     }
 
-    private createOrFindNode(x: number, y: number): Position {
+    private createOrFindNode(position: Point): Position {
 
         let found = this._nodes.find(node => {
             let position = node.get(Position);
-            return position.value.x == x && position.value.y == y;
+            return position.value.x == position.x && position.value.y == position.y;
         });
 
         if (found) {
@@ -207,7 +205,7 @@ export class PathService {
 
         let node = this.viewerService.createEntity();
         this._nodes.push(node);
-        node.add(new Position()).value = new Point(x, y);
+        node.add(new Position()).value = new Point(position.x, position.y);
 
         return node.get(Position);
 

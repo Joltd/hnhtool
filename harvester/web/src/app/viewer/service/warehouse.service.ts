@@ -112,6 +112,7 @@ export class WarehouseService {
             let cellEntity = this.viewerService.createEntity();
             this._cells.push(cellEntity);
 
+            cellEntity.add(cell);
             cellEntity.add(new Hoverable());
             cellEntity.add(new Selectable());
             cellEntity.add(new Movement());
@@ -194,10 +195,11 @@ export class WarehouseService {
         };
 
         for (let cellEntity of this._cells) {
-            let cell = new Cell();
+            let cell = cellEntity.get(Cell);
             cell.position = cellEntity.get(Position).value;
             warehouse.cells.push(cell);
             toSave.cells.push({
+                id: cell.id,
                 x: cell.position.x,
                 y: cell.position.y
             });
@@ -257,6 +259,7 @@ export class WarehouseService {
         }
 
         this._dummy.remove(FollowCursor);
+        this._dummy.add(new Cell()).position = this._dummy.get(Position).value;
         this._dummy.add(new Hoverable());
         this._dummy.add(new Selectable());
         this._dummy.add(new Movement());
