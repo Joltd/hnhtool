@@ -119,6 +119,7 @@ export class ViewerComponent implements OnInit {
         } else if (event.button == 1) {
             this.viewerService.mouse.mmb = false;
             this.viewerService.mouse.screenCurrent = null;
+            this.copyToClipboard(this.viewerService.mouse.worldCurrentRounded.toString())
         } else if (event.button == 2) {
             this.viewerService.onCancel();
             this.viewerService.mouse.rmb = false;
@@ -440,6 +441,26 @@ export class ViewerComponent implements OnInit {
         this.graphic.lineTo(from.x, to.y);
         this.graphic.lineTo(from.x, from.y);
         this.graphic.stroke();
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Utils                                         #
+    // #                                                #
+    // ##################################################
+
+    private copyToClipboard(value: string) {
+        const dummy = document.createElement('textarea');
+        dummy.style.position = 'fixed';
+        dummy.style.left = '0';
+        dummy.style.top = '0';
+        dummy.style.opacity = '0';
+        dummy.value = value;
+        document.body.appendChild(dummy);
+        dummy.focus();
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
     }
 
 }

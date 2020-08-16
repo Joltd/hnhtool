@@ -6,10 +6,12 @@ public abstract class Script {
 
     private Agent agent;
     private Storekeeper storekeeper;
+    private Routing routing;
 
     public void setAgent(final Agent agent) {
         this.agent = agent;
-        storekeeper = new Storekeeper(agent);
+        this.storekeeper = new Storekeeper(agent);
+        this.routing = new Routing(agent);
     }
 
     protected Agent getAgent() {
@@ -18,6 +20,10 @@ public abstract class Script {
 
     protected Storekeeper getStorekeeper() {
         return storekeeper;
+    }
+
+    protected Routing getRouting() {
+        return routing;
     }
 
     public abstract void execute();

@@ -1,16 +1,13 @@
 package com.evgenltd.hnhtool.harvester.core;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.service.KnownObjectService;
+import com.evgenltd.hnhtool.harvester.core.service.RoutingService;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.function.Supplier;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 25-11-2019 18:41
- */
 public interface Agent {
 
     // ##################################################
@@ -21,6 +18,8 @@ public interface Agent {
 
     KnownObjectService getKnownObjectService();
 
+    RoutingService getRoutingService();
+
     // ##################################################
     // #                                                #
     // #  Character                                     #
@@ -30,6 +29,8 @@ public interface Agent {
     Long getCharacterId();
 
     IntPoint getCharacterPosition();
+
+    Space getCurrentSpace();
 
     // ##################################################
     // #                                                #

@@ -1,15 +1,13 @@
 package com.evgenltd.hnhtool.harvester.core.component.script;
 
-import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.entity.Warehouse;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.WarehouseRepository;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
-import java.util.List;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -31,10 +29,12 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().scan();
 
-        final Warehouse warehouse = warehouseRepository.findAll().stream().findFirst().get();
-        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(getAgent().getCharacterId(), KnownObject.Place.MAIN_INVENTORY);
+        getRouting().move(new IntPoint(-948736,-923136));
 
-        getStorekeeper().store(warehouse, items);
+//        final Warehouse warehouse = warehouseRepository.findAll().stream().findFirst().get();
+//        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(getAgent().getCharacterId(), KnownObject.Place.MAIN_INVENTORY);
+//
+//        getStorekeeper().store(warehouse, items);
 
 //        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(
 ////                getAgent().getCharacterId(),

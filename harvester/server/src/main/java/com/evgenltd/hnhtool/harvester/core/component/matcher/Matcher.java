@@ -14,8 +14,8 @@ public final class Matcher {
             .thenComparing(KnownObject::getActual)
             .reversed();
 
-    public static MatchingResult<Prop, KnownObject> matchPropToKnownObject(final List<Prop> props, final List<KnownObject> knownObjects) {
-        return new MatcherImpl().match(props, knownObjects, PropWrapper::new, KnownObjectWrapper::new);
+    public static MatchingResult<Prop, KnownObject> matchPropToKnownObject(final List<Prop> props, final List<KnownObject> knownObjects, final IntPoint offset) {
+        return new MatcherImpl().match(props, knownObjects, prop -> new PropWrapper(prop, offset), KnownObjectWrapper::new);
     }
 
     public static MatchingResult<ItemWidget, KnownObject> matchItemWidgetToKnownObject(final List<ItemWidget> itemWidgets, final List<KnownObject> knownObjects) {
@@ -60,8 +60,11 @@ public final class Matcher {
     }
 
     private static class PropWrapper extends MatcherImpl.Wrapper<Prop> {
-        PropWrapper(final Prop value) {
+        private final IntPoint offset;
+
+        PropWrapper(final Prop value, final IntPoint offset) {
             super(value);
+            this.offset = offset;
         }
 
         @Override
@@ -71,7 +74,7 @@ public final class Matcher {
 
         @Override
         public IntPoint getPosition() {
-            return getValue().getPosition();
+            return getValue().getPosition().add(offset);
         }
     }
 

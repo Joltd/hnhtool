@@ -19,7 +19,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.IntBinaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -58,11 +61,11 @@ public class MatchingService {
         final List<Prop> filteredProps = props.stream()
                 .filter(prop -> {
                     final Resource resource = resources.get(prop.getResource());
-                    return resourceCondition.test(resource) && resource != null;
+                    return resourceCondition.test(resource) && resource != null && Assert.isNotEmpty(prop.getResource());
                 })
                 .collect(Collectors.toList());
 
-        WorldPoint offset = new OffsetSeeker(filteredProps).seek();
+        WorldPoint offset = seekOffset(filteredProps);
         if (offset == null) {
             offset = storeNewSpace();
         }
@@ -71,7 +74,8 @@ public class MatchingService {
         final List<KnownObject> knownObjects = loadKnownObjects(area, offset.getSpace());
         final MatchingResult<Prop, KnownObject> matchingResult = Matcher.matchPropToKnownObject(
                 filteredProps,
-                knownObjects
+                knownObjects,
+                offset.getPosition()
         );
 
         matchingResult.getMatches().forEach(entry -> {
@@ -175,27 +179,11 @@ public class MatchingService {
     // #                                                #
     // ##################################################
 
-    private class OffsetSeeker {
-
-        private final List<Prop> props;
-        private final List<String> excludedResources = new ArrayList<>();
-
-        OffsetSeeker(final List<Prop> props) {
-            this.props = new ArrayList<>(props);
-        }
-
-        @Nullable
-        WorldPoint seek() {
-
-            while (true) {
-
-                excludedResources.clear();
-                final Prop firstProp = selectRandomProp();
-                final Prop secondProp = selectRandomProp();
-                if (firstProp == null || secondProp == null) {
-                    log.info("Props are over");
-                    return null;
-                }
+    private WorldPoint seekOffset(final List<Prop> props) {
+        for (int firstIndex = 0; firstIndex < props.size(); firstIndex++) {
+            for (int secondIndex = firstIndex + 1; secondIndex < props.size(); secondIndex++) {
+                final Prop firstProp = props.get(firstIndex);
+                final Prop secondProp = props.get(secondIndex);
 
                 final KnownObject foundObject = findFirstObjectByPattern(firstProp, secondProp);
                 if (foundObject == null) {
@@ -208,51 +196,32 @@ public class MatchingService {
                 worldPoint.setSpace(foundObject.getSpace());
                 worldPoint.setPosition(offset);
                 return worldPoint;
-
             }
-
         }
 
-        @Nullable
-        private Prop selectRandomProp() {
-            return props.stream()
-                    .filter(this::isResourceNotRestricted)
-                    .findAny()
-                    .map(prop -> {
-                        props.remove(prop);
-                        excludedResources.add(prop.getResource());
-                        return prop;
-                    })
-                    .orElse(null);
+        return null;
+    }
+
+    private KnownObject findFirstObjectByPattern(final Prop first, final Prop second) {
+        final List<KnownObject> suitableCandidates = knownObjectRepository.findObjectByPattern(
+                first.getResource(),
+                first.getPosition().getX(),
+                first.getPosition().getY(),
+                second.getResource(),
+                second.getPosition().getX(),
+                second.getPosition().getY()
+        );
+
+        if (suitableCandidates.isEmpty()) {
+            log.info("No suitable object candidates");
+            return null;
         }
 
-        private boolean isResourceNotRestricted(final Prop prop) {
-            return Assert.isNotEmpty(prop.getResource())
-                    && !excludedResources.contains(prop.getResource());
+        if (suitableCandidates.size() > 1) {
+            log.info("Too much object candidates, [{}]", suitableCandidates.size());
         }
 
-        private KnownObject findFirstObjectByPattern(final Prop first, final Prop second) {
-            final List<KnownObject> suitableCandidates = knownObjectRepository.findObjectByPattern(
-                    first.getResource(),
-                    first.getPosition().getX(),
-                    first.getPosition().getY(),
-                    second.getResource(),
-                    second.getPosition().getX(),
-                    second.getPosition().getY()
-            );
-
-            if (suitableCandidates.isEmpty()) {
-                log.info("No suitable object candidates");
-                return null;
-            }
-
-            if (suitableCandidates.size() > 1) {
-                log.info("Too much object candidates, [{}]", suitableCandidates.size());
-            }
-
-            return suitableCandidates.get(0);
-        }
-
+        return suitableCandidates.get(0);
     }
 
     // ##################################################
@@ -263,8 +232,8 @@ public class MatchingService {
 
     private static final class Area {
 
-        private IntPoint upperLeft;
-        private IntPoint lowerRight;
+        private final IntPoint upperLeft;
+        private final IntPoint lowerRight;
 
         Area(final List<Prop> props, final IntPoint offset) {
             upperLeft = new IntPoint(

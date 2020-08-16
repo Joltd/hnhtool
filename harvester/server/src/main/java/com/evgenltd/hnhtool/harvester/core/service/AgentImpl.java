@@ -6,6 +6,7 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
@@ -48,9 +49,10 @@ public class AgentImpl implements Agent {
 
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
-    private MatchingService matchingService;
-    private KnownObjectService knownObjectService;
-    private ResourceService resourceService;
+    private final MatchingService matchingService;
+    private final KnownObjectService knownObjectService;
+    private final ResourceService resourceService;
+    private final RoutingService routingService;
 
     private ClientApp clientApp;
 
@@ -59,7 +61,7 @@ public class AgentImpl implements Agent {
 
     private Widget mapView;
     private Widget gameUi;
-    private WorldPoint worldPoint;
+    private WorldPoint worldPoint; // offset = KnownObject - Prop; Prop + Offset = KnownObject
     private final Character character = new Character();
     private final Hand hand = new Hand();
     private final Inventory currentInventory = new Inventory();
@@ -69,11 +71,13 @@ public class AgentImpl implements Agent {
     public AgentImpl(
             final MatchingService matchingService,
             final KnownObjectService knownObjectService,
-            final ResourceService resourceService
+            final ResourceService resourceService,
+            final RoutingService routingService
     ) {
         this.matchingService = matchingService;
         this.knownObjectService = knownObjectService;
         this.resourceService = resourceService;
+        this.routingService = routingService;
     }
 
     void setClientApp(final ClientApp clientApp) {
@@ -106,6 +110,11 @@ public class AgentImpl implements Agent {
         return knownObjectService;
     }
 
+    @Override
+    public RoutingService getRoutingService() {
+        return routingService;
+    }
+
     // ##################################################
     // #                                                #
     // #  State API                                     #
@@ -119,7 +128,12 @@ public class AgentImpl implements Agent {
 
     @Override
     public IntPoint getCharacterPosition() {
-        return character.getProp().getPosition();
+        return character.getProp().getPosition().add(worldPoint.getPosition());
+    }
+
+    @Override
+    public Space getCurrentSpace() {
+        return worldPoint.getSpace();
     }
 
     // ##################################################
@@ -136,7 +150,7 @@ public class AgentImpl implements Agent {
                 knownObjectService.storeCharacter(
                         character.getKnownObjectId(),
                         worldPoint.getSpace(),
-                        character.getProp().getPosition()
+                        getCharacterPosition()
                 );
             }
             return condition.get();
@@ -146,7 +160,7 @@ public class AgentImpl implements Agent {
     @Override
     public void move(final IntPoint position) {
         refreshState();
-        final IntPoint newPosition = character.getProp().getPosition().add(position);
+        final IntPoint newPosition = position.sub(worldPoint.getPosition());
         // other args if item in hand
         clientApp.sendWidgetCommand(
                 mapView.getId(),
@@ -646,7 +660,7 @@ public class AgentImpl implements Agent {
     @Override
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
-        knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), character.getProp().getPosition());
+        knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), getCharacterPosition());
     }
 
     // ##################################################
