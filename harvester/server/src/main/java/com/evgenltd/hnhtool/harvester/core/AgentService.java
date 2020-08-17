@@ -6,11 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 25-11-2019 18:27
- */
 public interface AgentService {
 
     List<String> loadCharacterList(Account account);

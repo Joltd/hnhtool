@@ -8,11 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 14:29
- */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 

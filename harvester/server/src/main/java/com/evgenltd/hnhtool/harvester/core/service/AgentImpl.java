@@ -5,6 +5,8 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
+import com.evgenltd.hnhtool.harvester.core.component.matcher.Matcher;
+import com.evgenltd.hnhtool.harvester.core.component.matcher.MatchingResult;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -29,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Transactional
 public class AgentImpl implements Agent {
 
     private static final String CLICK_COMMAND = "click";
@@ -88,11 +92,7 @@ public class AgentImpl implements Agent {
         final Long characterObjectId = knownObjectService.loadCharacterObjectId(character.getCharacterName());
         character.setKnownObjectId(characterObjectId);
 
-        final Long knownItemIdInHand = matchingService.researchHand(
-                characterObjectId,
-                hand.getItem()
-        );
-        hand.setKnownItemId(knownItemIdInHand);
+        researchHand();
         matchingService.researchItems(
                 characterObjectId,
                 KnownObject.Place.MAIN_INVENTORY,
@@ -108,6 +108,11 @@ public class AgentImpl implements Agent {
     @Override
     public KnownObjectService getKnownObjectService() {
         return knownObjectService;
+    }
+
+    @Override
+    public MatchingService getMatchingService() {
+        return matchingService;
     }
 
     @Override
@@ -134,6 +139,12 @@ public class AgentImpl implements Agent {
     @Override
     public Space getCurrentSpace() {
         return worldPoint.getSpace();
+    }
+
+    @Override
+    public void researchHand() {
+        final Long knownItemIdInHand = matchingService.researchHand(getCharacterId(), hand.getItem());
+        hand.setKnownItemId(knownItemIdInHand);
     }
 
     // ##################################################
@@ -211,9 +222,11 @@ public class AgentImpl implements Agent {
     }
 
     @Override
-    public void openHeap(final KnownObject knownObject) {
+    public void openHeap(final Long knownObjectId) {
         refreshState();
         forClose.forEach(this::closeWidget);
+
+        final KnownObject knownObject = knownObjectService.findById(knownObjectId);
 
         final Prop prop = getPropOrThrow(
                 knownObject.getResource().getName(),
@@ -239,6 +252,11 @@ public class AgentImpl implements Agent {
         await(currentHeap::isOpened);
 
         currentHeap.setKnownObjectId(knownObject.getId());
+
+        final Integer actualCount = currentHeap.getStoreBox().getFirst();
+        if (!Objects.equals(actualCount, knownObject.getChildren().size())) {
+            knownObject.setInvalid(true);
+        }
     }
 
     @Override
@@ -284,9 +302,12 @@ public class AgentImpl implements Agent {
     }
 
     @Override
-    public void takeItemInHandFromInventory(final KnownObject knownItem) {
+    public void takeItemInHandFromInventory(final Long knownItemId) {
         hand.checkEmpty();
         refreshState();
+
+        final KnownObject knownItem = knownObjectService.findById(knownItemId);
+
         final ItemWidget widget = getItemOrThrow(
                 knownItem.getResource().getName(),
                 knownItem.getPosition()
@@ -322,19 +343,66 @@ public class AgentImpl implements Agent {
         hand.checkEmpty();
 
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
-        final Long heapId = currentHeap.getKnownObjectId();
-
-        final KnownObject item = knownObjectService.loadKnownItemFromHeap(heapId);
+        Integer actualCount = storeBox.getFirst();;
 
         clientApp.sendWidgetCommand(storeBox.getId(), CLICK_COMMAND);
-
         await(() -> !hand.isEmpty());
 
-        hand.setKnownItemId(item.getId());
+        final Long heapId = currentHeap.getKnownObjectId();
+        final KnownObject heap = knownObjectService.findById(heapId);
+        final ItemWidget itemWidget = hand.getItem();
+        final boolean isStillExists = currentHeap.isOpened();
+        final boolean isCountSame = Objects.equals(heap.getChildren().size(), actualCount);
 
-        knownObjectService.moveToHand(character.getKnownObjectId(), item.getId(), item.getResource());
+        final List<KnownObject> knownItems = new ArrayList<>();
+        final KnownObject knownItem = heap.getChildren()
+                .stream()
+                .max(Comparator.comparingInt(o -> o.getPosition().getX()))
+                .orElse(null);
+        if (knownItem != null) {
+            knownItems.add(knownItem);
+        }
 
-        knownObjectService.deleteHeapIfEmpty(heapId);
+        final MatchingResult<ItemWidget, KnownObject> result = Matcher.matchItemWidgetToKnownObject(
+                Collections.singletonList(itemWidget),
+                knownItems,
+                Matcher.Flag.SKIP_POSITION
+        );
+
+        final boolean isItemMatched = !result.getMatches().isEmpty();
+
+        System.out.printf(
+                "\nheap = %s;\nitemWidget.resource = %s\nitemWidget.position = %s\nisStillExists = %s\nactualCount = %s\nisCountSame = %s\nisItemMatched = %s\n",
+                heapId,
+                itemWidget.getResource(),
+                itemWidget.getPosition(),
+                isStillExists,
+                actualCount,
+                isCountSame,
+                isItemMatched
+        );
+
+        final KnownObject character = knownObjectService.findById(getCharacterId());
+        if (knownItem != null && isItemMatched) {
+            System.out.println("moveToHand");
+            knownObjectService.moveToHand(character, knownItem, itemWidget.getResource());
+            heap.getChildren().remove(knownItem);
+            hand.setKnownItemId(knownItem.getId());
+        } else {
+            System.out.println("storeNewKnownItem");
+            final KnownObject newKnownItem = knownObjectService.storeNewKnownItem(character, KnownObject.Place.HAND, itemWidget);
+            hand.setKnownItemId(newKnownItem.getId());
+        }
+
+        if (!isItemMatched || !isCountSame) {
+            System.out.println("markHeapAsInvalid");
+            knownObjectService.markHeapAsInvalid(heap);
+        }
+
+        if (!isStillExists) {
+            System.out.println("deleteHeap");
+            knownObjectService.deleteHeap(heap);
+        }
     }
 
     @Override
@@ -500,12 +568,6 @@ public class AgentImpl implements Agent {
                 SCREEN_POSITION,
                 position, // seems it's ignored by server
                 0
-        );
-
-        clientApp.sendWidgetCommand(
-                gameUi.getId(),
-                FOCUS_COMMAND,
-                mapView.getId()
         );
 
         clientApp.sendWidgetCommand(

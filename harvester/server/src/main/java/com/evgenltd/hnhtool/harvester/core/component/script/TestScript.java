@@ -1,17 +1,16 @@
 package com.evgenltd.hnhtool.harvester.core.component.script;
 
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.WarehouseRepository;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.transaction.Transactional;
-
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-@Transactional
 public class TestScript extends Script {
 
     private final KnownObjectRepository knownObjectRepository;
@@ -29,38 +28,38 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().scan();
 
-        getRouting().move(new IntPoint(-948736,-923136));
+        takeItem();
+//        placeHeap();
+    }
 
-//        final Warehouse warehouse = warehouseRepository.findAll().stream().findFirst().get();
-//        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(getAgent().getCharacterId(), KnownObject.Place.MAIN_INVENTORY);
-//
-//        getStorekeeper().store(warehouse, items);
+    private void takeItem() {
+        final KnownObject heap = knownObjectRepository.findByResourceNameLikeAndLostIsFalse(
+                "gfx/terobjs/stockpile-branch")
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ApplicationException("Stockpile not found"));
 
-//        final List<KnownObject> items = knownObjectRepository.findByParentIdAndPlace(
-////                getAgent().getCharacterId(),
-//                342L,
-////                KnownObject.Place.MAIN_INVENTORY
-//                null
-//        )
-//                .stream()
-//                .filter(item -> item.getResource().getName().equals("gfx/invobjs/bark"))
-//                .collect(Collectors.toList());
-//
-//
-//        /*getAgent().takeItemInHandFromInventory(items.get(0));
-//        getAgent().placeHeap(new IntPoint(-1003866, -960910));*/
-//
-//        final KnownObject heap = knownObjectRepository.findById(342L).get();
-//        getAgent().openHeap(heap);
-//
-////        getAgent().takeItemInHandFromInventory(items.get(0));
-////        getAgent().dropItemFromHandInCurrentHeap();
-//
-//        for (int i = 0; i < items.size(); i++) {
-//            getAgent().takeItemInHandFromCurrentHeap();
-//            getAgent().dropItemFromHandInMainInventory(new IntPoint(i, 2));
-//        }
+        getAgent().openHeap(heap.getId());
+        getAgent().takeItemInHandFromCurrentHeap();
 
+//        final Long heapId = getAgent().placeHeap(new IntPoint(-953856, -929280));
+//
+//        getAgent().openHeap(heap.getId());
+//        getAgent().takeItemInHandFromCurrentHeap();
+
+        getAgent().dropItemFromHandInMainInventory(new IntPoint(1,1));
+
+//        getAgent().openHeap(heapId);
+//
+//        getAgent().takeItemInHandFromInventory(4987L);
+//
+//        getAgent().dropItemFromHandInCurrentHeap();
+    }
+
+    private void placeHeap() {
+        getAgent().takeItemInHandFromInventory(4987L);
+        getAgent().placeHeap(new IntPoint(-952832,-927232));
+        getAgent().move(new IntPoint(-950784,-927232));
     }
 
 }

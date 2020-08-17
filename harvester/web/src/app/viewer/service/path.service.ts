@@ -195,8 +195,8 @@ export class PathService {
     private createOrFindNode(position: Point): Position {
 
         let found = this._nodes.find(node => {
-            let position = node.get(Position);
-            return position.value.x == position.x && position.value.y == position.y;
+            let point = node.get(Position).value;
+            return point.x == position.x && point.y == position.y;
         });
 
         if (found) {

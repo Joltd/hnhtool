@@ -11,11 +11,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 19-11-2019 17:58
- */
 public class JsonUtil {
 
     public static String asText(@NotNull final JsonNode node, @NotNull final String field) {

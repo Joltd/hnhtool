@@ -8,11 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 06-12-2019 19:22
- */
 public class KnapsackTest {
 
     @Test

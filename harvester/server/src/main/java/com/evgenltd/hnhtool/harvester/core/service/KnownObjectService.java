@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +21,8 @@ import java.util.Map;
 @Transactional
 public class KnownObjectService {
 
-    private ResourceService resourceService;
-    private KnownObjectRepository knownObjectRepository;
+    private final ResourceService resourceService;
+    private final KnownObjectRepository knownObjectRepository;
 
     public KnownObjectService(
             final ResourceService resourceService,
@@ -51,14 +51,6 @@ public class KnownObjectService {
         }
 
         return id;
-    }
-
-    public KnownObject loadKnownItemFromHeap(final Long heapId) {
-        final KnownObject heap = findById(heapId);
-        return heap.getChildren()
-                .stream()
-                .max(Comparator.comparingInt(knownObject -> knownObject.getPosition().getX()))
-                .orElseThrow(() -> new ApplicationException("There is no items in Heap [%s]", heapId));
     }
 
     public void storeCharacter(final Long knownObjectId, final Space space, final IntPoint characterPosition) {
@@ -126,13 +118,13 @@ public class KnownObjectService {
     }
 
     public void moveToHand(final Long characterId, final Long knownItemId, final String resourceName) {
-        final Resource resource = resourceService.findByName(resourceName);
-        moveToHand(characterId, knownItemId, resource);
-    }
-
-    public void moveToHand(final Long characterId, final Long knownItemId, final Resource resource) {
         final KnownObject character = findById(characterId);
         final KnownObject knownItem = findById(knownItemId);
+        moveToHand(character, knownItem, resourceName);
+    }
+
+    public void moveToHand(final KnownObject character, final KnownObject knownItem, final String resourceName) {
+        final Resource resource = resourceService.findByName(resourceName);
         knownItem.setPlace(KnownObject.Place.HAND);
         knownItem.setPosition(null);
         knownItem.setParent(character);
@@ -165,11 +157,18 @@ public class KnownObjectService {
         knownItem.setParent(heap);
     }
 
-    public void deleteHeapIfEmpty(final Long heapId) {
-        final KnownObject heap = findById(heapId);
-        if (heap.getChildren().isEmpty()) {
-            knownObjectRepository.delete(heap);
+    public void markHeapAsInvalid(final KnownObject heap) {
+        for (Iterator<KnownObject> iterator = heap.getChildren().iterator(); iterator.hasNext(); ) {
+            final KnownObject item = iterator.next();
+            item.setParent(null);
+            knownObjectRepository.delete(item);
+            iterator.remove();
         }
+        heap.setInvalid(true);
+    }
+
+    public void deleteHeap(final KnownObject heap) {
+        knownObjectRepository.delete(heap);
     }
 
 }

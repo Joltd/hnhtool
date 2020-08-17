@@ -2,11 +2,6 @@ package com.evgenltd.hnhtool.harvester.security.entity;
 
 import javax.persistence.*;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 14:43
- */
 @Entity
 @Table(name = "users")
 public class User {

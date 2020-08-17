@@ -15,11 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 18:59
- */
 //@RestController
 //@RequestMapping("/auth")
 public class AuthController {

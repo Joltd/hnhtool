@@ -43,6 +43,8 @@ public class KnownObject {
     @Columns(columns = {@Column(name = "x"), @Column(name = "y")})
     private IntPoint position;
 
+    private Boolean invalid = false;
+
     public Long getId() {
         return id;
     }
@@ -104,6 +106,13 @@ public class KnownObject {
     }
     public void setPosition(final IntPoint position) {
         this.position = position;
+    }
+
+    public Boolean getInvalid() {
+        return invalid;
+    }
+    public void setInvalid(final Boolean invalid) {
+        this.invalid = invalid;
     }
 
     @Override

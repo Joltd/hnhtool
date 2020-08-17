@@ -8,11 +8,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.Objects;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 20-11-2019 18:50
- */
 final class InventoryWidgetImpl extends WidgetImpl implements InventoryWidget {
 
     private static final String SZ_NAME = "sz";

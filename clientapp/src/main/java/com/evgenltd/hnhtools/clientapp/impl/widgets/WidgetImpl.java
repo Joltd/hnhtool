@@ -4,11 +4,6 @@ import com.evgenltd.hnhtools.clientapp.impl.WidgetState;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 19-11-2019 17:17
- */
 public class WidgetImpl implements Widget {
 
     private final Integer id;

@@ -8,11 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 19-11-2019 19:57
- */
 final class ResourceState {
 
     private static final String ID = "resourceId";

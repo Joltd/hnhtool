@@ -1,10 +1,5 @@
 package com.evgenltd.hnhtool.harvester;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 13:39
- */
 //@EnableWebSecurity
 public class SecurityConfig {//extends WebSecurityConfigurerAdapter {
 //

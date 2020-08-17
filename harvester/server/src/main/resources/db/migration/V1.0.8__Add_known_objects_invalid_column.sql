@@ -1,0 +1,1 @@
+alter table known_objects add invalid tinyint;

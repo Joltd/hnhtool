@@ -30,7 +30,7 @@ public class Storekeeper {
             final KnownObject item = entry.item();
 
             if (heap.get().getId() == null) {
-                agent.takeItemInHandFromInventory(item);
+                agent.takeItemInHandFromInventory(item.getId());
                 final Long heapId = agent.placeHeap(heap.get().getPosition());
                 final KnownObject newHeap = agent.getKnownObjectService().findById(heapId);
                 final WarehouseCell cell = warehouse.getCells()
@@ -47,8 +47,8 @@ public class Storekeeper {
                 continue;
             }
 
-            agent.openHeap(heap.get());
-            agent.takeItemInHandFromInventory(item);
+            agent.openHeap(heap.get().getId());
+            agent.takeItemInHandFromInventory(item.getId());
             agent.dropItemFromHandInCurrentHeap();
         }
 
@@ -58,7 +58,7 @@ public class Storekeeper {
             final IntPoint position = boxEntry.position();
 
             agent.openContainer(container);
-            agent.takeItemInHandFromInventory(item);
+            agent.takeItemInHandFromInventory(item.getId());
             agent.dropItemFromHandInCurrentInventory(position);
         }
 

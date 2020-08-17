@@ -18,8 +18,8 @@ public final class Matcher {
         return new MatcherImpl().match(props, knownObjects, prop -> new PropWrapper(prop, offset), KnownObjectWrapper::new);
     }
 
-    public static MatchingResult<ItemWidget, KnownObject> matchItemWidgetToKnownObject(final List<ItemWidget> itemWidgets, final List<KnownObject> knownObjects) {
-        return new MatcherImpl().match(itemWidgets, knownObjects, ItemWidgetWrapper::new, KnownObjectWrapper::new);
+    public static MatchingResult<ItemWidget, KnownObject> matchItemWidgetToKnownObject(final List<ItemWidget> itemWidgets, final List<KnownObject> knownObjects, final Flag... flags) {
+        return new MatcherImpl().match(itemWidgets, knownObjects, ItemWidgetWrapper::new, KnownObjectWrapper::new, flags);
     }
 
     private static class KnownObjectWrapper extends MatcherImpl.Wrapper<KnownObject> {
@@ -76,6 +76,10 @@ public final class Matcher {
         public IntPoint getPosition() {
             return getValue().getPosition().add(offset);
         }
+    }
+
+    public enum Flag {
+        SKIP_POSITION
     }
 
 }

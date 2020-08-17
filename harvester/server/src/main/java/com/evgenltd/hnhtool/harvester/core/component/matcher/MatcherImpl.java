@@ -9,12 +9,17 @@ import java.util.stream.Collectors;
 
 final class MatcherImpl {
 
+    private final List<Matcher.Flag> flags = new ArrayList<>();
+
     <L, R, LW extends MatcherImpl.Wrapper<L>, RW extends MatcherImpl.Wrapper<R>> MatchingResult<L, R> match(
             final List<L> left,
             final List<R> right,
             final Function<L, LW> buildLeftWrapper,
-            final Function<R, RW> buildRightWrapper
+            final Function<R, RW> buildRightWrapper,
+            final Matcher.Flag... flags
     ) {
+        Collections.addAll(this.flags, flags);
+
         final List<LW> leftWrappers = left.stream()
                 .map(buildLeftWrapper)
                 .collect(Collectors.toList());
@@ -49,9 +54,9 @@ final class MatcherImpl {
             final List<RW> right
     ) {
         final Map<String, List<LW>> leftIndex = left.stream()
-                .collect(Collectors.groupingBy(Wrapper::getKey, Collectors.toList()));
+                .collect(Collectors.groupingBy(this::getKey, Collectors.toList()));
         final Map<String, List<RW>> rightIndex = right.stream()
-                .collect(Collectors.groupingBy(Wrapper::getKey, Collectors.toList()));
+                .collect(Collectors.groupingBy(this::getKey, Collectors.toList()));
 
         final List<MatchingEntry<LW,RW>> result = new ArrayList<>();
 
@@ -83,8 +88,17 @@ final class MatcherImpl {
         return result;
     }
 
+    private <T> String getKey(final Wrapper<T> wrapper) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(wrapper.getResource());
+        if (!this.flags.contains(Matcher.Flag.SKIP_POSITION)) {
+            sb.append(" ").append(wrapper.getPosition());
+        }
+        return sb.toString();
+    }
+
     static abstract class Wrapper<T> implements Comparable<Wrapper<T>> {
-        private T value;
+        private final T value;
 
         Wrapper(final T value) {
             this.value = value;
@@ -98,15 +112,10 @@ final class MatcherImpl {
 
         abstract IntPoint getPosition();
 
-        String getKey() {
-            return getResource() + " " + getPosition();
-        }
-
         @Override
         public int compareTo(@NotNull final MatcherImpl.Wrapper<T> o) {
             return 0;
         }
     }
-
 
 }

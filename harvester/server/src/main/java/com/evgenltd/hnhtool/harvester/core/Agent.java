@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.core;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.service.KnownObjectService;
+import com.evgenltd.hnhtool.harvester.core.service.MatchingService;
 import com.evgenltd.hnhtool.harvester.core.service.RoutingService;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
@@ -18,6 +19,8 @@ public interface Agent {
 
     KnownObjectService getKnownObjectService();
 
+    MatchingService getMatchingService();
+
     RoutingService getRoutingService();
 
     // ##################################################
@@ -32,6 +35,8 @@ public interface Agent {
 
     Space getCurrentSpace();
 
+    void researchHand();
+
     // ##################################################
     // #                                                #
     // #  Commands                                      #
@@ -44,11 +49,11 @@ public interface Agent {
 
     void openContainer(KnownObject knownObject);
 
-    void openHeap(KnownObject knownObject);
+    void openHeap(Long knownObjectId);
 
     void takeItemInHandFromWorld(KnownObject knownItem);
 
-    void takeItemInHandFromInventory(KnownObject knownItem);
+    void takeItemInHandFromInventory(Long knownItemId);
 
     void takeItemInHandFromCurrentHeap();
 

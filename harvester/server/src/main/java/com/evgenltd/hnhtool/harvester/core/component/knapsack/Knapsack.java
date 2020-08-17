@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 06-12-2019 17:12
- */
 public class Knapsack<B,I> {
 
     private final List<B> boxes;
@@ -117,9 +112,9 @@ public class Knapsack<B,I> {
     }
 
     public static final class Entry<B,I> {
-        private I item;
-        private B box;
-        private IntPoint position;
+        private final I item;
+        private final B box;
+        private final IntPoint position;
 
         Entry(final I item, final B box, final IntPoint position) {
             this.item = item;
@@ -141,8 +136,8 @@ public class Knapsack<B,I> {
     }
 
     private static final class BoxWrapper<B> {
-        private B box;
-        private boolean[][] cells;
+        private final B box;
+        private final boolean[][] cells;
 
         BoxWrapper(final B box, final boolean[][] cells) {
             this.box = box;

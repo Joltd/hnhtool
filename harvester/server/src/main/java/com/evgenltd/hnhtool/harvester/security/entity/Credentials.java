@@ -1,10 +1,5 @@
 package com.evgenltd.hnhtool.harvester.security.entity;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 26-03-2019 19:04
- */
 public class Credentials {
 
     private String username;

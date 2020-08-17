@@ -3,11 +3,6 @@ package com.evgenltd.hnhtools.clientapp.impl;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
-/**
- * Project: hnhtool-root
- * Author:  Lebedev
- * Created: 19-11-2019 17:18
- */
 final class PropImpl implements Prop {
 
     private Long id;

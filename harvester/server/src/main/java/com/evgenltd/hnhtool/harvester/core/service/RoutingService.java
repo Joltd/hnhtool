@@ -2,7 +2,6 @@ package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
-import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -35,14 +34,14 @@ public class RoutingService {
     private HipsterGraph<Node, Double> graph;
 
     private final ObjectMapper objectMapper;
-    private final KnownObjectRepository knownObjectRepository;
+    private final KnownObjectService knownObjectService;
 
     public RoutingService(
             final ObjectMapper objectMapper,
-            final KnownObjectRepository knownObjectRepository
+            final KnownObjectService knownObjectService
     ) {
         this.objectMapper = objectMapper;
-        this.knownObjectRepository = knownObjectRepository;
+        this.knownObjectService = knownObjectService;
     }
 
     @PostConstruct
@@ -152,7 +151,7 @@ public class RoutingService {
             return node;
         }
 
-        final KnownObject knownObject = knownObjectRepository.loadById(node.knownObjectId());
+        final KnownObject knownObject = knownObjectService.findById(node.knownObjectId());
         return new Node(node.knownObjectId(), knownObject.getSpace().getId(), knownObject.getPosition());
     }
 
