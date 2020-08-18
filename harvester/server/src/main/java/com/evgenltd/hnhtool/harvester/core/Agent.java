@@ -31,6 +31,8 @@ public interface Agent {
 
     Long getCharacterId();
 
+    String getCharacterName();
+
     IntPoint getCharacterPosition();
 
     Space getCurrentSpace();

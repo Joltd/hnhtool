@@ -64,4 +64,8 @@ public class Storekeeper {
 
     }
 
+    public void take(final List<KnownObject> items) {
+
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.Agent;
+import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
@@ -132,6 +133,11 @@ public class AgentImpl implements Agent {
     }
 
     @Override
+    public String getCharacterName() {
+        return character.getCharacterName();
+    }
+
+    @Override
     public IntPoint getCharacterPosition() {
         return character.getProp().getPosition().add(worldPoint.getPosition());
     }
@@ -168,6 +174,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void move(final IntPoint position) {
         refreshState();
@@ -185,6 +192,7 @@ public class AgentImpl implements Agent {
         await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(newPosition));
     }
 
+    @AgentCommand
     @Override
     public void openContainer(final KnownObject knownObject) {
         refreshState();
@@ -221,6 +229,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void openHeap(final Long knownObjectId) {
         refreshState();
@@ -259,6 +268,7 @@ public class AgentImpl implements Agent {
         }
     }
 
+    @AgentCommand
     @Override
     public void takeItemInHandFromWorld(final KnownObject knownItem) {
         hand.checkEmpty();
@@ -301,6 +311,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void takeItemInHandFromInventory(final Long knownItemId) {
         hand.checkEmpty();
@@ -337,6 +348,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void takeItemInHandFromCurrentHeap() {
         refreshState();
@@ -371,50 +383,38 @@ public class AgentImpl implements Agent {
 
         final boolean isItemMatched = !result.getMatches().isEmpty();
 
-        System.out.printf(
-                "\nheap = %s;\nitemWidget.resource = %s\nitemWidget.position = %s\nisStillExists = %s\nactualCount = %s\nisCountSame = %s\nisItemMatched = %s\n",
-                heapId,
-                itemWidget.getResource(),
-                itemWidget.getPosition(),
-                isStillExists,
-                actualCount,
-                isCountSame,
-                isItemMatched
-        );
-
         final KnownObject character = knownObjectService.findById(getCharacterId());
         if (knownItem != null && isItemMatched) {
-            System.out.println("moveToHand");
             knownObjectService.moveToHand(character, knownItem, itemWidget.getResource());
             heap.getChildren().remove(knownItem);
             hand.setKnownItemId(knownItem.getId());
         } else {
-            System.out.println("storeNewKnownItem");
             final KnownObject newKnownItem = knownObjectService.storeNewKnownItem(character, KnownObject.Place.HAND, itemWidget);
             hand.setKnownItemId(newKnownItem.getId());
         }
 
         if (!isItemMatched || !isCountSame) {
-            System.out.println("markHeapAsInvalid");
             knownObjectService.markHeapAsInvalid(heap);
         }
 
         if (!isStillExists) {
-            System.out.println("deleteHeap");
             knownObjectService.deleteHeap(heap);
         }
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInCurrentInventory(final IntPoint position) {
         dropItemFromHandInInventory(currentInventory, null, position);
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInMainInventory(final IntPoint position) {
         dropItemFromHandInInventory(character.getMainInventory(), KnownObject.Place.MAIN_INVENTORY, position);
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInStudyInventory(final IntPoint position) {
         dropItemFromHandInInventory(character.getStudyInventory(), KnownObject.Place.STUDY_INVENTORY, position);
@@ -455,6 +455,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInCurrentHeap() {
         refreshState();
@@ -483,6 +484,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInWorld() {
         refreshState();
@@ -517,6 +519,7 @@ public class AgentImpl implements Agent {
         });
     }
 
+    @AgentCommand
     @Override
     public void dropItemFromHandInEquip(final Integer position) {
         refreshState();
@@ -528,16 +531,19 @@ public class AgentImpl implements Agent {
 
 //    private void transferItemFromCurrentHeap() {}
 
+    @AgentCommand
     @Override
     public void applyItemInHandOnObject(final Long knownObjectId) {
         refreshState();
     }
 
+    @AgentCommand
     @Override
     public void applyItemInHandOnItem(final Long knownItemId) {
         refreshState();
     }
 
+    @AgentCommand
     @Override
     public void closeCurrentInventory() {
         refreshState();
@@ -555,6 +561,7 @@ public class AgentImpl implements Agent {
         await(() -> !widgetIndex.containsKey(widgetId));
     }
 
+    @AgentCommand
     @Override
     public Long placeHeap(final IntPoint position) {
         refreshState();
@@ -719,6 +726,7 @@ public class AgentImpl implements Agent {
     // #                                                #
     // ##################################################
 
+    @AgentCommand
     @Override
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);

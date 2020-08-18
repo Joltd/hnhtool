@@ -28,7 +28,10 @@ public class TestScript extends Script {
     public void execute() {
         getAgent().scan();
 
-        takeItem();
+        getAgent().move(new IntPoint(-955904,-926208));
+        getAgent().move(new IntPoint(-949760,-924160));
+
+//        takeItem();
 //        placeHeap();
     }
 
