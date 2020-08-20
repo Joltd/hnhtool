@@ -80,7 +80,7 @@ public final class IntPoint {
 
     @Override
     public String toString() {
-        return String.format("(%s;%s)", x, y);
+        return String.format("{%s;%s}", x, y);
     }
 
     @Override

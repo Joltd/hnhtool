@@ -4,21 +4,21 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 
 public class WorldPoint {
 
-    private Space space;
+    private Long spaceId;
     private IntPoint position;
 
-    public static WorldPoint of(final Space space, final IntPoint position) {
+    public static WorldPoint of(final Long space, final IntPoint position) {
         final WorldPoint worldPoint = new WorldPoint();
-        worldPoint.setSpace(space);
+        worldPoint.setSpaceId(space);
         worldPoint.setPosition(position);
         return worldPoint;
     }
 
-    public Space getSpace() {
-        return space;
+    public Long getSpaceId() {
+        return spaceId;
     }
-    public void setSpace(final Space space) {
-        this.space = space;
+    public void setSpaceId(final Long spaceId) {
+        this.spaceId = spaceId;
     }
 
     public IntPoint getPosition() {

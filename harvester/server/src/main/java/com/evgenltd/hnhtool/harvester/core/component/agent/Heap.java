@@ -43,4 +43,15 @@ public class Heap {
     public void setStoreBox(final StoreBoxWidget storeBox) {
         this.storeBox = storeBox;
     }
+
+    public Record toRecord() {
+        if (storeBox != null) {
+            return new Record(knownObjectId, true, storeBox.getFirst(), storeBox.getSecond());
+        } else {
+            return new Record(knownObjectId, false, null, null);
+        }
+    }
+
+    public static final record Record(Long knownObjectId, boolean isOpened, Integer count, Integer max) {}
+
 }

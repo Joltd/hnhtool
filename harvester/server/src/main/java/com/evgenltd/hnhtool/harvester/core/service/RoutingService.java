@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
+import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -34,14 +35,14 @@ public class RoutingService {
     private HipsterGraph<Node, Double> graph;
 
     private final ObjectMapper objectMapper;
-    private final KnownObjectService knownObjectService;
+    private final KnownObjectRepository knownObjectRepository;
 
     public RoutingService(
             final ObjectMapper objectMapper,
-            final KnownObjectService knownObjectService
+            final KnownObjectRepository knownObjectRepository
     ) {
         this.objectMapper = objectMapper;
-        this.knownObjectService = knownObjectService;
+        this.knownObjectRepository = knownObjectRepository;
     }
 
     @PostConstruct
@@ -151,7 +152,7 @@ public class RoutingService {
             return node;
         }
 
-        final KnownObject knownObject = knownObjectService.findById(node.knownObjectId());
+        final KnownObject knownObject = knownObjectRepository.getOne(node.knownObjectId());
         return new Node(node.knownObjectId(), knownObject.getSpace().getId(), knownObject.getPosition());
     }
 
@@ -176,7 +177,7 @@ public class RoutingService {
 
     private Node findNearest(final WorldPoint target) {
         return StreamSupport.stream(graph.vertices().spliterator(), false)
-                .filter(node -> Objects.equals(node.spaceId(), target.getSpace().getId()))
+                .filter(node -> Objects.equals(node.spaceId(), target.getSpaceId()))
                 .map(point -> new DistanceTo(point, calculateDistance(point.position(), target.getPosition())))
                 .min(Comparator.comparing(DistanceTo::distance))
                 .map(DistanceTo::node)

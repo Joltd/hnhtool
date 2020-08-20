@@ -42,7 +42,7 @@ public class AgentAspect {
             stopWatch.stop();
 
             final Agent agent = (Agent) call.getTarget();
-            final Logger logger = getLogger(agent.getCharacterName());
+            final Logger logger = getLogger(agent.getCharacter().name());
 
             final String args = Arrays.stream(call.getArgs())
                     .map(String::valueOf)

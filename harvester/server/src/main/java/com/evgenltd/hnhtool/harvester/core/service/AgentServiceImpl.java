@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.AgentService;
+import com.evgenltd.hnhtool.harvester.core.component.exception.HandNotEmptyException;
 import com.evgenltd.hnhtool.harvester.core.component.script.Script;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
@@ -83,6 +84,8 @@ public class AgentServiceImpl implements AgentService {
         script.setAgent(agent);
         try {
             script.execute();
+        } catch (final HandNotEmptyException e) {
+            // accident case
         } finally {
             clientApp.logout();
         }

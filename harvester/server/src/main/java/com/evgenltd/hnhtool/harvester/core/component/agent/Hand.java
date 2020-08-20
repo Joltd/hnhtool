@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.component.agent;
 
+import com.evgenltd.hnhtool.harvester.core.component.exception.HandNotEmptyException;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 
@@ -15,7 +16,7 @@ public class Hand {
         if (isEmpty()) {
             return;
         }
-        throw new ApplicationException("Hand hold another item");
+        throw new HandNotEmptyException();
     }
 
     public Long getKnownItemId() {
@@ -37,4 +38,14 @@ public class Hand {
     public void setItem(final ItemWidget item) {
         this.item = item;
     }
+
+    public Record toRecord() {
+        if (item != null) {
+            return new Record(knownItemId, false, item.getResource());
+        } else {
+            return new Record(knownItemId, true, null);
+        }
+    }
+
+    public static final record Record(Long knownItemId, boolean isEmpty, String resource) {}
 }

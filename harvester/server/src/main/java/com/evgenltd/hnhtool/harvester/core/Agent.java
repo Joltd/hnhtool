@@ -1,10 +1,9 @@
 package com.evgenltd.hnhtool.harvester.core;
 
+import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.entity.Space;
-import com.evgenltd.hnhtool.harvester.core.service.KnownObjectService;
-import com.evgenltd.hnhtool.harvester.core.service.MatchingService;
-import com.evgenltd.hnhtool.harvester.core.service.RoutingService;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.function.Supplier;
@@ -13,31 +12,17 @@ public interface Agent {
 
     // ##################################################
     // #                                                #
-    // #  Services                                      #
-    // #                                                #
-    // ##################################################
-
-    KnownObjectService getKnownObjectService();
-
-    MatchingService getMatchingService();
-
-    RoutingService getRoutingService();
-
-    // ##################################################
-    // #                                                #
     // #  Character                                     #
     // #                                                #
     // ##################################################
 
-    Long getCharacterId();
+    Character.Record getCharacter();
 
-    String getCharacterName();
+    Heap.Record getHeap();
 
-    IntPoint getCharacterPosition();
+    Hand.Record getHand();
 
-    Space getCurrentSpace();
-
-    void researchHand();
+    Long getCurrentSpace();
 
     // ##################################################
     // #                                                #
@@ -48,6 +33,8 @@ public interface Agent {
     void await(Supplier<Boolean> condition);
 
     void move(IntPoint position);
+
+    void moveByRoute(IntPoint position);
 
     void openContainer(KnownObject knownObject);
 

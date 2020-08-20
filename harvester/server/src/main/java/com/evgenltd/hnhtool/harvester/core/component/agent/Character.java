@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.component.agent;
 
 import com.evgenltd.hnhtools.clientapp.Prop;
+import com.evgenltd.hnhtools.entity.IntPoint;
 
 public class Character {
 
@@ -41,4 +42,9 @@ public class Character {
         return studyInventory;
     }
 
+    public Record toRecord(final IntPoint offset) {
+        return new Record(knownObjectId, characterName, prop.getPosition().add(offset));
+    }
+
+    public static final record Record(Long knownObjectId, String name, IntPoint position) {}
 }

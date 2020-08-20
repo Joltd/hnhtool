@@ -1,82 +1,69 @@
 package com.evgenltd.hnhtool.harvester.core.component.storekeeper;
 
 import com.evgenltd.hnhtool.harvester.core.component.Holder;
-import com.evgenltd.hnhtool.harvester.core.entity.*;
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Resource;
+import com.evgenltd.hnhtool.harvester.core.entity.ResourceGroup;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class Warehousing {
 
-    private final Set<IntPoint> freePoints = new HashSet<>();
+    private final Set<IntPoint> freeCells = new HashSet<>();
     private final List<Heap> heaps = new ArrayList<>();
     private final List<Box> boxes = new ArrayList<>();
 
-    public Result solve(final List<KnownObject> containers, final List<KnownObject> items) {
-        prepareContainerModel(containers);
-        return solveImpl(items);
+    public Result solve(final List<KnownObject> containers, final List<IntPoint> cells, final KnownObject item) {
+        prepareContainerModel(containers, cells);
+        return solveImpl(item);
     }
 
-    public Result solve(final Warehouse warehouse, final List<KnownObject> items) {
-        prepareContainerModel(warehouse);
-        return solveImpl(items);
+    public BoxEntry solve(final KnownObject box, final KnownObject item) {
+        final Result solution = solve(Collections.singletonList(box), Collections.emptyList(), item);
+        return solution.boxEntry() != null
+                ? solution.boxEntry()
+                : null;
     }
 
-    private Result solveImpl(final List<KnownObject> items) {
-
-        final Result result = new Result();
-
-        for (final KnownObject item : items) {
-
-            final HeapEntry heapEntry = findHeap(item);
-            if (heapEntry != null) {
-                result.heapEntries().add(heapEntry);
-                continue;
-            }
-
-            final HeapEntry newHeapEntry = placeNewHeap(item);
-            if (newHeapEntry != null) {
-                result.heapEntries().add(newHeapEntry);
-                continue;
-            }
-
-            final BoxEntry boxEntry = findBox(item);
-            if (boxEntry != null) {
-                result.boxEntries().add(boxEntry);
-                continue;
-            }
-
-            result.skipped().add(item);
-
+    private Result solveImpl(final KnownObject item) {
+        final HeapEntry heapEntry = findHeap(item);
+        if (heapEntry != null) {
+            return new Result(heapEntry);
         }
 
-        return result;
+        final HeapEntry newHeapEntry = placeNewHeap(item);
+        if (newHeapEntry != null) {
+            return new Result(newHeapEntry);
+        }
+
+        final BoxEntry boxEntry = findBox(item);
+        if (boxEntry != null) {
+            return new Result(boxEntry);
+        }
+
+        return new Result();
     }
 
-    private void prepareContainerModel(final Warehouse warehouse) {
-        warehouse.getCells()
+    private void prepareContainerModel(final KnownObject character, final KnownObject.Place place) {
+        final Box box = new Box(null, new boolean[4][4]);
+        character.getChildren()
                 .stream()
-                .filter(cell -> cell.getContainer() == null)
-                .forEach(cell -> freePoints.add(cell.getPosition()));
-
-        final List<KnownObject> containers = warehouse.getCells()
-                .stream()
-                .filter(cell -> cell.getContainer() != null)
-                .map(WarehouseCell::getContainer)
-                .collect(Collectors.toList());
-
-        prepareContainerModel(containers);
+                .filter(knownItem -> Objects.equals(knownItem.getPlace(), place))
+                .forEach(knownItem -> box.fillCells(knownItem.getPosition(), knownItem.getResource().getSize()));
+        boxes.add(box);
     }
 
-    private void prepareContainerModel(final List<KnownObject> containers) {
+    private void prepareContainerModel(final List<KnownObject> containers, final List<IntPoint> cells) {
+
+        freeCells.addAll(cells);
 
         for (final KnownObject container : containers) {
 
             final Resource resource = container.getResource();
             final IntPoint size = resource.getSize();
 
-            freePoints.remove(container.getPosition());
+            freeCells.remove(container.getPosition());
 
             if (resource.isBox()) {
 
@@ -113,7 +100,7 @@ public final class Warehousing {
             // select nearest heap
 
             heap.incrementCount();
-            return new HeapEntry(item, heap.getKnownObjectHolder());
+            return new HeapEntry(heap.getKnownObjectHolder());
 
         }
 
@@ -121,7 +108,7 @@ public final class Warehousing {
     }
 
     private HeapEntry placeNewHeap(final KnownObject item) {
-        if (freePoints.isEmpty()) {
+        if (freeCells.isEmpty()) {
             return null;
         }
 
@@ -139,7 +126,7 @@ public final class Warehousing {
             return null;
         }
 
-        final Iterator<IntPoint> iterator = freePoints.iterator();
+        final Iterator<IntPoint> iterator = freeCells.iterator();
         final IntPoint position = iterator.next();
         iterator.remove();
 
@@ -150,7 +137,7 @@ public final class Warehousing {
         final Heap heap = new Heap(newHeap, 1);
         heaps.add(heap);
 
-        return new HeapEntry(item, heap.getKnownObjectHolder());
+        return new HeapEntry(heap.getKnownObjectHolder());
     }
 
     private BoxEntry findBox(final KnownObject item) {
@@ -158,22 +145,31 @@ public final class Warehousing {
             final IntPoint suitablePosition = box.findSuitablePosition(item.getResource().getSize());
             if (suitablePosition != null) {
                 box.fillCells(suitablePosition, item.getResource().getSize());
-                return new BoxEntry(item, box.getKnownObject(), suitablePosition);
+                return new BoxEntry(box.getKnownObject(), suitablePosition);
             }
         }
 
         return null;
     }
 
-    public record Result(List<HeapEntry> heapEntries, List<BoxEntry> boxEntries, List<KnownObject> skipped) {
+    public record Result(HeapEntry heapEntry, BoxEntry boxEntry, boolean skipped) {
+        public Result(final HeapEntry heapEntry) {
+            this(heapEntry, null, false);
+        }
+
+        public Result(final BoxEntry boxEntry) {
+            this(null, boxEntry, false);
+        }
+
         public Result() {
-            this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+            this(null, null, true);
         }
     }
 
-    public record HeapEntry(KnownObject item, Holder<KnownObject>heap) {}
+    // todo holder now is redundant - we operate only with one item
+    public record HeapEntry(Holder<KnownObject>heap) {}
 
-    public record BoxEntry(KnownObject item, KnownObject container, IntPoint position) {}
+    public record BoxEntry(KnownObject container, IntPoint position) {}
 
     private static final class Heap {
         private final KnownObject knownObject;

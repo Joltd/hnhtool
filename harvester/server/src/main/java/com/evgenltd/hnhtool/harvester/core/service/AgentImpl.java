@@ -9,8 +9,8 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.Matcher;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.MatchingResult;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
-import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
+import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
@@ -21,6 +21,7 @@ import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -55,9 +56,11 @@ public class AgentImpl implements Agent {
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
     private final MatchingService matchingService;
+    private final KnownObjectRepository knownObjectRepository;
     private final KnownObjectService knownObjectService;
     private final ResourceService resourceService;
     private final RoutingService routingService;
+    private final Storekeeper storekeeper;
 
     private ClientApp clientApp;
 
@@ -75,17 +78,22 @@ public class AgentImpl implements Agent {
 
     public AgentImpl(
             final MatchingService matchingService,
+            final KnownObjectRepository knownObjectRepository,
             final KnownObjectService knownObjectService,
             final ResourceService resourceService,
-            final RoutingService routingService
+            final RoutingService routingService,
+            final ObjectFactory<Storekeeper> storekeeperFactory
     ) {
         this.matchingService = matchingService;
+        this.knownObjectRepository = knownObjectRepository;
         this.knownObjectService = knownObjectService;
         this.resourceService = resourceService;
         this.routingService = routingService;
+        this.storekeeper = storekeeperFactory.getObject();
     }
 
     void setClientApp(final ClientApp clientApp) {
+        this.storekeeper.setAgent(this);
         this.clientApp = clientApp;
 
         refreshState();
@@ -93,7 +101,8 @@ public class AgentImpl implements Agent {
         final Long characterObjectId = knownObjectService.loadCharacterObjectId(character.getCharacterName());
         character.setKnownObjectId(characterObjectId);
 
-        researchHand();
+        final Long knownItemIdInHand = matchingService.researchHand(character.getKnownObjectId(), hand.getItem());
+        hand.setKnownItemId(knownItemIdInHand);
         matchingService.researchItems(
                 characterObjectId,
                 KnownObject.Place.MAIN_INVENTORY,
@@ -106,21 +115,6 @@ public class AgentImpl implements Agent {
         );
     }
 
-    @Override
-    public KnownObjectService getKnownObjectService() {
-        return knownObjectService;
-    }
-
-    @Override
-    public MatchingService getMatchingService() {
-        return matchingService;
-    }
-
-    @Override
-    public RoutingService getRoutingService() {
-        return routingService;
-    }
-
     // ##################################################
     // #                                                #
     // #  State API                                     #
@@ -128,29 +122,27 @@ public class AgentImpl implements Agent {
     // ##################################################
 
     @Override
-    public Long getCharacterId() {
-        return character.getKnownObjectId();
+    public Character.Record getCharacter() {
+        return character.toRecord(worldPoint.getPosition());
     }
 
-    @Override
-    public String getCharacterName() {
-        return character.getCharacterName();
-    }
-
-    @Override
-    public IntPoint getCharacterPosition() {
+    private IntPoint getCharacterPosition() {
         return character.getProp().getPosition().add(worldPoint.getPosition());
     }
 
     @Override
-    public Space getCurrentSpace() {
-        return worldPoint.getSpace();
+    public Heap.Record getHeap() {
+        return currentHeap.toRecord();
     }
 
     @Override
-    public void researchHand() {
-        final Long knownItemIdInHand = matchingService.researchHand(getCharacterId(), hand.getItem());
-        hand.setKnownItemId(knownItemIdInHand);
+    public Hand.Record getHand() {
+        return hand.toRecord();
+    }
+
+    @Override
+    public Long getCurrentSpace() {
+        return worldPoint.getSpaceId();
     }
 
     // ##################################################
@@ -166,7 +158,7 @@ public class AgentImpl implements Agent {
             if (character.getProp().isMoving()) {
                 knownObjectService.storeCharacter(
                         character.getKnownObjectId(),
-                        worldPoint.getSpace(),
+                        worldPoint.getSpaceId(),
                         getCharacterPosition()
                 );
             }
@@ -190,6 +182,19 @@ public class AgentImpl implements Agent {
         );
 
         await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(newPosition));
+    }
+
+    @AgentCommand
+    @Override
+    public void moveByRoute(final IntPoint position) {
+        final List<RoutingService.Node> route = routingService.route(
+                WorldPoint.of(worldPoint.getSpaceId(), getCharacterPosition()),
+                WorldPoint.of(worldPoint.getSpaceId(), position)
+        );
+
+        for (final RoutingService.Node node : route) {
+            move(node.position());
+        }
     }
 
     @AgentCommand
@@ -235,7 +240,7 @@ public class AgentImpl implements Agent {
         refreshState();
         forClose.forEach(this::closeWidget);
 
-        final KnownObject knownObject = knownObjectService.findById(knownObjectId);
+        final KnownObject knownObject = knownObjectRepository.getOne(knownObjectId);
 
         final Prop prop = getPropOrThrow(
                 knownObject.getResource().getName(),
@@ -317,14 +322,8 @@ public class AgentImpl implements Agent {
         hand.checkEmpty();
         refreshState();
 
-        final KnownObject knownItem = knownObjectService.findById(knownItemId);
-
-        final ItemWidget widget = getItemOrThrow(
-                knownItem.getResource().getName(),
-                knownItem.getPosition()
-        );
-
-        hand.setKnownItemId(knownItem.getId());
+        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final ItemWidget widget = getItemOrThrow(knownItem.getResource().getName(), knownItem.getPosition());
 
         clientApp.sendWidgetCommand(
                 widget.getId(),
@@ -332,20 +331,13 @@ public class AgentImpl implements Agent {
                 SCREEN_POSITION
         );
 
-        await(() -> {
-            if (hand.isEmpty()) {
-                return false;
-            }
+        await(() -> !hand.isEmpty());
 
-            final ItemWidget itemWidget = hand.getItem();
+        hand.setKnownItemId(knownItem.getId());
 
-            knownObjectService.moveToHand(
-                    character.getKnownObjectId(),
-                    knownItem.getId(),
-                    itemWidget.getResource()
-            );
-            return true;
-        });
+        final ItemWidget itemWidget = hand.getItem();
+
+        knownObjectService.moveToHand(character.getKnownObjectId(), knownItem.getId(), itemWidget.getResource());
     }
 
     @AgentCommand
@@ -361,7 +353,7 @@ public class AgentImpl implements Agent {
         await(() -> !hand.isEmpty());
 
         final Long heapId = currentHeap.getKnownObjectId();
-        final KnownObject heap = knownObjectService.findById(heapId);
+        final KnownObject heap = knownObjectRepository.getOne(heapId);
         final ItemWidget itemWidget = hand.getItem();
         final boolean isStillExists = currentHeap.isOpened();
         final boolean isCountSame = Objects.equals(heap.getChildren().size(), actualCount);
@@ -383,7 +375,7 @@ public class AgentImpl implements Agent {
 
         final boolean isItemMatched = !result.getMatches().isEmpty();
 
-        final KnownObject character = knownObjectService.findById(getCharacterId());
+        final KnownObject character = knownObjectRepository.getOne(this.character.getKnownObjectId());
         if (knownItem != null && isItemMatched) {
             knownObjectService.moveToHand(character, knownItem, itemWidget.getResource());
             heap.getChildren().remove(knownItem);
@@ -474,14 +466,10 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            if (currentHeap.getStoreBox().getFirst() <= currentHeapSize) {
-                return false;
-            }
-
-            knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), currentHeap.getStoreBox().getFirst());
-
-            return true;
+            return currentHeap.getStoreBox().getFirst() > currentHeapSize;
         });
+
+        knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), currentHeap.getStoreBox().getFirst());
     }
 
     @AgentCommand
@@ -565,9 +553,12 @@ public class AgentImpl implements Agent {
     @Override
     public Long placeHeap(final IntPoint position) {
         refreshState();
+
         hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
-        final KnownObject knownItem = knownObjectService.findById(knownItemId);
+        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final String resource = knownItem.getResource().getName();
+        final List<String> resources = resourceService.loadResourceOfGroup(resource);
 
         clientApp.sendWidgetCommand(
                 mapView.getId(),
@@ -593,23 +584,18 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            final List<String> resources = resourceService.loadResourceOfGroup(knownItem.getResource().getName());
             final Prop heapProp = getProp(resources, position);
-            if (heapProp == null) {
-                return false;
-            }
-
-            final Long heapId = knownObjectService.storeHeap(
-                    worldPoint.getSpace(),
-                    heapProp.getPosition().add(worldPoint.getPosition()),
-                    heapProp.getResource()
-            );
-            knownObjectService.moveToHeap(knownItemId, heapId, 1);
-
-            holder.set(heapId);
-
-            return true;
+            return heapProp != null;
         });
+
+        final Prop heapProp = getProp(resources, position);
+
+        final Long heapId = knownObjectService.storeHeap(
+                worldPoint.getSpaceId(),
+                heapProp.getPosition().add(worldPoint.getPosition()),
+                heapProp.getResource()
+        );
+        knownObjectService.moveToHeap(knownItemId, heapId, 1);
 
         return holder.get();
     }
@@ -730,7 +716,7 @@ public class AgentImpl implements Agent {
     @Override
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
-        knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpace(), getCharacterPosition());
+        knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpaceId(), getCharacterPosition());
     }
 
     // ##################################################

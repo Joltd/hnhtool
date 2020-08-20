@@ -71,7 +71,7 @@ public class MatchingService {
         }
 
         final Area area = new Area(filteredProps, offset.getPosition());
-        final List<KnownObject> knownObjects = loadKnownObjects(area, offset.getSpace());
+        final List<KnownObject> knownObjects = loadKnownObjects(area, offset.getSpaceId());
         final MatchingResult<Prop, KnownObject> matchingResult = Matcher.matchPropToKnownObject(
                 filteredProps,
                 knownObjects,
@@ -86,7 +86,7 @@ public class MatchingService {
 
         for (final Prop prop : matchingResult.getLeftNotMatched()) {
             knownObjectService.storeNewKnownObject(
-                    offset.getSpace(),
+                    offset.getSpaceId(),
                     resources.get(prop.getResource()),
                     prop.getPosition().add(offset.getPosition())
             );
@@ -97,7 +97,7 @@ public class MatchingService {
 
     public void researchItems(final Long parentId, final KnownObject.Place place, final List<ItemWidget> itemWidgets) {
 
-        final KnownObject parent = knownObjectService.findById(parentId);
+        final KnownObject parent = knownObjectRepository.getOne(parentId);
         final List<KnownObject> knownItems = knownObjectRepository.findByParentIdAndPlace(parentId, place);
 
         final MatchingResult<ItemWidget, KnownObject> matchingResult = Matcher.matchItemWidgetToKnownObject(
@@ -117,7 +117,7 @@ public class MatchingService {
         final List<ItemWidget> itemWidgets = Optional.ofNullable(itemWidget)
                 .map(Collections::singletonList)
                 .orElse(Collections.emptyList());
-        final KnownObject parent = knownObjectService.findById(parentId);
+        final KnownObject parent = knownObjectRepository.getOne(parentId);
         final List<KnownObject> knownItems = knownObjectRepository.findByParentIdAndPlace(parentId, KnownObject.Place.HAND);
 
         final MatchingResult<ItemWidget, KnownObject> matchingResult = Matcher.matchItemWidgetToKnownObject(
@@ -152,7 +152,7 @@ public class MatchingService {
         spaceRepository.save(space);
 
         final WorldPoint worldPoint = new WorldPoint();
-        worldPoint.setSpace(space);
+        worldPoint.setSpaceId(space.getId());
         worldPoint.setPosition(new IntPoint());
         return worldPoint;
     }
@@ -163,9 +163,9 @@ public class MatchingService {
     // #                                                #
     // ##################################################
 
-    private List<KnownObject> loadKnownObjects(final Area area, final Space space) {
+    private List<KnownObject> loadKnownObjects(final Area area, final Long spaceId) {
         return knownObjectRepository.findObjectsInArea(
-                space.getId(),
+                spaceId,
                 area.getUpperLeftX(),
                 area.getUpperLeftY(),
                 area.getLowerRightX(),
@@ -193,7 +193,7 @@ public class MatchingService {
                 final IntPoint offset = foundObject.getPosition().sub(firstProp.getPosition());
 
                 final WorldPoint worldPoint = new WorldPoint();
-                worldPoint.setSpace(foundObject.getSpace());
+                worldPoint.setSpaceId(foundObject.getSpace().getId());
                 worldPoint.setPosition(offset);
                 return worldPoint;
             }
