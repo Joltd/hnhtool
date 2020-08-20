@@ -362,4 +362,4 @@ class Mouse {
     }
 }
 
-export type Mode = 'COMMON' | 'WAREHOUSE' | 'CELL' | 'PATH';
+export type Mode = 'COMMON' | 'WAREHOUSE' | 'CELL' | 'PATH' | 'AREA' | 'AREA_EDIT';

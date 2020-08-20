@@ -10,6 +10,8 @@ import java.util.List;
 @Repository
 public interface AreaRepository extends JpaRepository<Area, Long> {
 
+    List<Area> findBySpaceId(Long spaceId);
+
     @Query("""
             select a from Area a
             where
@@ -17,6 +19,6 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
                 and a.from.x <= ?2 and a.to.x >= ?2
                 and a.from.y <= ?3 and a.to.y >= ?3
             """)
-    List<Area> findByPosition(final Long spaceId, final Integer x, final Integer y);
+    List<Area> findByPosition(Long spaceId, Integer x, Integer y);
 
 }

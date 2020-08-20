@@ -36,12 +36,12 @@ export class RenderUtil {
                 graphic.fill();
                 break;
             }
-            case 'RECT': {
+            case 'SQUARE': {
                 let from = position.sub(size / 2);
                 graphic.fillRect(from.x, from.y, size, size);
                 break;
             }
-            case 'STROKE_RECT': {
+            case 'STROKE_SQUARE': {
                 graphic.strokeStyle = graphic.fillStyle;
                 let from = position.sub(size / 2);
                 graphic.strokeRect(from.x, from.y, size, size);
@@ -58,12 +58,12 @@ export class RenderUtil {
                     graphic.stroke();
                     break;
                 }
-                case 'RECT': {
+                case 'SQUARE': {
                     let from = position.sub(size / 2);
                     graphic.strokeRect(from.x, from.y, size, size);
                     break;
                 }
-                case 'STROKE_RECT': {
+                case 'STROKE_SQUARE': {
                     let from = position.sub(size / 2);
                     graphic.strokeRect(from.x, from.y, size, size);
                     break;
@@ -87,6 +87,39 @@ export class RenderUtil {
         graphic.stroke();
     }
 
+    static renderRect(
+        graphic: CanvasRenderingContext2D,
+        from: Point,
+        to: Point,
+        color: string,
+        selected: boolean,
+        hovered: boolean,
+        disabled: boolean
+    ) {
+        if (hovered) {
+            graphic.fillStyle = RenderUtil.lighten(color);
+        } else if (disabled) {
+            graphic.fillStyle = RenderUtil.DISABLED;
+        } else {
+            graphic.fillStyle = color;
+        }
+
+        let size = to.sub(from).abs();
+        let x = Math.min(from.x, to.x);
+        let y = Math.min(from.y, to.y);
+        graphic.fillRect(x,y, size.x,size.y);
+
+        if (selected) {
+            graphic.strokeStyle = RenderUtil.SELECTION;
+            graphic.beginPath();
+            graphic.moveTo(x, y);
+            graphic.lineTo(x + size.x, y);
+            graphic.lineTo(x + size.x, y + size.y);
+            graphic.lineTo(x, y + size.y);
+            graphic.lineTo(x, y);
+            graphic.stroke();
+        }
+    }
 }
 
-export type PrimitiveType = 'CIRCLE' | 'RECT' | 'STROKE_RECT';
+export type PrimitiveType = 'CIRCLE' | 'SQUARE' | 'STROKE_SQUARE';

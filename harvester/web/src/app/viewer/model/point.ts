@@ -65,6 +65,13 @@ export class Point {
         ).mul(value);
     }
 
+    abs() {
+        return new Point(
+            Math.abs(this.x),
+            Math.abs(this.y)
+        );
+    }
+
     equals(value: Point) {
         return value?.x == this.x && value?.y == this.y;
     }

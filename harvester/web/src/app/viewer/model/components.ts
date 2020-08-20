@@ -56,7 +56,7 @@ export class Position {
 }
 
 export class Primitive {
-    private _type: PrimitiveType = "RECT";
+    private _type: PrimitiveType = "SQUARE";
     private _size: number = 500;
     private _color: string = '#0000FF';
 

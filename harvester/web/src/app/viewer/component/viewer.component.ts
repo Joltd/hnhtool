@@ -20,6 +20,7 @@ import {WarehouseService} from "../service/warehouse.service";
 import {PathService} from "../service/path.service";
 import {Path} from "../model/path";
 import {KnownObjectService} from "../service/known-object.service";
+import {Area} from "../model/area";
 
 @Component({
     selector: 'viewer',
@@ -291,8 +292,11 @@ export class ViewerComponent implements OnInit {
         if (primitive && position) {
             return this.isIntersectPrimitive(primitive, position, box);
         }
-        if (entity.get(Warehouse)) {
+        if (entity.has(Warehouse)) {
             return this.isIntersectWarehouse(entity, box);
+        }
+        if (entity.has(Area)) {
+            return this.isIntersectArea(entity, box);
         }
         return false;
     }
@@ -313,6 +317,11 @@ export class ViewerComponent implements OnInit {
             }
         }
         return false;
+    }
+
+    private isIntersectArea(entity: Entity, box: Box): boolean {
+        let area = entity.get(Area);
+        return box.isOverlaps(new Box(area.from, area.to));
     }
 
     // ##################################################
@@ -363,6 +372,8 @@ export class ViewerComponent implements OnInit {
                 this.renderWarehouse(entity);
             } else if (entity.has(Path)) {
                 this.renderPath(entity);
+            } else if (entity.has(Area)) {
+                this.renderArea(entity);
             }
 
             if (entity.has(Disabled)) {
@@ -398,7 +409,7 @@ export class ViewerComponent implements OnInit {
             RenderUtil.renderPrimitive(
                 this.graphic,
                 this.viewerService.positionWorldToScreen(cell.position),
-                'STROKE_RECT',
+                'STROKE_SQUARE',
                 this.viewerService.sizeWorldToScreen(700).x,
                 '#BB0000',
                 entity.get(Selectable)?.value,
@@ -419,6 +430,19 @@ export class ViewerComponent implements OnInit {
                 '#FFFF00'
             )
         }
+    }
+
+    private renderArea(entity: Entity) {
+        let area = entity.get(Area);
+        RenderUtil.renderRect(
+            this.graphic,
+            area.from,
+            area.to,
+            '#88ff9c',
+            entity.get(Selectable)?.value,
+            entity.get(Hoverable)?.value,
+            entity.has(Disabled)
+        )
     }
 
     private renderSelectionArea() {
