@@ -21,6 +21,7 @@ import {PathService} from "../service/path.service";
 import {Path} from "../model/path";
 import {KnownObjectService} from "../service/known-object.service";
 import {Area} from "../model/area";
+import {AreaService} from "../service/area.service";
 
 @Component({
     selector: 'viewer',
@@ -44,13 +45,15 @@ export class ViewerComponent implements OnInit {
         public viewerService: ViewerService,
         private knownObjectService: KnownObjectService,
         private warehouseService: WarehouseService,
-        private pathService: PathService
+        private pathService: PathService,
+        private areaService: AreaService
     ) {}
 
     ngOnInit(): void {
         this.viewerService.load()
             .subscribe(() => {
-                this.warehouseService.load();
+                // this.warehouseService.load();
+                this.areaService.load();
                 this.pathService.load();
                 this.knownObjectService.load();
             })
@@ -320,8 +323,7 @@ export class ViewerComponent implements OnInit {
     }
 
     private isIntersectArea(entity: Entity, box: Box): boolean {
-        let area = entity.get(Area);
-        return box.isOverlaps(new Box(area.from, area.to));
+        return entity.get(Area).getBoundingBox().isOverlaps(box);
     }
 
     // ##################################################
@@ -436,9 +438,9 @@ export class ViewerComponent implements OnInit {
         let area = entity.get(Area);
         RenderUtil.renderRect(
             this.graphic,
-            area.from,
-            area.to,
-            '#88ff9c',
+            this.viewerService.positionWorldToScreen(area.from.value),
+            this.viewerService.positionWorldToScreen(area.to.value),
+            '#41a5547F',
             entity.get(Selectable)?.value,
             entity.get(Hoverable)?.value,
             entity.has(Disabled)

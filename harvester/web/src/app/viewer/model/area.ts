@@ -1,4 +1,6 @@
 import {Position} from "./components";
+import {Box} from "./box";
+import {Point} from "./point";
 
 export class Area {
     private _id: number;
@@ -24,6 +26,19 @@ export class Area {
     }
     set to(value: Position) {
         this._to = value;
+    }
+
+    getBoundingBox(): Box {
+        return new Box(
+            new Point(
+                Math.min(this._from.value.x, this._to.value.x),
+                Math.min(this._from.value.y, this._to.value.y)
+            ),
+            new Point(
+                Math.max(this._from.value.x, this._to.value.x),
+                Math.max(this._from.value.y, this._to.value.y)
+            )
+        );
     }
 
 }

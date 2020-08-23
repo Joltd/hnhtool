@@ -61,10 +61,7 @@ export class PathService {
     }
 
     startAddNode() {
-        this._dummyNode = this.viewerService.createEntity();
-        this._dummyNode.add(new FollowCursor());
-        this._dummyNode.add(new Primitive());
-        this._dummyNode.add(new Position());
+        this._dummyNode = this.viewerService.createFollowPrimitiveEntity();
         this._targetNode = this._dummyNode;
         for (let node of this._nodes) {
             node.add(new Disabled());

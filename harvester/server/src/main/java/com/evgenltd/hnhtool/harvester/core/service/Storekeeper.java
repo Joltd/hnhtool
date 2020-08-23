@@ -46,7 +46,7 @@ public class Storekeeper {
     private boolean store(final Area area, final KnownObject item, final Long... exclude) {
 
         final List<Long> containerExclude = Arrays.asList(exclude);
-        final List<IntPoint> cells = areaService.splitByPositions(area);
+        final List<IntPoint> cells = areaService.splitByPositions(area.getId());
 
         while (true) {
 

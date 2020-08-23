@@ -1,11 +1,9 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Area;
-import com.evgenltd.hnhtool.harvester.core.entity.Space;
+import com.evgenltd.hnhtool.harvester.core.record.AreaRecord;
 import com.evgenltd.hnhtool.harvester.core.repository.AreaRepository;
-import com.evgenltd.hnhtool.harvester.core.repository.SpaceRepository;
-import com.evgenltd.hnhtools.entity.IntPoint;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.evgenltd.hnhtool.harvester.core.service.AreaService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,14 +14,14 @@ import java.util.stream.Collectors;
 public class AreaController {
 
     private final AreaRepository areaRepository;
-    private final SpaceRepository spaceRepository;
+    private final AreaService areaService;
 
     public AreaController(
             final AreaRepository areaRepository,
-            final SpaceRepository spaceRepository
+            final AreaService areaService
     ) {
         this.areaRepository = areaRepository;
-        this.spaceRepository = spaceRepository;
+        this.areaService = areaService;
     }
 
     @GetMapping
@@ -37,14 +35,7 @@ public class AreaController {
 
     @PostMapping
     public Response<AreaRecord> update(@RequestBody final AreaRecord areaRecord) {
-        Area area = areaRecord.id() == null
-                ? new Area()
-                : areaRepository.getOne(areaRecord.id());
-        final Space space = spaceRepository.getOne(areaRecord.spaceId());
-        area.setSpace(space);
-        area.setFrom(areaRecord.from());
-        area.setTo(areaRecord.to());
-        areaRepository.save(area);
+        final Area area = areaService.update(areaRecord);
         return new Response<>(toRecord(area));
     }
 
@@ -62,8 +53,5 @@ public class AreaController {
                 area.getTo()
         );
     }
-
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public static final record AreaRecord(Long id, Long spaceId, IntPoint from, IntPoint to) {}
 
 }

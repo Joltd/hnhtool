@@ -7,6 +7,7 @@ import {Command} from "../model/command";
 import {environment} from "../../../environments/environment";
 import {HttpClient} from "@angular/common/http";
 import {tap} from "rxjs/operators";
+import {FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
 
 @Injectable()
 export class ViewerService {
@@ -169,6 +170,27 @@ export class ViewerService {
     createEntity(): Entity {
         let entity = new Entity(this._entityIdentity++);
         this._entities.push(entity);
+        return entity;
+    }
+
+    createPrimitiveEntity(): Entity {
+        let entity = this.createEntity();
+        entity.add(new Primitive());
+        entity.add(new Position());
+        return entity;
+    }
+
+    createFollowPrimitiveEntity(): Entity {
+        let entity = this.createPrimitiveEntity();
+        entity.add(new FollowCursor());
+        return entity;
+    }
+
+    createMovementPrimitiveEntity(): Entity {
+        let entity = this.createPrimitiveEntity();
+        entity.add(new Hoverable());
+        entity.add(new Selectable());
+        entity.add(new Movement());
         return entity;
     }
 

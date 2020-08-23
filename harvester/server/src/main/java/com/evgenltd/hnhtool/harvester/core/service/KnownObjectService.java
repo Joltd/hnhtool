@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.entity.Area;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -179,30 +177,30 @@ public class KnownObjectService {
     public void deleteHeap(final KnownObject heap) {
         knownObjectRepository.delete(heap);
     }
-
-    public List<IntPoint> findFreeCellsInLinkedArea(final KnownObject knownObject) {
-        final Space space = knownObject.getSpace();
-        final IntPoint position = knownObject.getPosition();
-        final Area area = areaRepository.findByPosition(space.getId(), position
-                .getX(), position.getY())
-                .stream()
-                .findFirst()
-                .orElse(null);
-        if (area == null) {
-            return Collections.emptyList();
-        }
-
-        final List<IntPoint> cells = areaService.splitByPositions(area);
-
-        knownObjectRepository.findObjectsInArea(
-                space.getId(),
-                area.getFrom().getX(),
-                area.getFrom().getY(),
-                area.getTo().getX(),
-                area.getTo().getY()
-        ).forEach(existed -> cells.remove(existed.getPosition()));
-
-        return cells;
-    }
+//
+//    public List<IntPoint> findFreeCellsInLinkedArea(final KnownObject knownObject) {
+//        final Space space = knownObject.getSpace();
+//        final IntPoint position = knownObject.getPosition();
+//        final Area area = areaRepository.findByPosition(space.getId(), position
+//                .getX(), position.getY())
+//                .stream()
+//                .findFirst()
+//                .orElse(null);
+//        if (area == null) {
+//            return Collections.emptyList();
+//        }
+//
+//        final List<IntPoint> cells = areaService.splitByPositions(area);
+//
+//        knownObjectRepository.findObjectsInArea(
+//                space.getId(),
+//                area.getFrom().getX(),
+//                area.getFrom().getY(),
+//                area.getTo().getX(),
+//                area.getTo().getY()
+//        ).forEach(existed -> cells.remove(existed.getPosition()));
+//
+//        return cells;
+//    }
 
 }

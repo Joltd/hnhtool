@@ -1,13 +1,12 @@
-import {Injectable} from "@angular/core";
 import {ViewerService} from "./viewer.service";
-import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
+import {Disabled, FollowCursor, Hoverable, Movement, Position, Selectable} from "../model/components";
 import {Entity} from "../model/entity";
 import {Point} from "../model/point";
 import {HttpClient, HttpParams} from "@angular/common/http";
 import {Cell, Warehouse} from "../model/warehouse";
-import {Command} from "../model/command";
 import {environment} from "../../../environments/environment";
 import {map} from "rxjs/operators";
+import {Injectable} from "@angular/core";
 
 @Injectable()
 export class WarehouseService {
@@ -22,7 +21,7 @@ export class WarehouseService {
         private http: HttpClient,
         private viewerService: ViewerService
     ) {
-        this.viewerService.onModeChanged.subscribe((mode) => {
+        /*this.viewerService.onModeChanged.subscribe((mode) => {
             if (mode == 'COMMON') {
                 this.viewerService.commands.push(new Command('storefront', () => this.enter()));
             } else if (mode == 'WAREHOUSE') {
@@ -40,7 +39,7 @@ export class WarehouseService {
                     new Command('close', () => this.cancel())
                 ];
             }
-        });
+        });*/
     }
 
     enter() {
@@ -109,15 +108,11 @@ export class WarehouseService {
         }
 
         for (let cell of this._warehouse.get(Warehouse).cells) {
-            let cellEntity = this.viewerService.createEntity();
+            let cellEntity = this.viewerService.createMovementPrimitiveEntity();
             this._cells.push(cellEntity);
 
             cellEntity.add(cell);
-            cellEntity.add(new Hoverable());
-            cellEntity.add(new Selectable());
-            cellEntity.add(new Movement());
-            cellEntity.add(new Primitive());
-            cellEntity.add(new Position()).value = cell.position;
+            cellEntity.get(Position).value = cell.position;
         }
 
         this.viewerService.mode = 'CELL';
@@ -234,21 +229,14 @@ export class WarehouseService {
     //
 
     private createCell(): Entity {
-        let cell = this.viewerService.createEntity();
-        cell.add(new Hoverable());
-        cell.add(new Selectable());
-        cell.add(new Movement());
-        cell.add(new Primitive());
-        cell.add(new Position());
+        let cell = this.viewerService.createMovementPrimitiveEntity();
         this._cells.push(cell);
         return cell;
     }
 
     private createDummy(): Entity {
-        let dummy = this.viewerService.createEntity();
-        dummy.add(new FollowCursor());
-        dummy.add(new Primitive());
-        dummy.add(new Position()).value = new Point(0,0);
+        let dummy = this.viewerService.createFollowPrimitiveEntity();
+        dummy.get(Position).value = new Point(0,0);
         this._dummy = dummy;
         return dummy;
     }

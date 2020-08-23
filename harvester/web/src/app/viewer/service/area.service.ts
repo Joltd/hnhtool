@@ -7,7 +7,7 @@ import {environment} from "../../../environments/environment";
 import {map} from "rxjs/operators";
 import {Area} from "../model/area";
 import {Point} from "../model/point";
-import {Disabled, FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
+import {Disabled, FollowCursor, Hoverable, Movement, Position, Selectable} from "../model/components";
 
 @Injectable()
 export class AreaService {
@@ -24,7 +24,7 @@ export class AreaService {
     ) {
         this.viewerService.onModeChanged.subscribe(mode => {
             if (mode == 'COMMON') {
-                this.viewerService.commands.push(new Command('storefront', () => this.enter()));
+                this.viewerService.commands.push(new Command('wallpaper', () => this.enter()));
             } else if (mode == 'AREA') {
                 this.viewerService.commands = [
                     new Command('add', () => this.startAdd()),
@@ -51,6 +51,7 @@ export class AreaService {
 
     private toAreaEntity(entry: any): Entity {
         let entity = this.viewerService.createEntity();
+        this._areas.push(entity);
         let area = entity.add(new Area());
         area.id = entry.id;
         area.from.value = new Point(entry.from.x, entry.from.y);
@@ -66,30 +67,33 @@ export class AreaService {
         }
     }
 
-    startAdd() {
-        this.viewerService.mode = 'AREA_EDIT';
+    done() {
+        for (let area of this._areas) {
+            area.remove(Hoverable);
+            area.remove(Selectable);
+        }
+        this.viewerService.mode = 'COMMON';
+    }
 
-        this._from = this.viewerService.createEntity();
-        this._from.add(new Primitive());
-        this._from.add(new Position());
-        this._from.add(new FollowCursor());
+    startAdd() {
+        this._from = this.viewerService.createFollowPrimitiveEntity();
 
         this.viewerService.onClick = () => this.addFrom();
         this.viewerService.onCancel = () => this.stopAdd();
+
+        this.viewerService.mode = 'AREA_EDIT';
     }
 
     private addFrom() {
         this._from.remove(FollowCursor);
 
-        this._to = this.viewerService.createEntity();
-        this._to.add(new Primitive());
-        this._to.add(new Position());
-        this._to.add(new FollowCursor());
+        this._to = this.viewerService.createFollowPrimitiveEntity();
 
         this._area = this.viewerService.createEntity();
         let area = this._area.add(new Area());
         area.from = this._from.get(Position);
         area.to = this._to.get(Position);
+        area.to.value = area.from.value;
 
         this.viewerService.onClick = () => this.addTo();
     }
@@ -137,46 +141,71 @@ export class AreaService {
         }
 
         for (let entity of this.viewerService.entities) {
-            entity.add(new Disabled());
+            if (entity.id != this._area.id) {
+                entity.add(new Disabled());
+            }
         }
 
         let area = this._area.get(Area);
 
-        this._from = this.viewerService.createEntity();
-        this._from.add(new Primitive());
+        this._from = this.viewerService.createMovementPrimitiveEntity();
         this._from.add(area.from);
-        this._from.add(new Hoverable());
-        this._from.add(new Selectable());
-        this._from.add(new Movement());
 
-        this._to = this.viewerService.createEntity();
-        this._to.add(new Primitive());
+        this._to = this.viewerService.createMovementPrimitiveEntity();
         this._to.add(area.to);
-        this._to.add(new Hoverable());
-        this._to.add(new Selectable());
-        this._to.add(new Movement());
 
         this.viewerService.mode = 'AREA_EDIT';
     }
 
     remove() {
-
-    }
-
-    done() {
+        let newAreas: Entity[] = [];
         for (let area of this._areas) {
-            area.remove(Hoverable);
-            area.remove(Selectable);
+            let selected = area.get(Selectable)?.value;
+            if (selected) {
+                this.http.delete(environment.apiUrl + '/area/' + area.get(Area).id).subscribe(() => {
+                    this.viewerService.removeEntity(area);
+                })
+            } else {
+                newAreas.push(area);
+            }
         }
-        this.viewerService.mode = 'COMMON';
+        this._areas = newAreas;
     }
 
     apply() {
 
-        this.cancel();
+        let area = this._area.get(Area);
+        let toSave = {
+            id: area.id,
+            spaceId: this.viewerService.space,
+            from: {
+                x: area.from.value.x,
+                y: area.from.value.y
+            },
+            to: {
+                x: area.to.value.x,
+                y: area.to.value.y
+            }
+        };
+
+        this.http.post<any>(environment.apiUrl + '/area', toSave)
+            .subscribe(result => {
+                area.id = result.id;
+
+                this._area.add(new Hoverable());
+                this._area.add(new Selectable());
+
+                this._areas.push(this._area);
+
+                this.cancel();
+            });
+
     }
 
     cancel() {
+        if (!this._area.get(Area).id) {
+            this.viewerService.removeEntity(this._area);
+        }
         this.viewerService.removeEntity(this._from);
         this.viewerService.removeEntity(this._to);
         this._from = null;
