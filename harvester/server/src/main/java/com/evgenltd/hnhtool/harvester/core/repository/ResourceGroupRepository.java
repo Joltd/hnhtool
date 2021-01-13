@@ -13,8 +13,8 @@ import java.util.List;
 @Repository
 public interface ResourceGroupRepository extends JpaRepository<ResourceGroup, Long> {
 
-    default ResourceGroup loadById(Long id) {
-        return findById(id).orElseThrow(() -> new ApplicationException("There is no entry [%s]", id));
+    default ResourceGroup findOne(Long id) {
+        return findById(id).orElseThrow(() -> new ApplicationException("ResourceGroup with id [%s] not found", id));
     }
 
     @Query("""

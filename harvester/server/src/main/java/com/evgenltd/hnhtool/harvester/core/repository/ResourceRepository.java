@@ -14,8 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
-    default Resource loadById(Long id) {
-        return findById(id).orElseThrow(() -> new ApplicationException("There is no entry [%s]", id));
+    default Resource findOne(Long id) {
+        return findById(id).orElseThrow(() -> new ApplicationException("Resource with id [%s] not found", id));
     }
 
     Optional<Resource> findByName(String name);

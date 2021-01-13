@@ -38,27 +38,27 @@ public class AccountService {
         account.setEnabled(enabled);
     }
 
-    public void authenticateAccount(final Account account, final String passwordHash) {
+    public void authenticateAccount(final Account account, final String password) {
         if (account.getId() == null) {
             final boolean accountAlreadyExists = accountRepository.findAccountByUsername(account.getUsername()).isPresent();
             if (accountAlreadyExists) {
                 throw new ApplicationException("Account [%s] already exists", account.getUsername());
             }
 
-            if (Assert.isEmpty(passwordHash)) {
+            if (Assert.isEmpty(password)) {
                 throw new ApplicationException("Password should be specified");
             }
         }
 
-        if (Assert.isNotEmpty(passwordHash)) {
-            final byte[] token = acquireToken(account.getUsername(), passwordHash);
+        if (Assert.isNotEmpty(password)) {
+            final byte[] token = acquireToken(account.getUsername(), password);
             account.setToken(token);
         }
     }
 
-    private byte[] acquireToken(final String username, final String passwordHash) {
+    private byte[] acquireToken(final String username, final String password) {
         try (final Authentication init = buildAuthentication()) {
-            final byte[] passwordHashAsBytes = Authentication.hashStringToBytes(passwordHash);
+            final byte[] passwordHashAsBytes = Authentication.passwordHash(password);
             final Authentication.Result result = init.login(username, passwordHashAsBytes);
             return result.token();
         }

@@ -5,7 +5,7 @@
         <i (click)="close()" class="material-icons c-pointer">close</i>
     </div>
     <input type="text" class="form-control" placeholder="Username" [(ngModel)]="agent.username">
-    <input type="text" class="form-control" placeholder="Password" />
+    <input type="text" class="form-control" placeholder="Password" [(ngModel)]="agent.password" />
     <ng-container *ngIf="agent.id">
         <div class="character">
             <div>{{agent.character}}</div>

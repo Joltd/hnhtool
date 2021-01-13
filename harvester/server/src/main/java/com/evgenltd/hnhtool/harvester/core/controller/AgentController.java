@@ -62,7 +62,7 @@ public class AgentController {
         account.setUsername(agentRecord.username());
         account.setCharacterName(agentRecord.character());
         account.setEnabled(agentRecord.enabled());
-        accountService.authenticateAccount(account, agentRecord.passwordHash());
+        accountService.authenticateAccount(account, agentRecord.password());
         accountRepository.save(account);
         return new Response<>();
     }
@@ -90,7 +90,7 @@ public class AgentController {
     public record AgentRecord(
             Long id,
             String username,
-            String passwordHash,
+            String password,
             String character,
             boolean enabled
     ) {}

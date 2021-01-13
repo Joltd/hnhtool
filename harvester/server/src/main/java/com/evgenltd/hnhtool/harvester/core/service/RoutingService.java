@@ -152,7 +152,7 @@ public class RoutingService {
             return node;
         }
 
-        final KnownObject knownObject = knownObjectRepository.getOne(node.knownObjectId());
+        final KnownObject knownObject = knownObjectRepository.findOne(node.knownObjectId());
         return new Node(node.knownObjectId(), knownObject.getSpace().getId(), knownObject.getPosition());
     }
 

@@ -12,7 +12,7 @@ public class ResourceGroup {
     @Id
     private Long id;
 
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
     private Set<Resource> resources = new HashSet<>();
 
     public Long getId() {

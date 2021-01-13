@@ -97,7 +97,7 @@ public class MatchingService {
 
     public void researchItems(final Long parentId, final KnownObject.Place place, final List<ItemWidget> itemWidgets) {
 
-        final KnownObject parent = knownObjectRepository.getOne(parentId);
+        final KnownObject parent = knownObjectRepository.findOne(parentId);
         final List<KnownObject> knownItems = knownObjectRepository.findByParentIdAndPlace(parentId, place);
 
         final MatchingResult<ItemWidget, KnownObject> matchingResult = Matcher.matchItemWidgetToKnownObject(
@@ -117,7 +117,7 @@ public class MatchingService {
         final List<ItemWidget> itemWidgets = Optional.ofNullable(itemWidget)
                 .map(Collections::singletonList)
                 .orElse(Collections.emptyList());
-        final KnownObject parent = knownObjectRepository.getOne(parentId);
+        final KnownObject parent = knownObjectRepository.findOne(parentId);
         final List<KnownObject> knownItems = knownObjectRepository.findByParentIdAndPlace(parentId, KnownObject.Place.HAND);
 
         final MatchingResult<ItemWidget, KnownObject> matchingResult = Matcher.matchItemWidgetToKnownObject(
@@ -164,7 +164,7 @@ public class MatchingService {
     // ##################################################
 
     private List<KnownObject> loadKnownObjects(final Area area, final Long spaceId) {
-        return knownObjectRepository.findObjectsInArea(
+        return knownObjectRepository.findPropInArea(
                 spaceId,
                 area.getUpperLeftX(),
                 area.getUpperLeftY(),

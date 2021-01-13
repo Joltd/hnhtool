@@ -1,5 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
+import com.evgenltd.hnhtool.harvester.core.entity.Area;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.Space;
@@ -58,14 +59,14 @@ public class KnownObjectService {
     }
 
     public void storeCharacter(final Long knownObjectId, final Long spaceId, final IntPoint characterPosition) {
-        final Space space = spaceRepository.getOne(spaceId);
-        final KnownObject characterObject = knownObjectRepository.getOne(knownObjectId);
+        final Space space = spaceRepository.findOne(spaceId);
+        final KnownObject characterObject = knownObjectRepository.findOne(knownObjectId);
         characterObject.setSpace(space);
         characterObject.setPosition(characterPosition);
     }
 
-    public Long storeHeap(final Long spaceId, final IntPoint position, final String resourceName) {
-        final Space space = spaceRepository.getOne(spaceId);
+    public KnownObject storeHeap(final Long spaceId, final IntPoint position, final String resourceName) {
+        final Space space = spaceRepository.findOne(spaceId);
         final Resource resource = resourceService.findByName(resourceName);
         final KnownObject heapObject = new KnownObject();
         heapObject.setSpace(space);
@@ -73,11 +74,11 @@ public class KnownObjectService {
         heapObject.setResource(resource);
         heapObject.setLost(false);
         heapObject.setActual(LocalDateTime.now());
-        return knownObjectRepository.save(heapObject).getId();
+        return knownObjectRepository.save(heapObject);
     }
 
     public void storeNewKnownObject(final Long spaceId, final Resource resource, final IntPoint position) {
-        final Space space = spaceRepository.getOne(spaceId);
+        final Space space = spaceRepository.findOne(spaceId);
         final KnownObject knownObject = new KnownObject();
         knownObject.setSpace(space);
         knownObject.setResource(resource);
@@ -125,8 +126,8 @@ public class KnownObjectService {
     }
 
     public void moveToHand(final Long characterId, final Long knownItemId, final String resourceName) {
-        final KnownObject character = knownObjectRepository.getOne(characterId);
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final KnownObject character = knownObjectRepository.findOne(characterId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
         moveToHand(character, knownItem, resourceName);
     }
 
@@ -139,8 +140,8 @@ public class KnownObjectService {
     }
 
     public void moveToInventory(final Long knownItemId, final Long parentId, final KnownObject.Place place, final ItemWidget itemWidget) {
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
-        final KnownObject parent = knownObjectRepository.getOne(parentId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
+        final KnownObject parent = knownObjectRepository.findOne(parentId);
         knownItem.setPlace(place);
         knownItem.setPosition(itemWidget.getPosition());
         knownItem.setParent(parent);
@@ -149,7 +150,7 @@ public class KnownObjectService {
 
     public void moveToWorld(final Long knownItemId, final Prop prop) {
         final Resource resource = resourceService.findByName(prop.getResource());
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
         knownItem.setPlace(null);
         knownItem.setPosition(prop.getPosition());
         knownItem.setParent(null);
@@ -157,8 +158,8 @@ public class KnownObjectService {
     }
 
     public void moveToHeap(final Long knownItemId, final Long heapId, final Integer position) {
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
-        final KnownObject heap = knownObjectRepository.getOne(heapId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
+        final KnownObject heap = knownObjectRepository.findOne(heapId);
         knownItem.setPlace(null);
         knownItem.setPosition(new IntPoint(position, 0));
         knownItem.setParent(heap);
@@ -176,6 +177,18 @@ public class KnownObjectService {
 
     public void deleteHeap(final KnownObject heap) {
         knownObjectRepository.delete(heap);
+    }
+
+    public List<KnownObject> loadContainersInArea(final Long areaId) {
+        final Area area = areaRepository.findOne(areaId);
+        return knownObjectRepository
+                .findContainerInArea(
+                        area.getSpace().getId(),
+                        area.getFrom().getX(),
+                        area.getFrom().getY(),
+                        area.getTo().getX(),
+                        area.getTo().getY()
+                );
     }
 //
 //    public List<IntPoint> findFreeCellsInLinkedArea(final KnownObject knownObject) {

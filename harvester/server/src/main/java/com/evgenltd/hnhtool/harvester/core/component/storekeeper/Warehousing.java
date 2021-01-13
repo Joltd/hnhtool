@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.component.storekeeper;
 
-import com.evgenltd.hnhtool.harvester.core.component.Holder;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.ResourceGroup;
@@ -45,15 +44,6 @@ public final class Warehousing {
         return new Result();
     }
 
-    private void prepareContainerModel(final KnownObject character, final KnownObject.Place place) {
-        final Box box = new Box(null, new boolean[4][4]);
-        character.getChildren()
-                .stream()
-                .filter(knownItem -> Objects.equals(knownItem.getPlace(), place))
-                .forEach(knownItem -> box.fillCells(knownItem.getPosition(), knownItem.getResource().getSize()));
-        boxes.add(box);
-    }
-
     private void prepareContainerModel(final List<KnownObject> containers, final List<IntPoint> cells) {
 
         freeCells.addAll(cells);
@@ -84,8 +74,17 @@ public final class Warehousing {
 
     private HeapEntry findHeap(final KnownObject item) {
         for (final Heap heap : heaps) {
-            final Long itemResourceGroup = item.getResource().getGroup().getId();
-            final Long heapResourceGroup = heap.getKnownObject().getResource().getGroup().getId();
+            final Long itemResourceGroup = Optional.of(item)
+                    .map(KnownObject::getResource)
+                    .map(Resource::getGroup)
+                    .map(ResourceGroup::getId)
+                    .orElse(null);
+            final Long heapResourceGroup = Optional.of(heap)
+                    .map(Heap::getKnownObject)
+                    .map(KnownObject::getResource)
+                    .map(Resource::getGroup)
+                    .map(ResourceGroup::getId)
+                    .orElse(null);
             final boolean belongToSameGroup = itemResourceGroup != null
                     && heapResourceGroup != null
                     && Objects.equals(itemResourceGroup, heapResourceGroup);
@@ -94,14 +93,12 @@ public final class Warehousing {
             }
 
             if (heap.getCount() >= heap.getMax()) {
+                System.out.printf("Heap [%s], count [%s], max [%s]\n", heap.getKnownObject().getId(), heap.getCount(), heap.getMax());
                 continue;
             }
 
-            // select nearest heap
-
             heap.incrementCount();
-            return new HeapEntry(heap.getKnownObjectHolder());
-
+            return new HeapEntry(heap.getKnownObject());
         }
 
         return null;
@@ -137,7 +134,7 @@ public final class Warehousing {
         final Heap heap = new Heap(newHeap, 1);
         heaps.add(heap);
 
-        return new HeapEntry(heap.getKnownObjectHolder());
+        return new HeapEntry(heap.getKnownObject());
     }
 
     private BoxEntry findBox(final KnownObject item) {
@@ -167,29 +164,23 @@ public final class Warehousing {
     }
 
     // todo holder now is redundant - we operate only with one item
-    public record HeapEntry(Holder<KnownObject>heap) {}
+    public record HeapEntry(KnownObject heap) {}
 
     public record BoxEntry(KnownObject container, IntPoint position) {}
 
     private static final class Heap {
         private final KnownObject knownObject;
-        private final Holder<KnownObject> knownObjectHolder;
         private int count;
         private final int max;
 
         Heap(final KnownObject knownObject, final int count) {
             this.knownObject = knownObject;
-            this.knownObjectHolder = Holder.of(knownObject);
             this.count = count;
             this.max = knownObject.getResource().getSize().getX();
         }
 
         KnownObject getKnownObject() {
             return knownObject;
-        }
-
-        public Holder<KnownObject> getKnownObjectHolder() {
-            return knownObjectHolder;
         }
 
         int getCount() {

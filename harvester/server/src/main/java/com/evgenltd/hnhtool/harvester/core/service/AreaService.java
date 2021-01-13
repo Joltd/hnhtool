@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -29,9 +31,21 @@ public class AreaService {
         this.spaceRepository = spaceRepository;
     }
 
-    public List<IntPoint> splitByPositions(final Long areaId) {
-        final Area area = areaRepository.getOne(areaId);
+    public Map<IntPoint, Area> prepareAreaIndex() {
+        final List<Area> areas = areaRepository.findAll();
+        final Map<IntPoint, Area> index = new HashMap<>();
+        for (final Area area : areas) {
+            splitByPositions(area).forEach(cell -> index.put(cell, area));
+        }
+        return index;
+    }
 
+    public List<IntPoint> splitByPositions(final Long areaId) {
+        final Area area = areaRepository.findOne(areaId);
+        return splitByPositions(area);
+    }
+
+    private List<IntPoint> splitByPositions(final Area area) {
         final IntPoint from = area.getFrom();
         final IntPoint to = area.getTo();
 
@@ -55,10 +69,10 @@ public class AreaService {
 
     public Area update(final AreaRecord areaRecord) {
         final Area area = areaRecord.id() != null
-                ? areaRepository.getOne(areaRecord.id())
+                ? areaRepository.findOne(areaRecord.id())
                 : new Area();
 
-        final Space space = spaceRepository.getOne(areaRecord.spaceId());
+        final Space space = spaceRepository.findOne(areaRecord.spaceId());
         area.setSpace(space);
         area.setFrom(new IntPoint(
                 Math.min(areaRecord.from().getX(), areaRecord.to().getX()),

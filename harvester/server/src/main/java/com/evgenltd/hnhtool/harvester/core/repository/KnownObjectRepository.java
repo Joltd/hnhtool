@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.core.repository;
 
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.record.Range;
+import com.evgenltd.hnhtools.common.ApplicationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,6 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> {
+
+    default KnownObject findOne(Long id) {
+        return findById(id).orElseThrow(() -> new ApplicationException("KnownObject with id [%s] not found", id));
+    }
 
     Optional<KnownObject> findByResourceName(String resourceName);
 
@@ -26,9 +31,27 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
                 and ko.position.x <= ?4
                 and ko.position.y <= ?5
                 and r.visual = 'PROP'
-                and ko.lost = false
             """)
-    List<KnownObject> findObjectsInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
+    List<KnownObject> findPropInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
+
+    @SuppressWarnings("JpaQlInspection")
+    @Query("""
+            select ko 
+            from KnownObject ko 
+            left join fetch ko.children
+            left join ko.resource r
+            where
+                ko.space.id = ?1
+                and ko.position.x >= ?2
+                and ko.position.y >= ?3
+                and ko.position.x <= ?4
+                and ko.position.y <= ?5
+                and r.visual = 'PROP'
+                and (r.box = true or r.heap = true)
+                and ko.lost = false
+                and ko.invalid = false
+            """)
+    List<KnownObject> findContainerInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
 
     @SuppressWarnings("JpaQlInspection")
     @Query("""
@@ -70,5 +93,7 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
     List<KnownObject> findBySpaceIdAndLostIsFalse(Long spaceId);
 
     List<KnownObject> findByResourceNameLikeAndLostIsFalse(final String resourceName);
+
+    List<KnownObject> findByResourceHeapIsTrueAndInvalidIsTrue();
 
 }

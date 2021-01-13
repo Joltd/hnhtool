@@ -69,14 +69,14 @@ public class ResourceService {
     }
 
     public void updateGroup(final Long resourceId, final Long groupId) {
-        final Resource resource = resourceRepository.loadById(resourceId);
+        final Resource resource = resourceRepository.findOne(resourceId);
         if (groupId == null) {
             resource.setGroup(null);
         } else if (groupId == -1) {
             final ResourceGroup group = resourceGroupRepository.save(new ResourceGroup());
             resource.setGroup(group);
         } else {
-            final ResourceGroup resourceGroup = resourceGroupRepository.loadById(groupId);
+            final ResourceGroup resourceGroup = resourceGroupRepository.findOne(groupId);
             resource.setGroup(resourceGroup);
         }
     }

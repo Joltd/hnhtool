@@ -26,7 +26,7 @@ public final class MessageBrokerImpl implements MessageBroker {
 
     private static final Logger log = LogManager.getLogger(MessageBroker.class);
 
-    private static final int PROTOCOL_VERSION = 23;
+    private static final int PROTOCOL_VERSION = 24;
     private static final String BROKER_NAME = "Hafen";
     private static final int SOCKET_TIMEOUT = 1_000;
     private static final long BEAT_TIMEOUT = 5_000L;

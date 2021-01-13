@@ -38,7 +38,7 @@ public interface Agent {
 
     void openContainer(KnownObject knownObject);
 
-    void openHeap(Long knownObjectId);
+    boolean openHeap(Long knownObjectId);
 
     void takeItemInHandFromWorld(KnownObject knownItem);
 
@@ -64,7 +64,7 @@ public interface Agent {
 
     void closeCurrentInventory();
 
-    Long placeHeap(IntPoint position);
+    KnownObject placeHeap(IntPoint position);
 
     void scan();
 

@@ -27,15 +27,18 @@ public class AgentServiceImpl implements AgentService {
     private final ObjectMapper objectMapper;
     private final AccountService accountService;
     private final ObjectFactory<AgentImpl> agentFactory;
+    private final ObjectFactory<Storekeeper> storekeeperFactory;
 
     public AgentServiceImpl(
             final ObjectMapper objectMapper,
             final AccountService accountService,
-            final ObjectFactory<AgentImpl> agentFactory
+            final ObjectFactory<AgentImpl> agentFactory,
+            final ObjectFactory<Storekeeper> storekeeperFactory
     ) {
         this.objectMapper = objectMapper;
         this.accountService = accountService;
         this.agentFactory = agentFactory;
+        this.storekeeperFactory = storekeeperFactory;
     }
 
     @Override
@@ -82,6 +85,9 @@ public class AgentServiceImpl implements AgentService {
         agent.setClientApp(clientApp);
 
         script.setAgent(agent);
+        final Storekeeper storekeeper = storekeeperFactory.getObject();
+        storekeeper.setAgent(agent);
+        script.setStorekeeper(storekeeper);
         try {
             script.execute();
         } catch (final HandNotEmptyException e) {

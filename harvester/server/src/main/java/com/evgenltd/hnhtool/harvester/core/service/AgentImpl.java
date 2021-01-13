@@ -21,14 +21,12 @@ import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -60,7 +58,6 @@ public class AgentImpl implements Agent {
     private final KnownObjectService knownObjectService;
     private final ResourceService resourceService;
     private final RoutingService routingService;
-    private final Storekeeper storekeeper;
 
     private ClientApp clientApp;
 
@@ -81,19 +78,16 @@ public class AgentImpl implements Agent {
             final KnownObjectRepository knownObjectRepository,
             final KnownObjectService knownObjectService,
             final ResourceService resourceService,
-            final RoutingService routingService,
-            final ObjectFactory<Storekeeper> storekeeperFactory
+            final RoutingService routingService
     ) {
         this.matchingService = matchingService;
         this.knownObjectRepository = knownObjectRepository;
         this.knownObjectService = knownObjectService;
         this.resourceService = resourceService;
         this.routingService = routingService;
-        this.storekeeper = storekeeperFactory.getObject();
     }
 
     void setClientApp(final ClientApp clientApp) {
-        this.storekeeper.setAgent(this);
         this.clientApp = clientApp;
 
         refreshState();
@@ -192,7 +186,8 @@ public class AgentImpl implements Agent {
                 WorldPoint.of(worldPoint.getSpaceId(), position)
         );
 
-        for (final RoutingService.Node node : route) {
+        for (int index = 0; index < route.size() - 1; index++) {
+            final RoutingService.Node node = route.get(index);
             move(node.position());
         }
     }
@@ -236,11 +231,11 @@ public class AgentImpl implements Agent {
 
     @AgentCommand
     @Override
-    public void openHeap(final Long knownObjectId) {
+    public boolean openHeap(final Long knownObjectId) {
         refreshState();
         forClose.forEach(this::closeWidget);
 
-        final KnownObject knownObject = knownObjectRepository.getOne(knownObjectId);
+        final KnownObject knownObject = knownObjectRepository.findOne(knownObjectId);
 
         final Prop prop = getPropOrThrow(
                 knownObject.getResource().getName(),
@@ -269,8 +264,11 @@ public class AgentImpl implements Agent {
 
         final Integer actualCount = currentHeap.getStoreBox().getFirst();
         if (!Objects.equals(actualCount, knownObject.getChildren().size())) {
-            knownObject.setInvalid(true);
+            knownObjectService.markHeapAsInvalid(knownObject);
+            return false;
         }
+
+        return true;
     }
 
     @AgentCommand
@@ -322,7 +320,7 @@ public class AgentImpl implements Agent {
         hand.checkEmpty();
         refreshState();
 
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
         final ItemWidget widget = getItemOrThrow(knownItem.getResource().getName(), knownItem.getPosition());
 
         clientApp.sendWidgetCommand(
@@ -347,16 +345,14 @@ public class AgentImpl implements Agent {
         hand.checkEmpty();
 
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
-        Integer actualCount = storeBox.getFirst();;
 
         clientApp.sendWidgetCommand(storeBox.getId(), CLICK_COMMAND);
         await(() -> !hand.isEmpty());
 
         final Long heapId = currentHeap.getKnownObjectId();
-        final KnownObject heap = knownObjectRepository.getOne(heapId);
+        final KnownObject heap = knownObjectRepository.findOne(heapId);
         final ItemWidget itemWidget = hand.getItem();
         final boolean isStillExists = currentHeap.isOpened();
-        final boolean isCountSame = Objects.equals(heap.getChildren().size(), actualCount);
 
         final List<KnownObject> knownItems = new ArrayList<>();
         final KnownObject knownItem = heap.getChildren()
@@ -375,7 +371,7 @@ public class AgentImpl implements Agent {
 
         final boolean isItemMatched = !result.getMatches().isEmpty();
 
-        final KnownObject character = knownObjectRepository.getOne(this.character.getKnownObjectId());
+        final KnownObject character = knownObjectRepository.findOne(this.character.getKnownObjectId());
         if (knownItem != null && isItemMatched) {
             knownObjectService.moveToHand(character, knownItem, itemWidget.getResource());
             heap.getChildren().remove(knownItem);
@@ -385,7 +381,7 @@ public class AgentImpl implements Agent {
             hand.setKnownItemId(newKnownItem.getId());
         }
 
-        if (!isItemMatched || !isCountSame) {
+        if (!isItemMatched) {
             knownObjectService.markHeapAsInvalid(heap);
         }
 
@@ -551,12 +547,12 @@ public class AgentImpl implements Agent {
 
     @AgentCommand
     @Override
-    public Long placeHeap(final IntPoint position) {
+    public KnownObject placeHeap(final IntPoint position) {
         refreshState();
 
         hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
-        final KnownObject knownItem = knownObjectRepository.getOne(knownItemId);
+        final KnownObject knownItem = knownObjectRepository.findOne(knownItemId);
         final String resource = knownItem.getResource().getName();
         final List<String> resources = resourceService.loadResourceOfGroup(resource);
 
@@ -577,8 +573,6 @@ public class AgentImpl implements Agent {
                 KeyModifier.NO.code
         );
 
-        final AtomicLong holder = new AtomicLong();
-
         await(() -> {
             if (!hand.isEmpty()) {
                 return false;
@@ -590,14 +584,14 @@ public class AgentImpl implements Agent {
 
         final Prop heapProp = getProp(resources, position);
 
-        final Long heapId = knownObjectService.storeHeap(
+        final KnownObject heap = knownObjectService.storeHeap(
                 worldPoint.getSpaceId(),
                 heapProp.getPosition().add(worldPoint.getPosition()),
                 heapProp.getResource()
         );
-        knownObjectService.moveToHeap(knownItemId, heapId, 1);
+        knownObjectService.moveToHeap(knownItemId, heap.getId(), 1);
 
-        return holder.get();
+        return heap;
     }
 
     // ##################################################

@@ -6,6 +6,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "warehouses")
+@Deprecated
 public class Warehouse {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
