@@ -8,7 +8,10 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.Matcher;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.MatchingResult;
+import com.evgenltd.hnhtool.harvester.core.component.storekeeper.Warehousing;
+import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
@@ -20,6 +23,8 @@ import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.util.JsonUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -34,6 +39,10 @@ import java.util.stream.Collectors;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Transactional
 public class AgentImpl implements Agent {
+
+    private static final Logger log = LogManager.getLogger(Agent.class);
+
+    private static final long DEFAULT_TIMEOUT = 60_000L;
 
     private static final String CLICK_COMMAND = "click";
     private static final String TAKE_COMMAND = "take";
@@ -58,8 +67,10 @@ public class AgentImpl implements Agent {
     private final KnownObjectService knownObjectService;
     private final ResourceService resourceService;
     private final RoutingService routingService;
+    private final Storekeeper storekeeper;
 
     private ClientApp clientApp;
+    private Account account;
 
     private Map<Long,Prop> propIndex;
     private Map<Integer,Widget> widgetIndex;
@@ -78,13 +89,15 @@ public class AgentImpl implements Agent {
             final KnownObjectRepository knownObjectRepository,
             final KnownObjectService knownObjectService,
             final ResourceService resourceService,
-            final RoutingService routingService
+            final RoutingService routingService,
+            final Storekeeper storekeeper
     ) {
         this.matchingService = matchingService;
         this.knownObjectRepository = knownObjectRepository;
         this.knownObjectService = knownObjectService;
         this.resourceService = resourceService;
         this.routingService = routingService;
+        this.storekeeper = storekeeper;
     }
 
     void setClientApp(final ClientApp clientApp) {
@@ -107,6 +120,25 @@ public class AgentImpl implements Agent {
                 KnownObject.Place.STUDY_INVENTORY,
                 character.getStudyInventory().getItems()
         );
+    }
+
+    @Override
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(final Account account) {
+        this.account = account;
+    }
+
+    // ##################################################
+    // #                                                #
+    // #  Other API                                     #
+    // #                                                #
+    // ##################################################
+
+    public Storekeeper getStorekeeper() {
+        return storekeeper;
     }
 
     // ##################################################
@@ -147,6 +179,11 @@ public class AgentImpl implements Agent {
 
     @Override
     public void await(final Supplier<Boolean> condition) {
+        await(condition, DEFAULT_TIMEOUT);
+    }
+
+    @Override
+    public void await(final Supplier<Boolean> condition, final long timeout) {
         clientApp.await(() -> {
             refreshState();
             if (character.getProp().isMoving()) {
@@ -157,7 +194,7 @@ public class AgentImpl implements Agent {
                 );
             }
             return condition.get();
-        });
+        }, timeout);
     }
 
     @AgentCommand
@@ -175,7 +212,7 @@ public class AgentImpl implements Agent {
                 KeyModifier.NO.code
         );
 
-        await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(newPosition));
+        await(() -> !character.getProp().isMoving() || character.getProp().getPosition().equals(newPosition), DEFAULT_TIMEOUT * 5);
     }
 
     @AgentCommand
@@ -340,11 +377,15 @@ public class AgentImpl implements Agent {
 
     @AgentCommand
     @Override
-    public void takeItemInHandFromCurrentHeap() {
+    public boolean takeItemInHandFromCurrentHeap() {
         refreshState();
         hand.checkEmpty();
 
-        final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
+        if (!currentHeap.isOpened()) {
+            return false;
+        }
+
+        final StoreBoxWidget storeBox = currentHeap.getStoreBox();
 
         clientApp.sendWidgetCommand(storeBox.getId(), CLICK_COMMAND);
         await(() -> !hand.isEmpty());
@@ -388,38 +429,45 @@ public class AgentImpl implements Agent {
         if (!isStillExists) {
             knownObjectService.deleteHeap(heap);
         }
+
+        return true;
     }
 
     @AgentCommand
     @Override
-    public void dropItemFromHandInCurrentInventory(final IntPoint position) {
-        dropItemFromHandInInventory(currentInventory, null, position);
+    public boolean dropItemFromHandInInventory(final InventoryType type) {
+        return switch (type) {
+            case CURRENT -> dropItemFromHandInInventory(currentInventory, null);
+            case MAIN -> dropItemFromHandInInventory(character.getMainInventory(), KnownObject.Place.MAIN_INVENTORY);
+            case STUDY -> dropItemFromHandInInventory(character.getStudyInventory(), KnownObject.Place.STUDY_INVENTORY);
+        };
     }
 
-    @AgentCommand
-    @Override
-    public void dropItemFromHandInMainInventory(final IntPoint position) {
-        dropItemFromHandInInventory(character.getMainInventory(), KnownObject.Place.MAIN_INVENTORY, position);
-    }
-
-    @AgentCommand
-    @Override
-    public void dropItemFromHandInStudyInventory(final IntPoint position) {
-        dropItemFromHandInInventory(character.getStudyInventory(), KnownObject.Place.STUDY_INVENTORY, position);
-    }
-
-    private void dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place, final IntPoint position) {
+    private boolean dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place) {
         refreshState();
-        final Integer inventoryId = inventory.getWidgetOrThrow().getId();
+        final InventoryWidget inventoryWidget = inventory.getWidgetOrThrow();
+        final Integer inventoryId = inventoryWidget.getId();
         final ItemWidget targetItem = hand.getItemOrThrow();
         final Long knownItemId = hand.getKnownItemId();
+
+        final Map<String, Resource> resourceIndex = resourceService.loadResourceIndexByNames(inventory.getItems(), ItemWidget::getResource);
+        final Warehousing.Box box = new Warehousing.Box(inventoryWidget.getSize());
+        for (final ItemWidget item : inventory.getItems()) {
+            final Resource resource = resourceIndex.get(item.getResource());
+            box.fillCells(item.getPosition(), resource.getSizeOrThrow()); // possibly just return false
+        }
+        final Resource resource = resourceService.findByName(targetItem.getResource());
+        final IntPoint suitablePosition = box.findSuitablePosition(resource.getSizeOrThrow()); // possibly just return false
+        if (suitablePosition == null) {
+            return false;
+        }
 
         hand.setKnownItemId(null);
 
         clientApp.sendWidgetCommand(
                 inventoryId,
                 DROP_COMMAND,
-                position
+                suitablePosition
         );
 
         await(() -> {
@@ -427,7 +475,7 @@ public class AgentImpl implements Agent {
                 return false;
             }
 
-            final ItemWidget itemInInventory = getItem(inventoryId, targetItem.getResource(), position);
+            final ItemWidget itemInInventory = getItem(inventoryId, targetItem.getResource(), suitablePosition);
             if (itemInInventory == null) {
                 return false;
             }
@@ -441,6 +489,8 @@ public class AgentImpl implements Agent {
 
             return true;
         });
+
+        return true;
     }
 
     @AgentCommand
@@ -610,7 +660,7 @@ public class AgentImpl implements Agent {
         widgetIndex = widgets.stream().collect(Collectors.toMap(Widget::getId, widget -> widget));
 
         character.getMainInventory().clearWidget();
-        character.getMainInventory().clearWidget();
+        character.getStudyInventory().clearWidget();
         hand.setItem(null);
         currentInventory.clearWidget();
         currentHeap.clearWidget();

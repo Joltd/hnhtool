@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.Agent;
+import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
 import com.evgenltd.hnhtool.harvester.core.component.storekeeper.Warehousing;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
@@ -14,8 +15,6 @@ import java.util.List;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Storekeeper {
-
-    private Agent agent;
 
     private final KnownObjectRepository knownObjectRepository;
     private final KnownObjectService knownObjectService;
@@ -31,14 +30,7 @@ public class Storekeeper {
         this.areaService = areaService;
     }
 
-    public Agent getAgent() {
-        return agent;
-    }
-
-    public void setAgent(final Agent agent) {
-        this.agent = agent;
-    }
-
+    @AgentCommand
     public boolean store(final Long areaId, final Long itemId) {
 
         final List<IntPoint> cells = areaService.splitByPositions(areaId);
@@ -56,16 +48,16 @@ public class Storekeeper {
 
             if (solution.heapEntry() != null) {
                 final KnownObject heap = solution.heapEntry().heap();
-                getAgent().moveByRoute(heap.getPosition());
+                A.moveByRoute(heap.getPosition());
                 if (heap.getId() == null) {
-                    getAgent().takeItemInHandFromInventory(itemId);
-                    getAgent().placeHeap(heap.getPosition());
+                    A.takeItemInHandFromInventory(itemId);
+                    A.placeHeap(heap.getPosition());
                     return true;
                 } else {
-                    final boolean valid = getAgent().openHeap(heap.getId());
+                    final boolean valid = A.openHeap(heap.getId());
                     if (valid) {
-                        getAgent().takeItemInHandFromInventory(itemId);
-                        getAgent().dropItemFromHandInCurrentHeap();
+                        A.takeItemInHandFromInventory(itemId);
+                        A.dropItemFromHandInCurrentHeap();
                         return true;
                     }
                 }
@@ -82,6 +74,46 @@ public class Storekeeper {
 
         }
 
+    }
+
+    @AgentCommand
+    public boolean takeItemInInventoryFromHeap(final Long heapId, final Agent.InventoryType type) {
+        final KnownObject heap = knownObjectRepository.findOne(heapId);
+        A.moveByRoute(heap.getPosition());
+        A.openHeap(heapId);
+        boolean result = A.takeItemInHandFromCurrentHeap();
+        if (!result) {
+            return false;
+        }
+
+        result = A.dropItemFromHandInInventory(type);
+        if (!result) {
+            A.dropItemFromHandInCurrentHeap();
+        }
+
+        return result;
+    }
+
+    @AgentCommand
+    public void takeItemsInInventoryFromHeap(final Long heapId, final Agent.InventoryType type) {
+        final KnownObject heap = knownObjectRepository.findOne(heapId);
+        A.moveByRoute(heap.getPosition());
+        A.openHeap(heapId);
+
+        while (true) {
+
+            boolean result = A.takeItemInHandFromCurrentHeap();
+            if (!result) {
+                return;
+            }
+
+            result = A.dropItemFromHandInInventory(type);
+            if (!result) {
+                A.dropItemFromHandInCurrentHeap();
+                return;
+            }
+
+        }
     }
 
 

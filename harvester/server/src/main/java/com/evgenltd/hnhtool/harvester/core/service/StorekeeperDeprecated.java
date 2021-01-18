@@ -83,7 +83,7 @@ public class StorekeeperDeprecated {
                 // move by route
                 agent.openContainer(container); // may have different item positions
                 agent.takeItemInHandFromInventory(item.getId());
-                agent.dropItemFromHandInCurrentInventory(position);
+//                agent.dropItemFromHandInCurrentInventory(position);
                 return true;
             }
         }
@@ -101,7 +101,7 @@ public class StorekeeperDeprecated {
                 return false;
             }
             agent.takeItemInHandFromInventory(knownItem.getId());
-            agent.dropItemFromHandInMainInventory(solution.position());
+//            agent.dropItemFromHandInMainInventory(solution.position());
             return true;
         }
 
@@ -150,7 +150,7 @@ public class StorekeeperDeprecated {
                 }
             }
 
-            agent.dropItemFromHandInMainInventory(solution.position());
+//            agent.dropItemFromHandInMainInventory(solution.position());
 
             if (!Objects.equals(targetItem.getId(), itemInHand.getId())) {
                 returnItemsBackToHeap(otherItems, heapId);

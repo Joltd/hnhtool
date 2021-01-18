@@ -1,10 +1,12 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
+import com.evgenltd.hnhtools.common.ExecutionException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "resources")
@@ -125,6 +127,13 @@ public class Resource {
     }
     public void setSize(final IntPoint size) {
         this.size = size;
+    }
+
+    public IntPoint getSizeOrThrow() {
+        if (Objects.equals(getSize(), IntPoint.ZERO)) {
+            throw new ExecutionException("Resource [%s] with zero size", getName());
+        }
+        return getSize();
     }
 
     public enum Visual {

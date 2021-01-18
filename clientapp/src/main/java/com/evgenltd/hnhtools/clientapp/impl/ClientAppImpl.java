@@ -11,12 +11,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public final class ClientAppImpl implements ClientApp {
+
+    private static final long DEFAULT_TIMEOUT = 60_000L;
 
     private static final String PLAY_COMMAND = "play";
 
@@ -64,15 +67,19 @@ public final class ClientAppImpl implements ClientApp {
         return propState.getProps();
     }
 
+    private void await(final Supplier<Boolean> condition) {
+        await(condition, DEFAULT_TIMEOUT);
+    }
+
     @Override
-    public void await(final Supplier<Boolean> condition) {
+    public void await(final Supplier<Boolean> condition, final long timeout) {
         lock.lock();
         try {
             while (!condition.get()) {
                 if (messageBroker.isClosed()) {
                     throw new ExecutionException("Connection to server closed");
                 }
-                waitForReceive.await();
+                waitForReceive.await(timeout, TimeUnit.MILLISECONDS);
             }
         } catch (final InterruptedException e) {
             throw new ExecutionException(e);

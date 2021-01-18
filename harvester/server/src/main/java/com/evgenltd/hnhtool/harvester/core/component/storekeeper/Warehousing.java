@@ -51,16 +51,13 @@ public final class Warehousing {
         for (final KnownObject container : containers) {
 
             final Resource resource = container.getResource();
-            final IntPoint size = resource.getSize();
 
             freeCells.remove(container.getPosition());
 
             if (resource.isBox()) {
 
-                final Box box = new Box(container, new boolean[size.getY()][size.getX()]);
-                for (final KnownObject child : container.getChildren()) {
-                    box.fillCells(child.getPosition(), child.getResource().getSize());
-                }
+                final Box box = new Box(container);
+
                 boxes.add(box);
 
             } else if (resource.isHeap()) {
@@ -163,7 +160,6 @@ public final class Warehousing {
         }
     }
 
-    // todo holder now is redundant - we operate only with one item
     public record HeapEntry(KnownObject heap) {}
 
     public record BoxEntry(KnownObject container, IntPoint position) {}
@@ -195,20 +191,28 @@ public final class Warehousing {
         }
     }
 
-    private static final class Box {
-        private final KnownObject knownObject;
+    public static final class Box {
+        private KnownObject knownObject;
         private final boolean[][] cells;
 
-        Box(final KnownObject knownObject, final boolean[][] cells) {
+        Box(final KnownObject knownObject) {
             this.knownObject = knownObject;
-            this.cells = cells;
+            final IntPoint size = knownObject.getResource().getSize();
+            this.cells = new boolean[size.getY()][size.getX()];
+            for (final KnownObject child : knownObject.getChildren()) {
+                fillCells(child.getPosition(), child.getResource().getSize());
+            }
+        }
+
+        public Box(final IntPoint size) {
+            this.cells = new boolean[size.getY()][size.getX()];
         }
 
         KnownObject getKnownObject() {
             return knownObject;
         }
 
-        void fillCells(final IntPoint position, final IntPoint size) {
+        public void fillCells(final IntPoint position, final IntPoint size) {
             for (int y = position.getY(); y < position.getY() + size.getY(); y++) {
                 for (int x = position.getX(); x < position.getX() + size.getX(); x++) {
                     cells[y][x] = true;
@@ -216,7 +220,7 @@ public final class Warehousing {
             }
         }
 
-        IntPoint findSuitablePosition(final IntPoint size) {
+        public IntPoint findSuitablePosition(final IntPoint size) {
             for (int y = 0; y < cells.length - (size.getY() - 1); y++) {
                 for (int x = 0; x < cells[y].length - (size.getX() - 1); x++) {
                     if (isFit(x, y, size.getX(), size.getY())) {

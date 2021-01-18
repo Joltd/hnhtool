@@ -1,7 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.AgentService;
-import com.evgenltd.hnhtool.harvester.core.component.exception.HandNotEmptyException;
 import com.evgenltd.hnhtool.harvester.core.component.script.Script;
 import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
@@ -27,18 +26,15 @@ public class AgentServiceImpl implements AgentService {
     private final ObjectMapper objectMapper;
     private final AccountService accountService;
     private final ObjectFactory<AgentImpl> agentFactory;
-    private final ObjectFactory<Storekeeper> storekeeperFactory;
 
     public AgentServiceImpl(
             final ObjectMapper objectMapper,
             final AccountService accountService,
-            final ObjectFactory<AgentImpl> agentFactory,
-            final ObjectFactory<Storekeeper> storekeeperFactory
+            final ObjectFactory<AgentImpl> agentFactory
     ) {
         this.objectMapper = objectMapper;
         this.accountService = accountService;
         this.agentFactory = agentFactory;
-        this.storekeeperFactory = storekeeperFactory;
     }
 
     @Override
@@ -83,17 +79,14 @@ public class AgentServiceImpl implements AgentService {
 
         final AgentImpl agent = agentFactory.getObject();
         agent.setClientApp(clientApp);
+        agent.setAccount(account);
+        A.set(agent);
 
-        script.setAgent(agent);
-        final Storekeeper storekeeper = storekeeperFactory.getObject();
-        storekeeper.setAgent(agent);
-        script.setStorekeeper(storekeeper);
         try {
             script.execute();
-        } catch (final HandNotEmptyException e) {
-            // accident case
         } finally {
             clientApp.logout();
+            A.clear();
         }
 
         return 0L;

@@ -3,7 +3,9 @@ package com.evgenltd.hnhtool.harvester.core;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
+import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.service.Storekeeper;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.function.Supplier;
@@ -12,9 +14,19 @@ public interface Agent {
 
     // ##################################################
     // #                                                #
-    // #  Character                                     #
+    // #  Other APIs                                    #
     // #                                                #
     // ##################################################
+
+    Storekeeper getStorekeeper();
+
+    // ##################################################
+    // #                                                #
+    // #  State API                                     #
+    // #                                                #
+    // ##################################################
+
+    Account getAccount();
 
     Character.Record getCharacter();
 
@@ -26,11 +38,13 @@ public interface Agent {
 
     // ##################################################
     // #                                                #
-    // #  Commands                                      #
+    // #  Commands API                                  #
     // #                                                #
     // ##################################################
 
     void await(Supplier<Boolean> condition);
+
+    void await(Supplier<Boolean> condition, long timeout);
 
     void move(IntPoint position);
 
@@ -44,13 +58,9 @@ public interface Agent {
 
     void takeItemInHandFromInventory(Long knownItemId);
 
-    void takeItemInHandFromCurrentHeap();
+    boolean takeItemInHandFromCurrentHeap();
 
-    void dropItemFromHandInCurrentInventory(IntPoint position);
-
-    void dropItemFromHandInMainInventory(IntPoint position);
-
-    void dropItemFromHandInStudyInventory(IntPoint position);
+    boolean dropItemFromHandInInventory(InventoryType type);
 
     void dropItemFromHandInCurrentHeap();
 
@@ -69,5 +79,11 @@ public interface Agent {
     void scan();
 
 //    void performContextMenuCommand();
+
+    enum InventoryType {
+        CURRENT,
+        MAIN,
+        STUDY
+    }
 
 }

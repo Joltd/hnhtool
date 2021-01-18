@@ -6,6 +6,8 @@ import java.util.Objects;
 
 public final class IntPoint {
 
+    public static final IntPoint ZERO = new IntPoint(0,0);
+
     private final int x;
     private final int y;
 

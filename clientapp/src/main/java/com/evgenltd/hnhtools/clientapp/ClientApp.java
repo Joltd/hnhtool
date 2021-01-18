@@ -11,7 +11,7 @@ public interface ClientApp {
 
     List<Prop> getProps();
 
-    void await(Supplier<Boolean> condition);
+    void await(Supplier<Boolean> condition, long timeout);
 
     // ##################################################
     // #                                                #
