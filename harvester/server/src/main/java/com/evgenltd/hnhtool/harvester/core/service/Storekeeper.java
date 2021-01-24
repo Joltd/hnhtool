@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.Agent;
 import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
 import com.evgenltd.hnhtool.harvester.core.component.storekeeper.Warehousing;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
@@ -77,7 +76,7 @@ public class Storekeeper {
     }
 
     @AgentCommand
-    public boolean takeItemInInventoryFromHeap(final Long heapId, final Agent.InventoryType type) {
+    public boolean takeItemInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
         final KnownObject heap = knownObjectRepository.findOne(heapId);
         A.moveByRoute(heap.getPosition());
         A.openHeap(heapId);
@@ -95,7 +94,7 @@ public class Storekeeper {
     }
 
     @AgentCommand
-    public void takeItemsInInventoryFromHeap(final Long heapId, final Agent.InventoryType type) {
+    public void takeItemsInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
         final KnownObject heap = knownObjectRepository.findOne(heapId);
         A.moveByRoute(heap.getPosition());
         A.openHeap(heapId);

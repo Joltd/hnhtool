@@ -40,8 +40,8 @@ public final class MessageBrokerImpl implements MessageBroker {
     private final Consumer<JsonNode> objectDataReceiver;
     private final String host;
     private final int port;
-    private final String username;
-    private final byte[] cookie;
+    private String username;
+    private byte[] cookie;
 
     // inner state
     private final String messageBrokerName;
@@ -64,24 +64,18 @@ public final class MessageBrokerImpl implements MessageBroker {
             @NotNull final ObjectMapper objectMapper,
             @NotNull final String host,
             final int port,
-            @NotNull final String username,
-            @NotNull final byte[] cookie,
             @NotNull final Consumer<JsonNode> relReceiver,
             @NotNull final Consumer<JsonNode> objectDataReceiver,
             boolean withMonitoring
     ) {
         Objects.requireNonNull(objectMapper, "[ObjectMapper] should not be empty");
         Objects.requireNonNull(host, "[Host] should not be empty");
-        Objects.requireNonNull(username, "[Username] should not be empty");
-        Objects.requireNonNull(cookie, "[Cookie] should not be empty");
         Objects.requireNonNull(relReceiver, "[RelReceiver] should not be empty");
         Objects.requireNonNull(objectDataReceiver, "[ObjectDataReceiver] should not be empty");
 
         this.objectMapper = new ObjectMapper();
         this.host = host;
         this.port = port;
-        this.username = username;
-        this.cookie = cookie;
         this.messageBrokerName = String.format("message-broker-%s", username);
         this.relReceiver = relReceiver;
         this.objectDataReceiver = objectDataReceiver;
@@ -109,11 +103,13 @@ public final class MessageBrokerImpl implements MessageBroker {
     // ##################################################
 
     @Override
-    public void connect() {
+    public void connect(final String username, final byte[] cookie) {
         if (!isInit()) {
             throw new MessageBrokerException("%s not in init state", this.messageBrokerName);
         }
 
+        this.username = username;
+        this.cookie = cookie;
         setState(State.CONNECTION);
 
         try {

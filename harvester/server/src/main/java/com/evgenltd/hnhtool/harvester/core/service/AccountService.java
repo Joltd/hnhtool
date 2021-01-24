@@ -1,7 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.entity.Account;
-import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
+import com.evgenltd.hnhtool.harvester.core.entity.Agent;
+import com.evgenltd.hnhtool.harvester.core.repository.AgentRepository;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.common.Assert;
 import com.hnh.auth.Authentication;
@@ -20,29 +20,29 @@ public class AccountService {
     @Value("${hafen.port}")
     private Integer port;
 
-    private final AccountRepository accountRepository;
+    private final AgentRepository agentRepository;
 
-    public AccountService(final AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+    public AccountService(final AgentRepository agentRepository) {
+        this.agentRepository = agentRepository;
     }
 
     @NotNull
-    public Account findById(final Long id) {
-        return accountRepository.findById(id)
+    public Agent findById(final Long id) {
+        return agentRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException("There is no Account for id [%s]", id));
     }
 
     @Transactional
     public void enableAccount(final Long id, final boolean enabled) {
-        final Account account = findById(id);
-        account.setEnabled(enabled);
+        final Agent agent = findById(id);
+        agent.setEnabled(enabled);
     }
 
-    public void authenticateAccount(final Account account, final String password) {
-        if (account.getId() == null) {
-            final boolean accountAlreadyExists = accountRepository.findAccountByUsername(account.getUsername()).isPresent();
+    public void authenticateAccount(final Agent agent, final String password) {
+        if (agent.getId() == null) {
+            final boolean accountAlreadyExists = agentRepository.findAccountByUsername(agent.getUsername()).isPresent();
             if (accountAlreadyExists) {
-                throw new ApplicationException("Account [%s] already exists", account.getUsername());
+                throw new ApplicationException("Account [%s] already exists", agent.getUsername());
             }
 
             if (Assert.isEmpty(password)) {
@@ -51,8 +51,8 @@ public class AccountService {
         }
 
         if (Assert.isNotEmpty(password)) {
-            final byte[] token = acquireToken(account.getUsername(), password);
-            account.setToken(token);
+            final byte[] token = acquireToken(agent.getUsername(), password);
+            agent.setToken(token);
         }
     }
 
@@ -68,7 +68,7 @@ public class AccountService {
         Objects.requireNonNull(username, "[Username] should not be empty");
         Objects.requireNonNull(password, "[Password] should not be empty");
 
-        final boolean accountAlreadyRegistered = accountRepository.findAccountByUsername(username).isPresent();
+        final boolean accountAlreadyRegistered = agentRepository.findAccountByUsername(username).isPresent();
         if (accountAlreadyRegistered) {
             throw new ApplicationException("Account [%s] already registered", username);
         }
@@ -80,16 +80,16 @@ public class AccountService {
             );
             final byte[] token = result.token();
 
-            final Account account = new Account();
-            account.setUsername(username);
-            account.setToken(token);
-            account.setCharacterName(characterName);
-            accountRepository.save(account);
+            final Agent agent = new Agent();
+            agent.setUsername(username);
+            agent.setToken(token);
+            agent.setCharacter(characterName);
+            agentRepository.save(agent);
         }
     }
 
-    public Account randomAccount() {
-        return accountRepository.findAll()
+    public Agent randomAccount() {
+        return agentRepository.findAll()
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ApplicationException("No one registered accounts"));

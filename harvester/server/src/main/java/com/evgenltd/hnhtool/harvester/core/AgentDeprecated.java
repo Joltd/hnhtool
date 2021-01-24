@@ -3,14 +3,14 @@ package com.evgenltd.hnhtool.harvester.core;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
-import com.evgenltd.hnhtool.harvester.core.entity.Account;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.service.AgentContext;
 import com.evgenltd.hnhtool.harvester.core.service.Storekeeper;
 import com.evgenltd.hnhtools.entity.IntPoint;
 
 import java.util.function.Supplier;
 
-public interface Agent {
+public interface AgentDeprecated {
 
     // ##################################################
     // #                                                #
@@ -25,8 +25,6 @@ public interface Agent {
     // #  State API                                     #
     // #                                                #
     // ##################################################
-
-    Account getAccount();
 
     Character.Record getCharacter();
 
@@ -60,7 +58,7 @@ public interface Agent {
 
     boolean takeItemInHandFromCurrentHeap();
 
-    boolean dropItemFromHandInInventory(InventoryType type);
+    boolean dropItemFromHandInInventory(AgentContext.InventoryType type);
 
     void dropItemFromHandInCurrentHeap();
 
@@ -79,11 +77,5 @@ public interface Agent {
     void scan();
 
 //    void performContextMenuCommand();
-
-    enum InventoryType {
-        CURRENT,
-        MAIN,
-        STUDY
-    }
 
 }

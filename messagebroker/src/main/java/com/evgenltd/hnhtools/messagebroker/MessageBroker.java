@@ -12,7 +12,7 @@ public interface MessageBroker {
      * @throws MessageBrokerException if broker not in initial state or socket unable to be opened
      * or if server have incorrect format
      */
-    void connect();
+    void connect(String username, byte[] cookie);
 
     /**
      * @throws MessageBrokerException if broker not in life or closing state

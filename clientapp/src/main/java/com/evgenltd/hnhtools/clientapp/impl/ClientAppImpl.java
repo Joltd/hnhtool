@@ -32,9 +32,7 @@ public final class ClientAppImpl implements ClientApp {
     public ClientAppImpl(
             @NotNull final ObjectMapper objectMapper,
             @NotNull final String host,
-            final int port,
-            @NotNull final String username,
-            @NotNull final byte[] cookie
+            final int port
     ) {
         final ResourceState resourceState = new ResourceState();
         this.widgetState = new WidgetState(resourceState);
@@ -43,8 +41,6 @@ public final class ClientAppImpl implements ClientApp {
                 objectMapper,
                 host,
                 port,
-                username,
-                cookie,
                 rel -> {
                     this.widgetState.receiveRel(rel);
                     signal();
@@ -89,9 +85,9 @@ public final class ClientAppImpl implements ClientApp {
     }
 
     @Override
-    public void login() {
+    public void login(final String username, final byte[] cookie) {
         try {
-            messageBroker.connect();
+            messageBroker.connect(username, cookie);
             await(messageBroker::isLife);
         } catch (Exception e) {
             messageBroker.disconnect();
@@ -100,11 +96,11 @@ public final class ClientAppImpl implements ClientApp {
     }
 
     @Override
-    public void play(final String characterName) {
+    public void play(final String username, final byte[] cookie, final String character) {
         try {
-            messageBroker.connect();
+            messageBroker.connect(username, cookie);
             await(messageBroker::isLife);
-            messageBroker.sendRel(3, PLAY_COMMAND, characterName);
+            messageBroker.sendRel(3, PLAY_COMMAND, character);
             await(() -> widgetState.hasWidgets() && propState.hasProps());
         } catch (final ExecutionException e) {
             messageBroker.disconnect();

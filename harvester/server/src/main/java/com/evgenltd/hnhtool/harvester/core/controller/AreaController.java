@@ -25,24 +25,22 @@ public class AreaController {
     }
 
     @GetMapping
-    public Response<List<AreaRecord>> list(@RequestParam("space") final Long spaceId) {
-        final List<AreaRecord> result = areaRepository.findBySpaceId(spaceId)
+    public List<AreaRecord> list(@RequestParam("space") final Long spaceId) {
+        return areaRepository.findBySpaceId(spaceId)
                 .stream()
                 .map(this::toRecord)
                 .collect(Collectors.toList());
-        return new Response<>(result);
     }
 
     @PostMapping
-    public Response<AreaRecord> update(@RequestBody final AreaRecord areaRecord) {
+    public AreaRecord update(@RequestBody final AreaRecord areaRecord) {
         final Area area = areaService.update(areaRecord);
-        return new Response<>(toRecord(area));
+        return toRecord(area);
     }
 
     @DeleteMapping("/{id}")
-    public Response<Void> delete(@PathVariable("id") final Long id) {
+    public void delete(@PathVariable("id") final Long id) {
         areaRepository.deleteById(id);
-        return new Response<>();
     }
 
     private AreaRecord toRecord(final Area area) {

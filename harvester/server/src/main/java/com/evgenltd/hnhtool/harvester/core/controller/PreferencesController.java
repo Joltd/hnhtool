@@ -8,8 +8,6 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/preferences")
 public class PreferencesController {
@@ -26,30 +24,26 @@ public class PreferencesController {
     }
 
     @GetMapping
-    public Response<PreferencesRecord> get() {
+    public PreferencesRecord get() {
         final Preferences preferences = preferencesService.get();
         final Space space = preferences.getSpace();
-        return new Response<>(new PreferencesRecord(
+        return new PreferencesRecord(
                 preferences.getId(),
                 space != null ? space.getId() : null,
                 preferences.getOffset(),
                 preferences.getZoom()
-        ));
+        );
     }
 
     @PostMapping
-    public Response<Void> update(@RequestBody final PreferencesRecord preferencesRecord) {
-        final Optional<Space> spaceHolder = spaceRepository.findById(preferencesRecord.space());
-        if (spaceHolder.isEmpty()) {
-            return new Response<>("Space [%s] not found", preferencesRecord.space());
-        }
+    public void update(@RequestBody final PreferencesRecord preferencesRecord) {
+        final Space space = spaceRepository.findOne(preferencesRecord.space());
         preferencesService.update(
-                spaceHolder.get(),
+                space,
                 preferencesRecord.offset(),
                 preferencesRecord.zoom()
 
         );
-        return new Response<>();
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

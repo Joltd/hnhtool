@@ -16,12 +16,12 @@ public class PathController {
     }
 
     @GetMapping
-    public Response<List<RoutingService.Edge>> list() {
-        return new Response<>(routingService.list());
+    public List<RoutingService.Edge> list() {
+        return routingService.list();
     }
 
     @PostMapping
-    public Response<List<RoutingService.Edge>> update(@RequestBody final List<RoutingService.Edge> edges) {
+    public List<RoutingService.Edge> update(@RequestBody final List<RoutingService.Edge> edges) {
         routingService.update(edges);
         return list();
     }

@@ -9,7 +9,10 @@ import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,47 +31,31 @@ public class WarehouseController {
     }
 
     @GetMapping
-    public Response<List<WarehouseRecord>> list(@RequestParam("space") final Long spaceId) {
-        final List<WarehouseRecord> result = warehouseRepository.findBySpaceId(spaceId)
+    public List<WarehouseRecord> list(@RequestParam("space") final Long spaceId) {
+        return warehouseRepository.findBySpaceId(spaceId)
                 .stream()
                 .map(this::toWarehouseRecord)
                 .collect(Collectors.toList());
-        return new Response<>(result);
     }
 
     @GetMapping("/{id}")
-    public Response<WarehouseRecord> get(@PathVariable("id") final Long id) {
-        return warehouseRepository.findById(id)
-                .map(warehouse -> {
-                    final WarehouseRecord record = toWarehouseRecord(warehouse);
-                    return new Response<>(record);
-                })
-                .orElseGet(() -> new Response<>("Warehouse [%s] not found", id));
+    public WarehouseRecord get(@PathVariable("id") final Long id) {
+        final Warehouse warehouse = warehouseRepository.findOne(id);
+        return toWarehouseRecord(warehouse);
     }
 
     @PostMapping
-    public Response<WarehouseRecord> update(@RequestBody final WarehouseRecord warehouseRecord) {
+    public WarehouseRecord update(@RequestBody final WarehouseRecord warehouseRecord) {
         final long spaceId = warehouseRecord.spaceId();
-        final Optional<Space> spaceHolder = spaceRepository.findById(spaceId);
-        if (spaceHolder.isEmpty()) {
-            return new Response<>("Space [%s] not found", spaceId);
-        }
-
-        final Space space = spaceHolder.get();
+        final Space space = spaceRepository.findOne(spaceId);
         final Long warehouseId = warehouseRecord.id();
         if (warehouseId == null) {
             final Warehouse warehouse = toWarehouse(warehouseRecord, space);
             final Warehouse saved = warehouseRepository.save(warehouse);
-            final WarehouseRecord newWarehouseRecord = toWarehouseRecord(saved);
-            return new Response<>(newWarehouseRecord);
+            return toWarehouseRecord(saved);
         }
 
-        final Optional<Warehouse> warehouseHolder = warehouseRepository.findById(warehouseId);
-        if (warehouseHolder.isEmpty()) {
-            return new Response<>("Warehouse [%s] not found", warehouseId);
-        }
-
-        final Warehouse warehouse = warehouseHolder.get();
+        final Warehouse warehouse = warehouseRepository.findOne(warehouseId);
         warehouse.setSpace(space);
 
         final Map<IntPoint, WarehouseCell> index = new HashMap<>();
@@ -91,13 +78,12 @@ public class WarehouseController {
 
         final Warehouse saved = warehouseRepository.save(warehouse);
 
-        return new Response<>(toWarehouseRecord(saved));
+        return toWarehouseRecord(saved);
     }
 
     @DeleteMapping("/{id}")
-    public Response<Void> delete(@PathVariable("id") final Long id) {
+    public void delete(@PathVariable("id") final Long id) {
         warehouseRepository.deleteById(id);
-        return new Response<>();
     }
 
     private WarehouseRecord toWarehouseRecord(final Warehouse warehouse) {

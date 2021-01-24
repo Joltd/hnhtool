@@ -1,6 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.Agent;
+import com.evgenltd.hnhtool.harvester.core.AgentDeprecated;
 import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
@@ -9,12 +9,13 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Inventory;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.Matcher;
 import com.evgenltd.hnhtool.harvester.core.component.matcher.MatchingResult;
 import com.evgenltd.hnhtool.harvester.core.component.storekeeper.Warehousing;
-import com.evgenltd.hnhtool.harvester.core.entity.Account;
+import com.evgenltd.hnhtool.harvester.core.entity.Agent;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.entity.Resource;
 import com.evgenltd.hnhtool.harvester.core.entity.WorldPoint;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
+import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
@@ -23,9 +24,9 @@ import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.util.JsonUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -38,9 +39,7 @@ import java.util.stream.Collectors;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Transactional
-public class AgentImpl implements Agent {
-
-    private static final Logger log = LogManager.getLogger(Agent.class);
+public class AgentContext implements AgentDeprecated {
 
     private static final long DEFAULT_TIMEOUT = 60_000L;
 
@@ -62,6 +61,12 @@ public class AgentImpl implements Agent {
 
     private static final IntPoint SCREEN_POSITION = new IntPoint();
 
+    @Value("${hafen.server}")
+    private String server;
+    @Value("${hafen.port}")
+    private Integer port;
+
+    private final ObjectMapper objectMapper;
     private final MatchingService matchingService;
     private final KnownObjectRepository knownObjectRepository;
     private final KnownObjectService knownObjectService;
@@ -70,7 +75,7 @@ public class AgentImpl implements Agent {
     private final Storekeeper storekeeper;
 
     private ClientApp clientApp;
-    private Account account;
+    private Agent agent;
 
     private Map<Long,Prop> propIndex;
     private Map<Integer,Widget> widgetIndex;
@@ -84,7 +89,8 @@ public class AgentImpl implements Agent {
     private final Heap currentHeap = new Heap();
     private final Set<Integer> forClose = new HashSet<>();
 
-    public AgentImpl(
+    public AgentContext(
+            final ObjectMapper objectMapper,
             final MatchingService matchingService,
             final KnownObjectRepository knownObjectRepository,
             final KnownObjectService knownObjectService,
@@ -92,6 +98,7 @@ public class AgentImpl implements Agent {
             final RoutingService routingService,
             final Storekeeper storekeeper
     ) {
+        this.objectMapper = objectMapper;
         this.matchingService = matchingService;
         this.knownObjectRepository = knownObjectRepository;
         this.knownObjectService = knownObjectService;
@@ -100,8 +107,13 @@ public class AgentImpl implements Agent {
         this.storekeeper = storekeeper;
     }
 
-    void setClientApp(final ClientApp clientApp) {
-        this.clientApp = clientApp;
+    public void init(final Agent agent) {
+        this.agent = agent;
+        this.clientApp = ClientAppFactory.buildClientApp(objectMapper, server, port);
+    }
+
+    public void play(final byte[] cookie) {
+        clientApp.play(agent.getUsername(), cookie, agent.getCharacter());
 
         refreshState();
 
@@ -122,13 +134,8 @@ public class AgentImpl implements Agent {
         );
     }
 
-    @Override
-    public Account getAccount() {
-        return account;
-    }
-
-    public void setAccount(final Account account) {
-        this.account = account;
+    public void logout() {
+        clientApp.logout();
     }
 
     // ##################################################
@@ -136,6 +143,10 @@ public class AgentImpl implements Agent {
     // #  Other API                                     #
     // #                                                #
     // ##################################################
+
+    public Agent getAgent() {
+        return agent;
+    }
 
     public Storekeeper getStorekeeper() {
         return storekeeper;
@@ -840,4 +851,9 @@ public class AgentImpl implements Agent {
         }
     }
 
+    public enum InventoryType {
+        CURRENT,
+        MAIN,
+        STUDY
+    }
 }

@@ -1,10 +1,6 @@
 package com.evgenltd.hnhtool.harvester.core.aspect;
 
-import com.evgenltd.hnhtool.harvester.core.entity.AgentLog;
-import com.evgenltd.hnhtool.harvester.core.repository.AgentLogRepository;
-import com.evgenltd.hnhtool.harvester.core.service.A;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +13,6 @@ import org.springframework.util.StopWatch;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,14 +25,9 @@ public class AgentAspect {
     private static final Logger log = LogManager.getLogger(AgentAspect.class);
     private static final ThreadLocal<Invocation> invocationContext = new ThreadLocal<>();
 
-    private final AgentLogRepository agentLogRepository;
     private final ObjectMapper objectMapper;
 
-    public AgentAspect(
-            final AgentLogRepository agentLogRepository,
-            final ObjectMapper objectMapper
-    ) {
-        this.agentLogRepository = agentLogRepository;
+    public AgentAspect(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -50,7 +40,7 @@ public class AgentAspect {
         final List<String> arguments = Arrays.stream(call.getArgs())
                 .map(String::valueOf)
                 .collect(Collectors.toList());
-        startInvocation(call.getTarget().getClass().getName(), call.getSignature().getName(), arguments);
+        startInvocation(call.getTarget().getClass().getSimpleName(), call.getSignature().getName(), arguments);
 
         Throwable throwable = null;
         Object result = null;
@@ -88,15 +78,6 @@ public class AgentAspect {
             invocationContext.set(invocation.getParent());
         } else {
             invocationContext.remove();
-            try {
-                final AgentLog agentLog = new AgentLog();
-                agentLog.setDate(LocalDateTime.now());
-                agentLog.setAccount(A.getAccount());
-                agentLog.setLog(objectMapper.writeValueAsString(invocation));
-                agentLogRepository.save(agentLog);
-            } catch (JsonProcessingException e) {
-                log.error("Unable to store agent log", e);
-            }
         }
     }
 

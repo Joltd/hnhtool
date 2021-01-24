@@ -9,11 +9,9 @@ public final class ClientAppFactory {
     public static ClientApp buildClientApp(
             @NotNull final ObjectMapper objectMapper,
             @NotNull final String host,
-            final int port,
-            @NotNull final String username,
-            @NotNull final byte[] cookie
+            final int port
     ) {
-        return new ClientAppImpl(objectMapper, host, port, username, cookie);
+        return new ClientAppImpl(objectMapper, host, port);
     }
 
 }

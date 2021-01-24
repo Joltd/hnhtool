@@ -21,8 +21,8 @@ public class KnownObjectController {
     }
 
     @GetMapping
-    public Response<List<KnownObjectRecord>> list(@RequestParam("space") final Long spaceId) {
-        final List<KnownObjectRecord> result = knownObjectRepository.findBySpaceIdAndLostIsFalse(spaceId)
+    public List<KnownObjectRecord> list(@RequestParam("space") final Long spaceId) {
+        return knownObjectRepository.findBySpaceIdAndLostIsFalse(spaceId)
                 .stream()
                 .map(knownObject -> new KnownObjectRecord(
                         knownObject.getPosition().getX(),
@@ -30,7 +30,6 @@ public class KnownObjectController {
                         knownObject.getResource().getName()
                 ))
                 .collect(Collectors.toList());
-        return new Response<>(result);
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

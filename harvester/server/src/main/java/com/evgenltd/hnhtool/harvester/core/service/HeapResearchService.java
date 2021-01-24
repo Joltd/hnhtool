@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.AgentService;
 import com.evgenltd.hnhtool.harvester.core.component.script.HeapResearchScript;
 import com.evgenltd.hnhtool.harvester.core.entity.Area;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
@@ -67,7 +66,7 @@ public class HeapResearchService {
             final HeapResearchScript script = heapResearchScriptFactory.getObject();
             script.setAreaId(areaId);
             script.setHeaps(heapIds);
-            agentService.scheduleScriptExecution(script);
+//            agentService.scheduleScriptExecution(script);
         });
 
 

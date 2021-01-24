@@ -3,8 +3,8 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "accounts")
-public class Account {
+@Table(name = "agents")
+public class Agent {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -14,9 +14,14 @@ public class Account {
 
     private byte[] token;
 
-    private String characterName;
+    private String character;
+
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.OFFLINE;
 
     private boolean enabled = true;
+
+    private boolean accident;
 
     public Long getId() {
         return id;
@@ -39,11 +44,18 @@ public class Account {
         this.token = token;
     }
 
-    public String getCharacterName() {
-        return characterName;
+    public String getCharacter() {
+        return character;
     }
-    public void setCharacterName(final String characterName) {
-        this.characterName = characterName;
+    public void setCharacter(final String characterName) {
+        this.character = characterName;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+    public void setStatus(final Status status) {
+        this.status = status;
     }
 
     public boolean isEnabled() {
@@ -51,5 +63,21 @@ public class Account {
     }
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isAccident() {
+        return accident;
+    }
+    public void setAccident(final boolean accident) {
+        this.accident = accident;
+    }
+
+    public enum Status {
+        OFFLINE,
+        IDLE,
+        IN_PROGRESS,
+
+        NOT_AUTHENTICATED,
+        CHARACTER_NOT_SELECTED
     }
 }

@@ -1,12 +1,10 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
-import com.evgenltd.hnhtool.harvester.core.AgentService;
-import com.evgenltd.hnhtool.harvester.core.component.script.TestScript;
-import com.evgenltd.hnhtool.harvester.core.entity.Account;
-import com.evgenltd.hnhtool.harvester.core.repository.AccountRepository;
-import com.evgenltd.hnhtool.harvester.core.service.AccountService;
+import com.evgenltd.hnhtool.harvester.core.entity.Agent;
+import com.evgenltd.hnhtool.harvester.core.repository.AgentRepository;
+import com.evgenltd.hnhtool.harvester.core.service.AgentService;
+import com.evgenltd.hnhtools.util.Util;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,82 +14,93 @@ import java.util.stream.Collectors;
 @RequestMapping("/agent")
 public class AgentController {
 
-    private final AccountRepository accountRepository;
-    private final AccountService accountService;
+    private final AgentRepository agentRepository;
     private final AgentService agentService;
-    private final ObjectFactory<TestScript> testScriptFactory;
 
     public AgentController(
-            final AccountRepository accountRepository,
-            final AccountService accountService,
-            final AgentService agentService,
-            final ObjectFactory<TestScript> testScriptFactory
+            final AgentRepository agentRepository,
+            final AgentService agentService
     ) {
-        this.accountRepository = accountRepository;
-        this.accountService = accountService;
+        this.agentRepository = agentRepository;
         this.agentService = agentService;
-        this.testScriptFactory = testScriptFactory;
     }
 
     @GetMapping
-    public Response<List<AgentRecord>> list() {
-        final List<AgentRecord> result = accountRepository.findAll()
+    public List<AgentRecord> list() {
+        return agentRepository.findAll()
                 .stream()
-                .map(account -> new AgentRecord(
-                        account.getId(),
-                        account.getUsername(),
-                        null,
-                        account.getCharacterName(),
-                        account.isEnabled()
+                .map(agent -> new AgentRecord(
+                        agent.getId(),
+                        agent.getUsername(),
+                        agent.getCharacter(),
+                        agent.getStatus(),
+                        agent.isAccident(),
+                        agent.isEnabled()
                 ))
                 .collect(Collectors.toList());
-        return new Response<>(result);
     }
 
     @GetMapping("/{id}")
-    public Response<AgentRecord> byId(@PathVariable final Long id) {
-        final Account account = accountService.findById(id);
-        return new Response<>(new AgentRecord(account.getId(), account.getUsername(), null, account.getCharacterName(), account.isEnabled()));
+    public AgentRecord byId(@PathVariable final Long id) {
+        final Agent agent = agentRepository.findOne(id);
+        return new AgentRecord(
+                agent.getId(),
+                agent.getUsername(),
+                agent.getCharacter(),
+                agent.getStatus(),
+                agent.isAccident(),
+                agent.isEnabled()
+        );
     }
 
-    @PostMapping
-    public Response<Void> update(@RequestBody final AgentRecord agentRecord) {
-        final Account account = agentRecord.id != null
-                ? accountService.findById(agentRecord.id)
-                : new Account();
-        account.setUsername(agentRecord.username());
-        account.setCharacterName(agentRecord.character());
-        account.setEnabled(agentRecord.enabled());
-        accountService.authenticateAccount(account, agentRecord.password());
-        accountRepository.save(account);
-        return new Response<>();
-    }
-
-    @PostMapping("/{id}")
-    public Response<Void> updateEnabled(@PathVariable final Long id, @RequestParam(name = "enabled") final Boolean enabled) {
-        accountService.enableAccount(id, enabled);
-        return new Response<>();
+    @PostMapping("/authentication")
+    public void authentication(@RequestBody final AgentAuthenticationRecord agentAuthenticationRecord) {
+        agentService.authenticateAgent(
+                agentAuthenticationRecord.id(),
+                agentAuthenticationRecord.username(),
+                Util.hexStringToByteArray(agentAuthenticationRecord.password())
+        );
     }
 
     @GetMapping("/{id}/character")
-    public Response<List<String>> characterList(@PathVariable final Long id) {
-        final Account account = accountService.findById(id);
-        return new Response<>(agentService.loadCharacterList(account));
+    public List<String> characterList(@PathVariable final Long id) {
+        return agentService.characterList(id);
     }
 
-    @PostMapping("/task")
-    public Response<Void> task() {
-        final TestScript testScript = testScriptFactory.getObject();
-        agentService.scheduleScriptExecution(testScript);
-        return new Response<>();
+    @PostMapping("/{id}/character/{character}")
+    public void updateCharacter(@PathVariable final Long id, @PathVariable final String character) {
+        agentService.updateCharacter(id, character);
     }
+
+    @PostMapping("/{id}")
+    public void updateState(
+            @PathVariable final Long id,
+            @RequestParam("accident") final Boolean accident,
+            @RequestParam("enabled") final Boolean enabled
+    ) {
+        agentService.updateState(id, accident, enabled);
+    }
+
+    @PostMapping("/{id}/login")
+    public void login(@PathVariable final Long id) {
+        agentService.login(id);
+    }
+
+    @PostMapping("/{id}/logout")
+    public void logout(@PathVariable final Long id) {
+        agentService.logout(id);
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    public record AgentAuthenticationRecord(Long id, String username, String password) {}
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     public record AgentRecord(
             Long id,
             String username,
-            String password,
             String character,
+            Agent.Status status,
+            boolean accident,
             boolean enabled
     ) {}
 

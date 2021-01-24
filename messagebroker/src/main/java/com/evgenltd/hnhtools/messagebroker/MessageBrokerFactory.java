@@ -13,8 +13,6 @@ public class MessageBrokerFactory {
             @NotNull final ObjectMapper objectMapper,
             @NotNull final String host,
             final int port,
-            @NotNull final String username,
-            @NotNull final byte[] cookie,
             @NotNull final Consumer<JsonNode> relReceiver,
             @NotNull final Consumer<JsonNode> objectDataReceiver,
             boolean withMonitoring
@@ -23,8 +21,6 @@ public class MessageBrokerFactory {
                 objectMapper,
                 host,
                 port,
-                username,
-                cookie,
                 relReceiver,
                 objectDataReceiver,
                 withMonitoring

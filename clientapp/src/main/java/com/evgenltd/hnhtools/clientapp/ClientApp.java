@@ -19,9 +19,9 @@ public interface ClientApp {
     // #                                                #
     // ##################################################
 
-    void login();
+    void login(String username, byte[] cookie);
 
-    void play(String characterName);
+    void play(String username, byte[] cookie, String characterName);
 
     void logout();
 

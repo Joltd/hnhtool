@@ -21,7 +21,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     @ResponseBody
     public ResponseEntity<Object> handle(Throwable throwable) {
         log.error("", throwable);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new Response<>(throwable.getMessage()));
     }
 
     @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
