@@ -23,6 +23,7 @@ import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
+import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 import com.evgenltd.hnhtools.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.Nullable;
@@ -107,7 +108,7 @@ public class AgentContext implements AgentDeprecated {
         this.storekeeper = storekeeper;
     }
 
-    public void init(final Agent agent) {
+    public void initialize(final Agent agent) {
         this.agent = agent;
         this.clientApp = ClientAppFactory.buildClientApp(objectMapper, server, port);
     }
@@ -136,6 +137,10 @@ public class AgentContext implements AgentDeprecated {
 
     public void logout() {
         clientApp.logout();
+    }
+
+    public MessageBroker.State getConnectionState() {
+        return clientApp.getState();
     }
 
     // ##################################################

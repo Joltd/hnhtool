@@ -1,0 +1,1 @@
+alter table tasks add fail_reason varchar(512);

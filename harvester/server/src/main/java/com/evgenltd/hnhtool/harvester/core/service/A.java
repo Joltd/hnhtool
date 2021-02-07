@@ -4,30 +4,37 @@ import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Heap;
 import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
+import com.evgenltd.hnhtool.harvester.core.entity.Task;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class A {
 
     private static final ThreadLocal<Context> context = new ThreadLocal<>();
+    private static final Map<Long, LogEntry> forFlush = new HashMap<>();
 
-    public static void init(final AgentContext agent) {
-        if (context.get() != null) {
-            throw new IllegalStateException("Context already initialized");
-        }
-
-        final Context contextData = new Context();
-        contextData.setAgent(agent);
-        contextData.setLogEntry(new LogEntry());
-        context.set(contextData);
+    public static void initialize(final AgentContext agentContext, final Task task) {
+        final Context context = new Context(agentContext, task);
+        A.context.set(context);
     }
 
-    public static void remove() {
-        context.remove();
+    public static void cleanup() {
+        final Context context = A.context.get();
+        if (context != null) {
+            final Task task = context.getTask();
+            if (task != null) {
+                forFlush.remove(task.getId());
+            }
+        }
+        A.context.remove();
     }
 
     // ##################################################
@@ -36,40 +43,72 @@ public class A {
     // #                                                #
     // ##################################################
 
-
-    public static void log() {
-
+    public static void info(final String message, final Object... args) {
+        log(Severity.INFO, message, args);
     }
 
-    public static void info() {
-
+    public static void error(final Throwable throwable, final String message, final Object... args) {
+        final LogEntry entry = log(Severity.ERROR, message, args);
+        entry.setThrowable(throwable);
     }
 
-    public static void error() {
+    private static LogEntry log(final Severity severity, final String message, final Object... args) {
+        final LogEntry logEntry = new LogEntry();
+        logEntry.setSeverity(severity);
+        logEntry.setMessage(String.format(message, args));
 
+        final Context context = A.context.get();
+        final LogEntry holder = context.getLogEntry();
+        holder.getChildren().add(logEntry);
+        sendForFlush(context);
+
+        return logEntry;
     }
 
-    public static void downward() {
+    public static void downward(final String message) {
+        final Context context = A.context.get();
+
+        final LogEntry parent = context.getLogEntry();
         final LogEntry entry = new LogEntry();
+        entry.setParent(parent);
+        entry.setMessage(message);
+        parent.getChildren().add(entry);
 
-        final LogEntry parent = context.get().getLogEntry();
-        if (parent != null) {
-            entry.setParent(parent);
-            parent.getChildren().add(entry);
-        }
+        context.setLogEntry(entry);
 
-        context.get().setLogEntry(entry);
+        sendForFlush(context);
     }
 
-    public static void upward() {
-        final LogEntry entry = context.get().getLogEntry();
-        if (entry == null) {
-            return;
+    public static void upward(final String message, final long time, final Throwable throwable) {
+        final Context context = A.context.get();
+        final LogEntry entry = context.getLogEntry();
+        entry.appendMessage(message);
+        entry.setTime(time);
+        entry.setThrowable(throwable);
+        final LogEntry parent = entry.getParent();
+        if (parent != null) {
+            context.setLogEntry(parent);
         }
+        sendForFlush(context);
+    }
 
-        if (entry.getParent() != null) {
-            context.get().setLogEntry(entry.getParent());
-        }
+    private static synchronized void sendForFlush(final Context context) {
+        forFlush.put(context.getTask().getId(), context.getRootLogEntry());
+    }
+
+    public static String logForFlush(final Function<Object,String> mapper) {
+        final Context context = A.context.get();
+        final LogEntry entry = context.getRootLogEntry();
+        return mapper.apply(entry);
+    }
+
+    public static synchronized Map<Long, String> logsForFlush(final Function<Object,String> mapper) {
+        return forFlush.entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> mapper.apply(entry.getValue())
+                ));
     }
 
     // ##################################################
@@ -79,7 +118,7 @@ public class A {
     // ##################################################
 
     private static AgentContext getAgent() {
-        return context.get().getAgent();
+        return context.get().getAgentContext();
     }
 
     private static Storekeeper getStorekeeper() {
@@ -183,30 +222,44 @@ public class A {
     }
 
     private static final class Context {
-        private AgentContext agent;
+        private final AgentContext agentContext;
+        private final Task task;
+        private final LogEntry rootLogEntry;
         private LogEntry logEntry;
 
-        public AgentContext getAgent() {
-            return agent;
+        public Context(final AgentContext agentContext, final Task task) {
+            this.agentContext = agentContext;
+            this.task = task;
+            this.logEntry = new LogEntry();
+            this.rootLogEntry = this.logEntry;
         }
 
-        public void setAgent(final AgentContext agent) {
-            this.agent = agent;
+        public AgentContext getAgentContext() {
+            return agentContext;
+        }
+
+        public Task getTask() {
+            return task;
+        }
+
+        public LogEntry getRootLogEntry() {
+            return rootLogEntry;
+        }
+
+        public void setLogEntry(final LogEntry logEntry) {
+            this.logEntry = logEntry;
         }
 
         public LogEntry getLogEntry() {
             return logEntry;
         }
 
-        public void setLogEntry(final LogEntry logEntry) {
-            this.logEntry = logEntry;
-        }
     }
 
-    public static class LogEntry {
+    private static class LogEntry {
         private String message;
         private long time;
-        private Severity severity;
+        private Severity severity = Severity.INFO;
         private Throwable throwable;
         private List<LogEntry> children = new ArrayList<>();
 
@@ -219,6 +272,10 @@ public class A {
 
         public void setMessage(final String message) {
             this.message = message;
+        }
+
+        public void appendMessage(final String message) {
+            this.message = this.message + message;
         }
 
         public long getTime() {

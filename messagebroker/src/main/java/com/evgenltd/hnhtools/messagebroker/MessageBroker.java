@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtools.messagebroker;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 public interface MessageBroker {
 
     // ##################################################
@@ -21,6 +23,8 @@ public interface MessageBroker {
 
     State getState();
 
+    Status getStatus();
+
     boolean isInit();
 
     boolean isConnection();
@@ -39,12 +43,24 @@ public interface MessageBroker {
 
     void sendRel(int id, String name, Object... args);
 
-    enum State {
+    enum Status {
         INIT,
         CONNECTION,
         LIFE,
         CLOSING,
         CLOSED
     }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    record State(
+            String username,
+            Status status,
+            Thread.State inbound,
+            Thread.State outbound,
+            SocketState socketState
+    ) {}
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    record SocketState(boolean connected, boolean closed, boolean bound) {}
 
 }

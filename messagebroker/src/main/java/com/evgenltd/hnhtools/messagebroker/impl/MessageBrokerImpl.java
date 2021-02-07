@@ -44,10 +44,9 @@ public final class MessageBrokerImpl implements MessageBroker {
     private byte[] cookie;
 
     // inner state
-    private final String messageBrokerName;
     private Monitor monitor;
 
-    private State state = State.INIT;
+    private Status status = Status.INIT;
 
     private final ObjectDataHolder objectDataHolder;
     private final InboundRelHolder inboundRelHolder;
@@ -76,7 +75,6 @@ public final class MessageBrokerImpl implements MessageBroker {
         this.objectMapper = new ObjectMapper();
         this.host = host;
         this.port = port;
-        this.messageBrokerName = String.format("message-broker-%s", username);
         this.relReceiver = relReceiver;
         this.objectDataReceiver = objectDataReceiver;
 
@@ -88,12 +86,13 @@ public final class MessageBrokerImpl implements MessageBroker {
         inbound = new Thread(this::inboundLoop);
         outbound = new Thread(this::outboundLoop);
 
-        inbound.setName(String.format("%s-inbound", this.messageBrokerName));
-        outbound.setName(String.format("%s-outbound", this.messageBrokerName));
-
         if (withMonitoring) {
             monitor = new Monitor();
         }
+    }
+    
+    private String getMessageBrokerName() {
+        return String.format("message-broker-%s", username);
     }
 
     // ##################################################
@@ -105,12 +104,12 @@ public final class MessageBrokerImpl implements MessageBroker {
     @Override
     public void connect(final String username, final byte[] cookie) {
         if (!isInit()) {
-            throw new MessageBrokerException("%s not in init state", this.messageBrokerName);
+            throw new MessageBrokerException("%s not in init state", getMessageBrokerName());
         }
 
         this.username = username;
         this.cookie = cookie;
-        setState(State.CONNECTION);
+        setStatus(Status.CONNECTION);
 
         try {
             server = new InetSocketAddress(InetAddress.getByName(host), port);
@@ -122,9 +121,11 @@ public final class MessageBrokerImpl implements MessageBroker {
             socket = new DatagramSocket();
             socket.setSoTimeout(SOCKET_TIMEOUT);
         } catch (final SocketException e) {
-            throw new MessageBrokerException("%s failed on starting connection", e, this.messageBrokerName);
+            throw new MessageBrokerException("%s failed on starting connection", e, getMessageBrokerName());
         }
 
+        inbound.setName(String.format("%s-inbound", getMessageBrokerName()));
+        outbound.setName(String.format("%s-outbound", getMessageBrokerName()));
         inbound.start();
         outbound.start();
     }
@@ -132,44 +133,62 @@ public final class MessageBrokerImpl implements MessageBroker {
     @Override
     public void disconnect() {
         if (!isLife() && !isClosing()) {
-            throw new MessageBrokerException("%s not in life state", this.messageBrokerName);
+            throw new MessageBrokerException("%s not in life state", getMessageBrokerName());
         }
 
-        setState(State.CLOSING);
+        setStatus(Status.CLOSING);
     }
 
     @Override
     public synchronized State getState() {
-        return state;
+        final SocketState socketState = socket != null
+                ? new SocketState(
+                        socket.isConnected(),
+                        socket.isClosed(),
+                        socket.isBound()
+                )
+                : null;
+        return new State(
+                username,
+                getStatus(),
+                inbound.getState(),
+                outbound.getState(),
+                socketState
+        );
     }
 
-    private synchronized void setState(final State state) {
-        this.state = state;
+    @Override
+    public synchronized Status getStatus() {
+        return status;
+    }
+
+    private synchronized void setStatus(final Status status) {
+        this.status = status;
     }
 
     @Override
     public boolean isInit() {
-        return getState().equals(State.INIT);
+        return getStatus().equals(Status.INIT);
     }
 
     @Override
     public boolean isConnection() {
-        return getState().equals(State.CONNECTION);
+        return getStatus().equals(Status.CONNECTION);
     }
 
     @Override
     public boolean isLife() {
-        return getState().equals(State.LIFE);
+        return getStatus().equals(Status.LIFE);
     }
 
     @Override
     public boolean isClosing() {
-        return getState().equals(State.CLOSING);
+        return getStatus().equals(Status.CLOSING);
     }
 
     @Override
     public boolean isClosed() {
-        return getState().equals(State.CLOSED);
+        return getStatus().equals(Status.CLOSED);
     }
 
     // ##################################################
@@ -240,7 +259,7 @@ public final class MessageBrokerImpl implements MessageBroker {
             InboundMessageConverter.convert(rootNode, truncatedDate);
         } catch (final SocketTimeoutException ignored) {
         } catch (final Exception e) {
-            log.debug(String.format("%s unable to receive message", this.messageBrokerName), e);
+            log.debug(String.format("%s unable to receive message", getMessageBrokerName()), e);
         }
 
         return message;
@@ -252,9 +271,9 @@ public final class MessageBrokerImpl implements MessageBroker {
         }
 
         if (message.isConnectionErrorCodeOk()) {
-            setState(State.LIFE);
+            setStatus(Status.LIFE);
         } else {
-            setState(State.CLOSED);
+            setStatus(Status.CLOSED);
         }
     }
 
@@ -313,7 +332,7 @@ public final class MessageBrokerImpl implements MessageBroker {
     }
 
     private void shutdown() {
-        setState(State.CLOSED);
+        setStatus(Status.CLOSED);
         socket.close();
     }
 

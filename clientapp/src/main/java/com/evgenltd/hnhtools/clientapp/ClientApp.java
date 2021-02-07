@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtools.clientapp;
 
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
+import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -12,6 +13,8 @@ public interface ClientApp {
     List<Prop> getProps();
 
     void await(Supplier<Boolean> condition, long timeout);
+
+    MessageBroker.State getState();
 
     // ##################################################
     // #                                                #

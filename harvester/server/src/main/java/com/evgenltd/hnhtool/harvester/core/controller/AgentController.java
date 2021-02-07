@@ -81,6 +81,11 @@ public class AgentController {
         agentService.updateState(id, accident, enabled);
     }
 
+    @GetMapping("/{id}/status")
+    public AgentService.AgentStatus agentStatus(@PathVariable final Long id) {
+        return agentService.agentStatus(id);
+    }
+
     @PostMapping("/{id}/login")
     public void login(@PathVariable final Long id) {
         agentService.login(id);

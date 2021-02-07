@@ -85,6 +85,11 @@ public final class ClientAppImpl implements ClientApp {
     }
 
     @Override
+    public MessageBroker.State getState() {
+        return messageBroker.getState();
+    }
+
+    @Override
     public void login(final String username, final byte[] cookie) {
         try {
             messageBroker.connect(username, cookie);

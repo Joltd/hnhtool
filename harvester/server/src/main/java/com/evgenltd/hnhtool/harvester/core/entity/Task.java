@@ -24,6 +24,8 @@ public class Task {
 
     private String log;
 
+    private String failReason;
+
     public Long getId() {
         return id;
     }
@@ -64,6 +66,13 @@ public class Task {
     }
     public void setLog(final String log) {
         this.log = log;
+    }
+
+    public String getFailReason() {
+        return failReason;
+    }
+    public void setFailReason(final String failReason) {
+        this.failReason = failReason;
     }
 
     public enum Status {

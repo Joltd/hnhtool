@@ -6,28 +6,31 @@ import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
 import com.evgenltd.hnhtools.clientapp.widgets.CharListWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.messagebroker.MessageBroker;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hnh.auth.Authentication;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class AgentService {
+
+    private static final Logger log = LogManager.getLogger(AgentService.class);
 
     @Value("${hafen.server}")
     private String server;
     @Value("${hafen.port}")
     private Integer port;
 
-    private final Map<Long, AgentContext> agents = new ConcurrentHashMap<>();
+    private final List<AgentContext> idleAgents = new ArrayList<>();
 
     private final ObjectMapper objectMapper;
     private final AgentRepository agentRepository;
@@ -45,15 +48,17 @@ public class AgentService {
 
     @PostConstruct
     public void postConstruct() {
-        agentRepository.findAll().forEach(this::registerAgentContext);
+        agentRepository.findAll()
+                .forEach(agent -> {
+                    agent.setStatus(Agent.Status.OFFLINE);
+                    agentRepository.save(agent);
+                });
     }
 
     public void authenticateAgent(final Long id, final String username, final byte[] password) {
         final Agent agent = id != null
                 ? agentRepository.findOne(id)
                 : new Agent();
-
-        unregisterAgentContext(agent);
 
         agent.setUsername(username);
 
@@ -109,11 +114,9 @@ public class AgentService {
 
     public void updateCharacter(final Long id, final String character) {
         final Agent agent = agentRepository.findOne(id);
-        unregisterAgentContext(agent);
         agent.setCharacter(character);
         agent.setStatus(Agent.Status.OFFLINE);
         agentRepository.save(agent);
-        registerAgentContext(agent);
     }
 
     public void updateState(final Long id, final Boolean accident, final Boolean enabled) {
@@ -123,32 +126,54 @@ public class AgentService {
         }
         if (enabled != null) {
             if (agent.isEnabled() && !enabled) {
-                unregisterAgentContext(agent);
                 agent.setEnabled(false);
             } else if (!agent.isEnabled() && enabled) {
-                registerAgentContext(agent);
                 agent.setEnabled(true);
             }
         }
         agentRepository.save(agent);
     }
 
+    public AgentStatus agentStatus(final Long id) {
+        final Agent agent = agentRepository.findOne(id);
+        final AgentContext agentContext = findIdleAgent(id);
+        if (!agent.isEnabled() || agentContext == null) {
+            return new AgentStatus(id, agent.getUsername(), agent.getStatus(), null);
+        }
+
+        return new AgentStatus(
+                id,
+                agent.getUsername(),
+                agent.getStatus(),
+                agentContext.getConnectionState()
+        );
+    }
+
     public void login(final Long id) {
         if (id == null) {
             return;
         }
-        final AgentContext agentContext = agents.get(id);
-        if (agentContext == null) {
-            return;
-        }
-        final Agent agent = agentContext.getAgent();
+        final Agent agent = agentRepository.findOne(id);
         final Agent.Status status = agent.getStatus();
         switch (status) {
-            case IDLE -> logout(id);
+            case IDLE -> {
+                return;
+            }
             case IN_PROGRESS -> throw new ApplicationException("Agent [%s] currently performing task", agent.getUsername());
             case NOT_AUTHENTICATED, CHARACTER_NOT_SELECTED -> throw new ApplicationException("Unable to login due to agent [%s] status [%s]", agent.getUsername(), agent.getStatus());
         }
+        final AgentContext agentContext = agentContextFactory.getObject();
         try (final Authentication authentication = Authentication.of().setHost(server).init()) {
+            final Authentication.Result result = authentication.loginByToken(agent.getUsername(), agent.getToken());
+            final byte[] cookie = result.cookie();
+            agentContext.play(cookie);
+            agentIdle(agentContext);
+        }
+    }
+
+    private void loginImpl(final AgentContext agentContext) {
+        try (final Authentication authentication = Authentication.of().setHost(server).init()) {
+            final Agent agent = agentContext.getAgent();
             final Authentication.Result result = authentication.loginByToken(agent.getUsername(), agent.getToken());
             final byte[] cookie = result.cookie();
             agentContext.play(cookie);
@@ -159,38 +184,109 @@ public class AgentService {
         if (id == null) {
             return;
         }
-        final AgentContext agentContext = agents.get(id);
+        final AgentContext agentContext = findIdleAgent(id);
         if (agentContext == null) {
             return;
         }
         agentContext.logout();
-        final Agent agent = agentContext.getAgent();
+        agentOffline(agentContext.getAgent());
+    }
+
+//    @Scheduled(cron = "0 */6 * * * *")
+    public void releaseLostConnectionAgents() {
+        synchronized (idleAgents) {
+            for (final Iterator<AgentContext> iterator = idleAgents.iterator(); iterator.hasNext(); ) {
+                final AgentContext agentContext = iterator.next();
+                final MessageBroker.State connectionState = agentContext.getConnectionState();
+                final MessageBroker.Status status = connectionState.status();
+                if (status.equals(MessageBroker.Status.CLOSED) || status.equals(MessageBroker.Status.CLOSING)) {
+                    final Long agentId = agentContext.getAgent().getId();
+                    final Agent agent = agentRepository.findOne(agentId);
+                    agentOffline(agent);
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    public AgentContext takeRandomAgent() {
+        synchronized (idleAgents) {
+            releaseLostConnectionAgents();
+            final AgentContext agentForReUse = idleAgents.stream()
+                    .findAny()
+                    .orElse(null);
+            if (agentForReUse != null) {
+                agentInProgress(agentForReUse.getAgent());
+                return agentForReUse;
+            }
+
+
+            final Agent agent = agentRepository.findAll()
+                    .stream()
+                    .filter(a -> Objects.equals(a.getStatus(), Agent.Status.OFFLINE))
+                    .findAny()
+                    .orElse(null);
+            if (agent == null) {
+                return null;
+            }
+            agentInProgress(agent);
+
+            final AgentContext agentContext = agentContextFactory.getObject();
+            agentContext.initialize(agent);
+            return agentContext;
+        }
+    }
+
+    private void agentInProgress(final Agent agent) {
+        agent.setStatus(Agent.Status.IN_PROGRESS);
+        agentRepository.save(agent);
+    }
+
+    private void agentIdle(final AgentContext agentContext) {
+        synchronized (idleAgents) {
+            idleAgents.add(agentContext);
+            final Agent agent = agentContext.getAgent();
+            agent.setStatus(Agent.Status.IDLE);
+            agentRepository.save(agent);
+        }
+    }
+
+    private void agentOffline(final Agent agent) {
         agent.setStatus(Agent.Status.OFFLINE);
         agentRepository.save(agent);
     }
 
-    private void registerAgentContext(final Agent agent) {
-        if (agent.getId() == null) {
-            return;
+    public void initializeAgent(final AgentContext agentContext) {
+        try {
+            final MessageBroker.State connectionState = agentContext.getConnectionState();
+            if (connectionState.status().equals(MessageBroker.Status.INIT)) {
+                loginImpl(agentContext);
+            }
+        } catch (Exception e) {
+            agentOffline(agentContext.getAgent());
+            throw e;
         }
-        if (agents.containsKey(agent.getId())) {
-            return;
-        }
-        final AgentContext agentContext = agentContextFactory.getObject();
-        agentContext.init(agent);
-        agents.put(agent.getId(), agentContext);
     }
 
-    private void unregisterAgentContext(final Agent agent) {
-        if (agent.getId() == null) {
-            return;
-        }
-        final AgentContext agentContext = agents.get(agent.getId());
-        if (agentContext == null) {
-            return;
-        }
-        logout(agent.getId());
-        agents.remove(agent.getId());
+    public void releaseAgent(final AgentContext agentContext) {
+        agentIdle(agentContext);
     }
+
+    private AgentContext findIdleAgent(final Long agentId) {
+        synchronized (idleAgents) {
+            return idleAgents.stream()
+                    .filter(ac -> ac.getAgent().getId().equals(agentId))
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    public record AgentStatus(
+            Long id,
+            String username,
+            Agent.Status agentStatus,
+            MessageBroker.State connectionState
+    ) {}
 
 }
