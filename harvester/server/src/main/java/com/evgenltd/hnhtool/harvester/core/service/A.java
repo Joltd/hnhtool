@@ -173,12 +173,16 @@ public class A {
         return getAgent().takeItemInHandFromCurrentHeap();
     }
 
-    public static boolean dropItemFromHandInInventory(AgentContext.InventoryType type) {
+    public static Long dropItemFromHandInInventory(AgentContext.InventoryType type) {
         return getAgent().dropItemFromHandInInventory(type);
     }
 
     public static void dropItemFromHandInCurrentHeap() {
         getAgent().dropItemFromHandInCurrentHeap();
+    }
+
+    public static void dropItemFromHandInCurrentHeapOrPlaceHeap(IntPoint position) {
+        getAgent().dropItemFromHandInCurrentHeapOrPlaceHeap(position);
     }
 
     public static void dropItemFromHandInWorld() {
@@ -209,16 +213,16 @@ public class A {
         getAgent().scan();
     }
 
-    public static void store(final Long areaId, final Long itemId) {
-        getStorekeeper().store(areaId, itemId);
+    public static boolean store(final Long areaId, final Long itemId) {
+        return getStorekeeper().store(areaId, itemId);
     }
 
-    public static boolean takeItemInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
+    public static Long takeItemInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
         return getStorekeeper().takeItemInInventoryFromHeap(heapId, type);
     }
 
-    public static void takeItemsInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
-        getStorekeeper().takeItemsInInventoryFromHeap(heapId, type);
+    public static List<Long> takeItemsInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
+        return getStorekeeper().takeItemsInInventoryFromHeap(heapId, type);
     }
 
     private static final class Context {

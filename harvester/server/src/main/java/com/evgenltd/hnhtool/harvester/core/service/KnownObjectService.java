@@ -190,30 +190,5 @@ public class KnownObjectService {
                         area.getTo().getY()
                 );
     }
-//
-//    public List<IntPoint> findFreeCellsInLinkedArea(final KnownObject knownObject) {
-//        final Space space = knownObject.getSpace();
-//        final IntPoint position = knownObject.getPosition();
-//        final Area area = areaRepository.findByPosition(space.getId(), position
-//                .getX(), position.getY())
-//                .stream()
-//                .findFirst()
-//                .orElse(null);
-//        if (area == null) {
-//            return Collections.emptyList();
-//        }
-//
-//        final List<IntPoint> cells = areaService.splitByPositions(area);
-//
-//        knownObjectRepository.findObjectsInArea(
-//                space.getId(),
-//                area.getFrom().getX(),
-//                area.getFrom().getY(),
-//                area.getTo().getX(),
-//                area.getTo().getY()
-//        ).forEach(existed -> cells.remove(existed.getPosition()));
-//
-//        return cells;
-//    }
 
 }

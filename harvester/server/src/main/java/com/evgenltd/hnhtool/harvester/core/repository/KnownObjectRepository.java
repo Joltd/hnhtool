@@ -53,6 +53,24 @@ public interface KnownObjectRepository extends JpaRepository<KnownObject, Long> 
             """)
     List<KnownObject> findContainerInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
 
+    @Query("""
+            select ko 
+            from KnownObject ko 
+            left join fetch ko.children
+            left join ko.resource r
+            where
+                ko.space.id = ?1
+                and ko.position.x >= ?2
+                and ko.position.y >= ?3
+                and ko.position.x <= ?4
+                and ko.position.y <= ?5
+                and r.visual = 'PROP'
+                and r.heap = true
+                and ko.lost = false
+                and ko.invalid = true
+            """)
+    List<KnownObject> findInvalidHeapInArea(Long spaceId, Integer x1, Integer y1, Integer x2, Integer y2);
+
     @SuppressWarnings("JpaQlInspection")
     @Query("""
             select f 

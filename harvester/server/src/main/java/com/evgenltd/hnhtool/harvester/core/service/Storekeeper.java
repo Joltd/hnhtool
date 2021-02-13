@@ -9,7 +9,9 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -76,45 +78,50 @@ public class Storekeeper {
     }
 
     @AgentCommand
-    public boolean takeItemInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
-        final KnownObject heap = knownObjectRepository.findOne(heapId);
-        A.moveByRoute(heap.getPosition());
+    public Long takeItemInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
+        final Optional<KnownObject> heap = knownObjectRepository.findById(heapId);
+        if (heap.isEmpty()) {
+            return null;
+        }
+        A.moveByRoute(heap.get().getPosition());
         A.openHeap(heapId);
-        boolean result = A.takeItemInHandFromCurrentHeap();
+        final boolean result = A.takeItemInHandFromCurrentHeap();
         if (!result) {
-            return false;
+            return null;
         }
 
-        result = A.dropItemFromHandInInventory(type);
-        if (!result) {
-            A.dropItemFromHandInCurrentHeap();
+        final Long knownItemId = A.dropItemFromHandInInventory(type);
+        if (knownItemId == null) {
+            A.dropItemFromHandInCurrentHeapOrPlaceHeap(heap.get().getPosition());
         }
 
-        return result;
+        return knownItemId;
     }
 
     @AgentCommand
-    public void takeItemsInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
+    public List<Long> takeItemsInInventoryFromHeap(final Long heapId, final AgentContext.InventoryType type) {
         final KnownObject heap = knownObjectRepository.findOne(heapId);
         A.moveByRoute(heap.getPosition());
         A.openHeap(heapId);
+
+        final List<Long> takenItems = new ArrayList<>();
 
         while (true) {
 
             boolean result = A.takeItemInHandFromCurrentHeap();
             if (!result) {
-                return;
+                return takenItems;
             }
 
-            result = A.dropItemFromHandInInventory(type);
-            if (!result) {
-                A.dropItemFromHandInCurrentHeap();
-                return;
+            final Long knownItemId = A.dropItemFromHandInInventory(type);
+            if (knownItemId == null) {
+                A.dropItemFromHandInCurrentHeapOrPlaceHeap(heap.getPosition());
+                return takenItems;
+            } else {
+                takenItems.add(knownItemId);
             }
 
         }
     }
-
-
 
 }

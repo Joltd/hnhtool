@@ -58,9 +58,11 @@ public interface AgentDeprecated {
 
     boolean takeItemInHandFromCurrentHeap();
 
-    boolean dropItemFromHandInInventory(AgentContext.InventoryType type);
+    Long dropItemFromHandInInventory(AgentContext.InventoryType type);
 
     void dropItemFromHandInCurrentHeap();
+
+    void dropItemFromHandInCurrentHeapOrPlaceHeap(IntPoint position);
 
     void dropItemFromHandInWorld();
 

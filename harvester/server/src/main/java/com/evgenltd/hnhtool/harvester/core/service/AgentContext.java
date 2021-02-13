@@ -451,7 +451,7 @@ public class AgentContext implements AgentDeprecated {
 
     @AgentCommand
     @Override
-    public boolean dropItemFromHandInInventory(final InventoryType type) {
+    public Long dropItemFromHandInInventory(final InventoryType type) {
         return switch (type) {
             case CURRENT -> dropItemFromHandInInventory(currentInventory, null);
             case MAIN -> dropItemFromHandInInventory(character.getMainInventory(), KnownObject.Place.MAIN_INVENTORY);
@@ -459,7 +459,7 @@ public class AgentContext implements AgentDeprecated {
         };
     }
 
-    private boolean dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place) {
+    private Long dropItemFromHandInInventory(final Inventory inventory, final KnownObject.Place place) {
         refreshState();
         final InventoryWidget inventoryWidget = inventory.getWidgetOrThrow();
         final Integer inventoryId = inventoryWidget.getId();
@@ -475,7 +475,7 @@ public class AgentContext implements AgentDeprecated {
         final Resource resource = resourceService.findByName(targetItem.getResource());
         final IntPoint suitablePosition = box.findSuitablePosition(resource.getSizeOrThrow()); // possibly just return false
         if (suitablePosition == null) {
-            return false;
+            return null;
         }
 
         hand.setKnownItemId(null);
@@ -506,7 +506,7 @@ public class AgentContext implements AgentDeprecated {
             return true;
         });
 
-        return true;
+        return knownItemId;
     }
 
     @AgentCommand
@@ -532,6 +532,17 @@ public class AgentContext implements AgentDeprecated {
         });
 
         knownObjectService.moveToHeap(knownItemId, currentHeap.getKnownObjectId(), currentHeap.getStoreBox().getFirst());
+    }
+
+    @AgentCommand
+    @Override
+    public void dropItemFromHandInCurrentHeapOrPlaceHeap(final IntPoint position) {
+        refreshState();
+        if (currentHeap.isOpened()) {
+            dropItemFromHandInCurrentHeap();
+        } else {
+            placeHeap(position);
+        }
     }
 
     @AgentCommand

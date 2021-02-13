@@ -49,7 +49,7 @@ public final class ClientAppImpl implements ClientApp {
                     this.propState.receiveObjectData(objectData);
                     signal();
                 },
-                true
+                false
         );
     }
 

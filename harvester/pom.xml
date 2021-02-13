@@ -17,32 +17,4 @@
         <module>web</module>
     </modules>
 
-<!--    <build>-->
-<!--        <pluginManagement>-->
-<!--            <plugins>-->
-<!--                <plugin>-->
-<!--                    <groupId>org.apache.maven.plugins</groupId>-->
-<!--                    <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                    <version>3.8.0</version>-->
-<!--                    <configuration>-->
-<!--                        <target>1.8</target>-->
-<!--                        <source>1.8</source>-->
-<!--                    </configuration>-->
-<!--                </plugin>-->
-<!--            </plugins>-->
-<!--        </pluginManagement>-->
-<!--    </build>-->
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <type>pom</type>
-                <version>2.2.6.RELEASE</version>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 </project>
