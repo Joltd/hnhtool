@@ -12,8 +12,12 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -92,7 +96,7 @@ public class TaskService {
                     failTask(task, "Illegal execution method signature");
                 } catch (final Throwable t) {
                     failTask(task, "Execution process failed");
-                    log.error(t);
+                    log.error("", t);
                 } finally {
                     saveLogToTask(task);
                     agentService.releaseAgent(agentContext);
@@ -127,8 +131,13 @@ public class TaskService {
     }
 
     private void saveLogToTask(final Task task, final String log) {
-        task.setLog(log);
-        taskRepository.save(task);
+        try {
+            Files.writeString(Paths.get(task.getId().toString() + ".json"), log, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+//        task.setLog(log);
+//        taskRepository.save(task);
     }
 
     private void assignTask(final Task task, final Agent agent) {

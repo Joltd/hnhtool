@@ -2,8 +2,10 @@
     <thead>
         <tr>
             <th>Username</th>
-            <th>Character</th>
-            <th class="action-column"></th>
+            <th class="label-column">Character</th>
+            <th class="label-column">Status</th>
+            <th class="action-column">Enabled</th>
+            <th class="action-column">Accident</th>
             <th class="action-column"></th>
         </tr>
     </thead>
@@ -14,10 +16,17 @@
         <tbody>
             <tr *ngFor="let agent of agents">
                 <td>{{agent.username}}</td>
-                <td>{{agent.character}}</td>
+                <td class="label-column">{{agent.character}}</td>
+                <td class="label-column">{{agent.status}}</td>
                 <td class="action-column">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" (ngModelChange)="toggleAgentState(agent)" [id]="'ab-' + agent.id + '-enabled'">
+                        <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.accident" (ngModelChange)="toggleAgentEnabled(agent)" [id]="'ab-' + agent.id + '-accident'">
+                        <label class="custom-control-label" [htmlFor]="'ab-' + agent.id + '-accident'"></label>
+                    </div>
+                </td>
+                <td class="action-column">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" (ngModelChange)="toggleAgentAccident(agent)" [id]="'ab-' + agent.id + '-enabled'">
                         <label class="custom-control-label" [htmlFor]="'ab-' + agent.id + '-enabled'"></label>
                     </div>
                 </td>

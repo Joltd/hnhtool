@@ -20,7 +20,11 @@ export class AgentEditorComponent {
     constructor(private agentService: AgentService) {}
 
     save() {
-        this.agentService.update(this.agent).subscribe(() => this.close());
+        if (this.agent.password) {
+            this.agentService.update(this.agent).subscribe(() => this.close());
+        } else {
+            this.close();
+        }
     }
 
     close() {
@@ -34,6 +38,8 @@ export class AgentEditorComponent {
     onSelectCharacter(character: string) {
         if (character) {
             this.agent.character = character;
+            this.agentService.updateCharacter(this.agent.id, character)
+                .subscribe(() => {});
         }
         this.selectCharacter = false;
     }

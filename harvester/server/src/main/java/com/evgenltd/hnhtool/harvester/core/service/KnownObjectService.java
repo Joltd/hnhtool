@@ -9,7 +9,6 @@ import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.core.repository.SpaceRepository;
 import com.evgenltd.hnhtools.clientapp.Prop;
 import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
-import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import org.springframework.stereotype.Service;
 
@@ -27,35 +26,29 @@ public class KnownObjectService {
     private final SpaceRepository spaceRepository;
     private final KnownObjectRepository knownObjectRepository;
     private final AreaRepository areaRepository;
-    private final AreaService areaService;
 
     public KnownObjectService(
             final ResourceService resourceService,
             final SpaceRepository spaceRepository,
             final KnownObjectRepository knownObjectRepository,
-            final AreaRepository areaRepository,
-            final AreaService areaService
+            final AreaRepository areaRepository
     ) {
         this.resourceService = resourceService;
         this.spaceRepository = spaceRepository;
         this.knownObjectRepository = knownObjectRepository;
         this.areaRepository = areaRepository;
-        this.areaService = areaService;
     }
 
     public Long loadCharacterObjectId(final String characterName) {
         final KnownObject characterObject = knownObjectRepository.findByResourceName(characterName)
-                .orElseThrow(() -> new ApplicationException(
-                        "There is no KnownObject for character [%s]",
-                        characterName
-                ));
+                .orElseGet(() -> {
+                    final Resource resource = resourceService.findByName(characterName);
+                    final KnownObject player = new KnownObject();
+                    player.setResource(resource);
+                    return knownObjectRepository.save(player);
+                });
 
-        final Long id = characterObject.getId();
-        if (!characterObject.getResource().isPlayer()) {
-            throw new ApplicationException("KnownObject [%s] is not a character", id);
-        }
-
-        return id;
+        return characterObject.getId();
     }
 
     public void storeCharacter(final Long knownObjectId, final Long spaceId, final IntPoint characterPosition) {

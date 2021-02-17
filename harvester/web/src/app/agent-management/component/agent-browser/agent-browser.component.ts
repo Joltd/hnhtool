@@ -34,8 +34,13 @@ export class AgentBrowserComponent implements OnInit{
         this.agent = null;
     }
 
-    toggleAgentState(agent: Agent) {
+    toggleAgentEnabled(agent: Agent) {
         this.agentService.updateEnabled(agent.id, agent.enabled)
+            .subscribe(() => {});
+    }
+
+    toggleAgentAccident(agent: Agent) {
+        this.agentService.updateAccident(agent.id, agent.accident)
             .subscribe(() => {});
     }
 

@@ -1,9 +1,6 @@
 package com.evgenltd.hnhtools.clientapp.impl;
 
-import com.evgenltd.hnhtools.clientapp.impl.widgets.ItemInfoImpl;
-import com.evgenltd.hnhtools.clientapp.impl.widgets.ItemWidgetImpl;
-import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetFactory;
-import com.evgenltd.hnhtools.clientapp.impl.widgets.WidgetImpl;
+import com.evgenltd.hnhtools.clientapp.impl.widgets.*;
 import com.evgenltd.hnhtools.clientapp.widgets.Widget;
 import com.evgenltd.hnhtools.messagebroker.RelType;
 import com.evgenltd.hnhtools.util.JsonUtil;
@@ -55,6 +52,11 @@ public final class WidgetState {
                 resourceState.putResource(relNode);
                 break;
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
+                index.values()
+                        .stream()
+                        .filter(widget -> widget instanceof CharacterWidgetImpl)
+                        .map(widget -> (CharacterWidgetImpl) widget)
+                        .forEach(widget -> widget.handleAttribute(relNode.get("characterAttributes")));
                 break;
         }
     }
@@ -76,9 +78,7 @@ public final class WidgetState {
     }
 
     private void fillResource(final WidgetImpl widget) {
-        if (widget instanceof ItemWidgetImpl) {
-
-            final ItemWidgetImpl item = (ItemWidgetImpl) widget;
+        if (widget instanceof ItemWidgetImpl item) {
 
             final Long resourceId = item.getResourceId();
             if (resourceId != null) {
@@ -113,6 +113,10 @@ public final class WidgetState {
 
         RelAccessor(final JsonNode data) {
             this.data = data;
+        }
+
+        public JsonNode getRaw() {
+            return data;
         }
 
         RelType getRelType() {

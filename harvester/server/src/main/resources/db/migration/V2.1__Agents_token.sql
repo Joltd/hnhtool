@@ -1,0 +1,1 @@
+alter table agents modify token varbinary(64);

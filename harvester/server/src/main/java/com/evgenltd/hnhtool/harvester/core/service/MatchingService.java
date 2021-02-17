@@ -180,26 +180,32 @@ public class MatchingService {
     // ##################################################
 
     private WorldPoint seekOffset(final List<Prop> props) {
-        for (int firstIndex = 0; firstIndex < props.size(); firstIndex++) {
-            for (int secondIndex = firstIndex + 1; secondIndex < props.size(); secondIndex++) {
-                final Prop firstProp = props.get(firstIndex);
-                final Prop secondProp = props.get(secondIndex);
 
-                final KnownObject foundObject = findFirstObjectByPattern(firstProp, secondProp);
-                if (foundObject == null) {
-                    continue;
-                }
+        if (props.size() < 2) {
+            return null;
+        }
 
-                final IntPoint offset = foundObject.getPosition().sub(firstProp.getPosition());
+        for (int count = 0; count < 10; count++) {
+            Collections.shuffle(props);
 
-                final WorldPoint worldPoint = new WorldPoint();
-                worldPoint.setSpaceId(foundObject.getSpace().getId());
-                worldPoint.setPosition(offset);
-                return worldPoint;
+            final Prop firstProp = props.get(0);
+            final Prop secondProp = props.get(1);
+
+            final KnownObject foundObject = findFirstObjectByPattern(firstProp, secondProp);
+            if (foundObject == null) {
+                continue;
             }
+
+            final IntPoint offset = foundObject.getPosition().sub(firstProp.getPosition());
+
+            final WorldPoint worldPoint = new WorldPoint();
+            worldPoint.setSpaceId(foundObject.getSpace().getId());
+            worldPoint.setPosition(offset);
+            return worldPoint;
         }
 
         return null;
+
     }
 
     private KnownObject findFirstObjectByPattern(final Prop first, final Prop second) {
@@ -219,6 +225,7 @@ public class MatchingService {
 
         if (suitableCandidates.size() > 1) {
             log.info("Too much object candidates, [{}]", suitableCandidates.size());
+            return null;
         }
 
         return suitableCandidates.get(0);

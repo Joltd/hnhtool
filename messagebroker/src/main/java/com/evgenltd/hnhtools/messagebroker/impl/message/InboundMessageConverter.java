@@ -156,7 +156,7 @@ public final class InboundMessageConverter {
                     int type = reader.uint8();
                     party.put("type", type);
                     if (type == 0) { // PD_LIST
-                        final ArrayNode ids =party.putArray("ids");
+                        final ArrayNode ids = party.putArray("ids");
                         while (true) {
                             long id = reader.int32();
                             if (id < 0)
@@ -186,10 +186,12 @@ public final class InboundMessageConverter {
                 rel.put("speed", ((double) reader.uint16()) / 256.0);
                 break;
             case REL_MESSAGE_CHARACTER_ATTRIBUTE:
+                final ArrayNode attributeNode = rel.putArray("characterAttributes");
                 while (reader.hasNext()) {
-                    rel.put("attributeName", reader.string());
-                    rel.put("baseValue", reader.int32());
-                    rel.put("complexValue", reader.int32());
+                    final ObjectNode attribute = attributeNode.addObject();
+                    attribute.put("attributeName", reader.string());
+                    attribute.put("baseValue", reader.int32());
+                    attribute.put("complexValue", reader.int32());
                 }
                 break;
             case REL_MESSAGE_MUSIC:

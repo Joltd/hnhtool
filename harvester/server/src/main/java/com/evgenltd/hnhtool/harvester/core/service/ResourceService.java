@@ -85,31 +85,12 @@ public class ResourceService {
         final Resource resource = new Resource();
         resource.setName(name);
         resource.setUnknown(true);
-//        final byte[] content = loadResourceContent(name);
-//        if (content != null) {
-//            final ResourceContent resourceContent = new ResourceContent();
-//            resourceContent.setData(content);
-//            resource.setContent(resourceContent);
-//        }
+        if (name.contains("terobjs")) {
+            resource.setProp(true);
+        } else if (name.contains("invobjs")) {
+            resource.setItem(true);
+        }
         return resourceRepository.save(resource);
     }
-
-//    @Nullable
-//    private byte[] loadResourceContent(final String name) {
-//        final HttpHeaders headers = new HttpHeaders();
-//        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
-//        final HttpEntity<String> entity = new HttpEntity<>(headers);
-//        final ResponseEntity<byte[]> response = restTemplate.exchange(
-//                hafenResourceHost + name + ".res",
-//                HttpMethod.GET,
-//                entity,
-//                byte[].class
-//        );
-//        if (Objects.equals(response.getStatusCode(), HttpStatus.OK)) {
-//            return response.getBody();
-//        }
-//
-//        return null;
-//    }
 
 }

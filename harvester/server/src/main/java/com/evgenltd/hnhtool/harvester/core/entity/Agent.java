@@ -14,6 +14,7 @@ public class Agent {
 
     private byte[] token;
 
+    @Column(name = "`character`")
     private String character;
 
     @Enumerated(EnumType.STRING)

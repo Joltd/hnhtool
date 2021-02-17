@@ -108,6 +108,10 @@ public class AgentContext implements AgentDeprecated {
         this.storekeeper = storekeeper;
     }
 
+    public ClientApp _getClientApp() {
+        return clientApp;
+    }
+
     public void initialize(final Agent agent) {
         this.agent = agent;
         this.clientApp = ClientAppFactory.buildClientApp(objectMapper, server, port);

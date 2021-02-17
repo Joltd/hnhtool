@@ -5,6 +5,8 @@ import {Agent} from "../model/agent";
 import {environment} from "../../../environments/environment";
 import {plainToClass} from "class-transformer";
 import {map} from "rxjs/operators";
+import {sha256} from "js-sha256";
+
 
 @Injectable()
 export class AgentService {
@@ -22,7 +24,15 @@ export class AgentService {
     }
 
     update(agent: Agent): Observable<any> {
-        return this.http.post(environment.apiUrl + '/agent', agent);
+        let result = sha256(agent.password);
+        return this.http.post(
+            environment.apiUrl + '/agent',
+            {
+                id: agent.id,
+                username: agent.username,
+                password: result
+            }
+        );
     }
 
     updateEnabled(id: number, enabled: boolean): Observable<any> {
@@ -31,8 +41,18 @@ export class AgentService {
         return this.http.post(environment.apiUrl + '/agent/' + id, null, {params});
     }
 
+    updateAccident(id: number, accident: boolean): Observable<any> {
+        let params = new HttpParams()
+            .set('accident', String(accident))
+        return this.http.post(environment.apiUrl + '/agent/' + id, null, {params});
+    }
+
     listCharacter(id: number): Observable<string[]> {
         return this.http.get<string[]>(environment.apiUrl + '/agent/' + id + '/character');
+    }
+
+    updateCharacter(id: number, character: string): Observable<void> {
+        return this.http.post<void>(environment.apiUrl + '/agent/' + id + '/character/' + character, null);
     }
 
 }

@@ -20,6 +20,12 @@ public class TestScript {
     @AgentCommand
     public void execute() {
         A.scan();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println();
 
 //        A.takeItemsInInventoryFromHeap(5440L, Agent.InventoryType.MAIN);
 //        A.takeItemInMainInventoryFromHeap(5440L);

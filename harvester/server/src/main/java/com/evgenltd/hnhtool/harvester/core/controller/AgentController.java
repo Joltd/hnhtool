@@ -53,7 +53,7 @@ public class AgentController {
         );
     }
 
-    @PostMapping("/authentication")
+    @PostMapping
     public void authentication(@RequestBody final AgentAuthenticationRecord agentAuthenticationRecord) {
         agentService.authenticateAgent(
                 agentAuthenticationRecord.id(),
@@ -75,8 +75,8 @@ public class AgentController {
     @PostMapping("/{id}")
     public void updateState(
             @PathVariable final Long id,
-            @RequestParam("accident") final Boolean accident,
-            @RequestParam("enabled") final Boolean enabled
+            @RequestParam(value = "accident", required = false) final Boolean accident,
+            @RequestParam(value = "enabled", required = false) final Boolean enabled
     ) {
         agentService.updateState(id, accident, enabled);
     }

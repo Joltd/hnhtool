@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class CharListWidgetImpl extends WidgetImpl implements CharListWidget {
+public final class CharListWidgetImpl extends WidgetImpl implements CharListWidget {
 
     private static final String ADD_NAME = "add";
 

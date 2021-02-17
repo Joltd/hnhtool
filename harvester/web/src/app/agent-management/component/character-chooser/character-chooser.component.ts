@@ -25,8 +25,8 @@ export class CharacterChooserComponent {
     }
 
     load() {
-        // this.agentService.listCharacter(this._agent.id)
-        //     .subscribe(result => this.characters = result);
+        this.agentService.listCharacter(this._agent.id)
+            .subscribe(result => this.characters = result);
     }
 
 }

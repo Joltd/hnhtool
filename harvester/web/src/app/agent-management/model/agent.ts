@@ -3,5 +3,7 @@ export class Agent {
     username: string;
     password: string;
     character: string;
+    status: string;
+    accident: boolean;
     enabled: boolean;
 }

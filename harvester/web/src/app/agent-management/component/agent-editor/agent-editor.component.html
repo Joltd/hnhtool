@@ -5,15 +5,11 @@
         <i (click)="close()" class="material-icons c-pointer">close</i>
     </div>
     <input type="text" class="form-control" placeholder="Username" [(ngModel)]="agent.username">
-    <input type="text" class="form-control" placeholder="Password" [(ngModel)]="agent.password" />
+    <input type="password" class="form-control" placeholder="Password" [(ngModel)]="agent.password" />
     <ng-container *ngIf="agent.id">
         <div class="character">
             <div>{{agent.character}}</div>
             <i class="material-icons c-pointer" (click)="doSelectCharacter()">more_horiz</i>
-        </div>
-        <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" [(ngModel)]="agent.enabled" id="ae-enabled">
-            <label class="custom-control-label" for="ae-enabled">Enabled</label>
         </div>
     </ng-container>
 </div>
