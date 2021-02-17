@@ -1,0 +1,39 @@
+:host {
+  display: grid;
+  grid-auto-flow: row;
+}
+
+.agent {
+  display: grid;
+  grid-template-rows: min-content min-content min-content;
+  grid-template-columns: min-content minmax(150px, 1fr);
+  grid-template-areas:
+          "icon username"
+          "icon status"
+          "icon actions";
+  margin-bottom: 8px;
+}
+
+.icon {
+  grid-area: icon;
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  align-self: center;
+  margin-right: 8px;
+}
+
+.username {
+  grid-area: username;
+}
+
+.status {
+  grid-area: status;
+}
+
+.actions {
+  grid-area: actions;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: min-content min-content;
+}

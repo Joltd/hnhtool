@@ -8,6 +8,8 @@ import {environment} from "../../../environments/environment";
 import {HttpClient} from "@angular/common/http";
 import {tap} from "rxjs/operators";
 import {FollowCursor, Hoverable, Movement, Position, Primitive, Selectable} from "../model/components";
+import {plainToClass} from "class-transformer";
+import {Space} from "../model/space";
 
 @Injectable()
 export class ViewerService {
@@ -20,7 +22,7 @@ export class ViewerService {
     private _mouse: Mouse = new Mouse();
     private _entityIdentity: number = 1;
     private _entities: Entity[] = [];
-    private _space: number;
+    private _space: Space;
 
     private _hasSelection: boolean = false;
     private _isMovement: boolean = false;
@@ -34,16 +36,16 @@ export class ViewerService {
     private _onCancel: () => void = () => {};
     private _onModeChanged: BehaviorSubject<Mode> = new BehaviorSubject<Mode>('COMMON');
 
-    private _tooltip: String[] = ['Test','Test2'];
+    private _tooltip: String[] = [];
 
     constructor(private http: HttpClient) {
         this.scheduleSavePreferences(this.space, this._viewport.offset, this._viewport.zoom);
     }
 
-    private scheduleSavePreferences(space: number, offset: Point, zoom: number) {
+    private scheduleSavePreferences(space: Space, offset: Point, zoom: number) {
         setTimeout(
             () => {
-                if (this.space != space || !this._viewport.offset.equals(offset) || this._viewport.zoom != zoom) {
+                if (this.space?.id != space?.id || !this._viewport.offset.equals(offset) || this._viewport.zoom != zoom) {
                     let toSave = {
                         space: this.space,
                         offset: this._viewport.offset,
@@ -60,13 +62,13 @@ export class ViewerService {
     load(): Observable<void> {
         return this.http.get<any>(environment.apiUrl + '/preferences')
             .pipe(tap(result => {
-                this._space = result.space;
+                this._space = plainToClass(Space, result.space);
                 this._viewport.offset = new Point(result.offset.x, result.offset.y);
                 this._viewport.zoom = result.zoom;
             }));
     }
 
-    get space(): number {
+    get space(): Space {
         return this._space;
     }
 

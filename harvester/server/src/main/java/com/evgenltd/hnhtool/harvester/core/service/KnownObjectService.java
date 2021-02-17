@@ -39,16 +39,14 @@ public class KnownObjectService {
         this.areaRepository = areaRepository;
     }
 
-    public Long loadCharacterObjectId(final String characterName) {
-        final KnownObject characterObject = knownObjectRepository.findByResourceName(characterName)
+    public KnownObject loadCharacterObject(final String characterName) {
+        return knownObjectRepository.findByResourceName(characterName)
                 .orElseGet(() -> {
                     final Resource resource = resourceService.findByName(characterName);
                     final KnownObject player = new KnownObject();
                     player.setResource(resource);
                     return knownObjectRepository.save(player);
                 });
-
-        return characterObject.getId();
     }
 
     public void storeCharacter(final Long knownObjectId, final Long spaceId, final IntPoint characterPosition) {

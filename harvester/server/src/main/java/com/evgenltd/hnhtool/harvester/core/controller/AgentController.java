@@ -3,6 +3,7 @@ package com.evgenltd.hnhtool.harvester.core.controller;
 import com.evgenltd.hnhtool.harvester.core.entity.Agent;
 import com.evgenltd.hnhtool.harvester.core.repository.AgentRepository;
 import com.evgenltd.hnhtool.harvester.core.service.AgentService;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.util.Util;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.springframework.web.bind.annotation.*;
@@ -94,6 +95,11 @@ public class AgentController {
     @PostMapping("/{id}/logout")
     public void logout(@PathVariable final Long id) {
         agentService.logout(id);
+    }
+
+    @GetMapping("/{id}/position")
+    public IntPoint agentPosition(@PathVariable final Long id) {
+        return agentService.agentPosition(id);
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

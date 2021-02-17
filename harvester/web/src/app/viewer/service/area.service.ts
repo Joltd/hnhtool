@@ -43,7 +43,7 @@ export class AreaService {
 
     load() {
         let params = new HttpParams()
-            .set('space', this.viewerService.space.toString());
+            .set('space', this.viewerService.space.id.toString());
         this.http.get<any[]>(environment.apiUrl + '/area', {params})
             .pipe(map(result => result.map(entry => this.toAreaEntity(entry))))
             .subscribe(result => this._areas = result);
@@ -177,7 +177,7 @@ export class AreaService {
         let area = this._area.get(Area);
         let toSave = {
             id: area.id,
-            spaceId: this.viewerService.space,
+            spaceId: this.viewerService.space.id,
             from: {
                 x: area.from.value.x,
                 y: area.from.value.y

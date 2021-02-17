@@ -1,11 +1,13 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Agent;
+import com.evgenltd.hnhtool.harvester.core.entity.KnownObject;
 import com.evgenltd.hnhtool.harvester.core.repository.AgentRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
 import com.evgenltd.hnhtools.clientapp.widgets.CharListWidget;
 import com.evgenltd.hnhtools.common.ApplicationException;
+import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.messagebroker.MessageBroker;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,15 +37,18 @@ public class AgentService {
     private final ObjectMapper objectMapper;
     private final AgentRepository agentRepository;
     private final ObjectFactory<AgentContext> agentContextFactory;
+    private final KnownObjectService knownObjectService;
 
     public AgentService(
             final ObjectMapper objectMapper,
             final AgentRepository agentRepository,
-            final ObjectFactory<AgentContext> agentContextFactory
+            final ObjectFactory<AgentContext> agentContextFactory,
+            final KnownObjectService knownObjectService
     ) {
         this.objectMapper = objectMapper;
         this.agentRepository = agentRepository;
         this.agentContextFactory = agentContextFactory;
+        this.knownObjectService = knownObjectService;
     }
 
     @PostConstruct
@@ -279,6 +284,17 @@ public class AgentService {
                     .findFirst()
                     .orElse(null);
         }
+    }
+
+    public IntPoint agentPosition(final Long agentId) {
+        final Agent agent = agentRepository.findOne(agentId);
+        if (Arrays.asList(Agent.Status.NOT_AUTHENTICATED, Agent.Status.CHARACTER_NOT_SELECTED).contains(agent.getStatus())) {
+            return null;
+        }
+
+        final String character = agent.getCharacter();
+        final KnownObject knownObject = knownObjectService.loadCharacterObject(character);
+        return knownObject.getPosition();
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)

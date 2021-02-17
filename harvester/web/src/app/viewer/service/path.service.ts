@@ -154,11 +154,11 @@ export class PathService {
         let toSave = this._path.get(Path).edges.map(edge => {
             return {
                 from: {
-                    spaceId: this.viewerService.space,
+                    spaceId: this.viewerService.space.id,
                     position: edge.from.value
                 },
                 to: {
-                    spaceId: this.viewerService.space,
+                    spaceId: this.viewerService.space.id,
                     position: edge.to.value
                 }
             }

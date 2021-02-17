@@ -1,0 +1,12 @@
+<mat-card *ngFor="let agent of agents" class="agent">
+
+    <mat-icon class="icon">person</mat-icon>
+    <div class="username">{{agent.username}} ({{agent.character}})</div>
+    <div class="status">{{agent.status}}</div>
+
+    <div class="actions">
+        <button mat-icon-button (click)="moveToAgent(agent.id)"><mat-icon>room</mat-icon></button>
+        <button mat-icon-button><mat-icon>radar</mat-icon></button>
+    </div>
+
+</mat-card>

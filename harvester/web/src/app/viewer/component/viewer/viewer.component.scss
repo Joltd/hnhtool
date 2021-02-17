@@ -1,0 +1,41 @@
+:host {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr min-content;
+  grid-template-rows: min-content 1fr;
+  grid-template-areas:
+          "tb cp"
+          "vw cp";
+}
+
+.toolbar {
+  grid-area: tb;
+  padding: 4px;
+
+  .item {
+    padding-right: 4px;
+  }
+}
+
+.viewer {
+  grid-area: vw;
+  width: 100%;
+  height: 100%;
+}
+
+.control-panel {
+  grid-area: cp;
+  padding: 16px;
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content min-content;
+}
+
+.v-tooltip {
+  position: absolute;
+  display: grid;
+  grid-auto-flow: row;
+}

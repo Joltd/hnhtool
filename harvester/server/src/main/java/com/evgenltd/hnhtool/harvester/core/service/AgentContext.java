@@ -122,7 +122,7 @@ public class AgentContext implements AgentDeprecated {
 
         refreshState();
 
-        final Long characterObjectId = knownObjectService.loadCharacterObjectId(character.getCharacterName());
+        final Long characterObjectId = knownObjectService.loadCharacterObject(character.getCharacterName()).getId();
         character.setKnownObjectId(characterObjectId);
 
         final Long knownItemIdInHand = matchingService.researchHand(character.getKnownObjectId(), hand.getItem());

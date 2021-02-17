@@ -1,11 +1,12 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
-import com.evgenltd.hnhtool.harvester.core.entity.Space;
 import com.evgenltd.hnhtool.harvester.core.repository.SpaceRepository;
 import com.evgenltd.hnhtool.harvester.core.service.PreferencesService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/space")
@@ -23,13 +24,19 @@ public class SpaceController {
     }
 
     @GetMapping
-    public List<Space> list() {
-        return spaceRepository.findAll();
+    public List<SpaceRecord> list() {
+        return spaceRepository.findAll()
+                .stream()
+                .map(space -> new SpaceRecord(space.getId(), space.getName()))
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/current/{id}")
     public void switchToSpace(@PathVariable("id") final Long id, @RequestParam(value = "knownObjectId", required = false) final Long knownObjectId) {
         preferencesService.switchToSpace(id, knownObjectId);
     }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    record SpaceRecord(Long id, String name) {}
 
 }

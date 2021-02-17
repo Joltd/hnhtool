@@ -32,7 +32,7 @@ export class KnownObjectService {
     }
 
     load() {
-        let params = new HttpParams().set('space', this.viewerService.space.toString());
+        let params = new HttpParams().set('space', this.viewerService.space.id.toString());
         this.http.get<any[]>(environment.apiUrl + '/known-object', {params})
             .subscribe(result => {
                 for (let entry of result) {

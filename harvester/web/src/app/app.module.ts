@@ -9,6 +9,7 @@ import {CoreModule} from "./core/core.module";
 import {ErrorInterceptor} from "./core/error-hub/service/error-interceptor";
 import {AgentManagementModule} from "./agent-management/agent-management.module";
 import {ViewerModule} from "./viewer/viewer.module";
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import {ViewerModule} from "./viewer/viewer.module";
     CoreModule,
     ResourceManagementModule,
     AgentManagementModule,
-    ViewerModule
+    ViewerModule,
+    BrowserAnimationsModule
   ],
   providers: [
     {

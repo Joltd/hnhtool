@@ -27,9 +27,12 @@ public class PreferencesController {
     public PreferencesRecord get() {
         final Preferences preferences = preferencesService.get();
         final Space space = preferences.getSpace();
+        final SpaceController.SpaceRecord spaceRecord = space != null
+                ? new SpaceController.SpaceRecord(space.getId(), space.getName())
+                : null;
         return new PreferencesRecord(
                 preferences.getId(),
-                space != null ? space.getId() : null,
+                spaceRecord,
                 preferences.getOffset(),
                 preferences.getZoom()
         );
@@ -37,7 +40,7 @@ public class PreferencesController {
 
     @PostMapping
     public void update(@RequestBody final PreferencesRecord preferencesRecord) {
-        final Space space = spaceRepository.findOne(preferencesRecord.space());
+        final Space space = spaceRepository.findOne(preferencesRecord.space().id());
         preferencesService.update(
                 space,
                 preferencesRecord.offset(),
@@ -47,6 +50,6 @@ public class PreferencesController {
     }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    record PreferencesRecord(Long id, Long space, IntPoint offset, Integer zoom) {}
+    record PreferencesRecord(Long id, SpaceController.SpaceRecord space, IntPoint offset, Integer zoom) {}
 
 }

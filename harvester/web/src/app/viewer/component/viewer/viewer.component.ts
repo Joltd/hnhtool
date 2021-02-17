@@ -1,7 +1,7 @@
 import {Component, ElementRef, NgZone, OnInit, ViewChild} from "@angular/core";
-import {Point} from "../model/point";
-import {Entity} from "../model/entity";
-import {Box} from "../model/box";
+import {Point} from "../../model/point";
+import {Entity} from "../../model/entity";
+import {Box} from "../../model/box";
 import {
     Delta,
     Disabled,
@@ -12,16 +12,17 @@ import {
     Primitive,
     Selectable,
     Tooltip
-} from "../model/components";
-import {ViewerService} from "../service/viewer.service";
-import {RenderUtil} from "../service/render-util";
-import {Warehouse} from "../model/warehouse";
-import {WarehouseService} from "../service/warehouse.service";
-import {PathService} from "../service/path.service";
-import {Path} from "../model/path";
-import {KnownObjectService} from "../service/known-object.service";
-import {Area} from "../model/area";
-import {AreaService} from "../service/area.service";
+} from "../../model/components";
+import {ViewerService} from "../../service/viewer.service";
+import {RenderUtil} from "../../service/render-util";
+import {Warehouse} from "../../model/warehouse";
+import {WarehouseService} from "../../service/warehouse.service";
+import {PathService} from "../../service/path.service";
+import {Path} from "../../model/path";
+import {KnownObjectService} from "../../service/known-object.service";
+import {Area} from "../../model/area";
+import {AreaService} from "../../service/area.service";
+import {SpaceService} from "../../service/space.service";
 
 @Component({
     selector: 'viewer',
@@ -46,12 +47,14 @@ export class ViewerComponent implements OnInit {
         private knownObjectService: KnownObjectService,
         private warehouseService: WarehouseService,
         private pathService: PathService,
-        private areaService: AreaService
+        private areaService: AreaService,
+        public spaceService: SpaceService
     ) {}
 
     ngOnInit(): void {
         this.viewerService.load()
             .subscribe(() => {
+                this.spaceService.load()
                 // this.warehouseService.load();
                 this.areaService.load();
                 this.pathService.load();

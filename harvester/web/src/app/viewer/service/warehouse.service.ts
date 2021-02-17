@@ -53,7 +53,7 @@ export class WarehouseService {
 
     load() {
         let params = new HttpParams()
-            .set('space', this.viewerService.space.toString());
+            .set('space', this.viewerService.space.id.toString());
         this.http.get<any[]>(environment.apiUrl + '/warehouse', {params})
             .pipe(map(result => result.map(entry => this.toWarehouseEntity(entry))))
             .subscribe(result => this._warehouses = result);
@@ -185,7 +185,7 @@ export class WarehouseService {
         warehouse.cells = [];
         let toSave = {
             id: warehouse.id,
-            spaceId: this.viewerService.space,
+            spaceId: this.viewerService.space.id,
             cells: []
         };
 
