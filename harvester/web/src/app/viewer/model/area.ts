@@ -4,6 +4,7 @@ import {Point} from "./point";
 
 export class Area {
     private _id: number;
+    private _name: string;
     private _from: Position = new Position();
     private _to: Position = new Position();
 
@@ -12,6 +13,13 @@ export class Area {
     }
     set id(value: number) {
         this._id = value;
+    }
+
+    get name(): string {
+        return this._name;
+    }
+    set name(value: string) {
+        this._name = value;
     }
 
     get from(): Position {

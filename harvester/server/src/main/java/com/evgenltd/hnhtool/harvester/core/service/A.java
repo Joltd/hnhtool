@@ -117,100 +117,104 @@ public class A {
     // #                                                #
     // ##################################################
 
-    private static AgentContext getAgent() {
+    public static AgentContext getAgentContext() {
         return context.get().getAgentContext();
     }
 
+    public static Task getTask() {
+        return context.get().getTask();
+    }
+
     private static Storekeeper getStorekeeper() {
-        return getAgent().getStorekeeper();
+        return getAgentContext().getStorekeeper();
     }
 
     public static Character.Record getCharacter() {
-        return getAgent().getCharacter();
+        return getAgentContext().getCharacter();
     }
 
     public static Heap.Record getHeap() {
-        return getAgent().getHeap();
+        return getAgentContext().getHeap();
     }
 
     public static Hand.Record getHand() {
-        return getAgent().getHand();
+        return getAgentContext().getHand();
     }
 
     public static Long getCurrentSpace() {
-        return getAgent().getCurrentSpace();
+        return getAgentContext().getCurrentSpace();
     }
 
     public static void await(Supplier<Boolean> condition) {
-        getAgent().await(condition);
+        getAgentContext().await(condition);
     }
 
     public static void move(IntPoint position) {
-        getAgent().move(position);
+        getAgentContext().move(position);
     }
 
     public static void moveByRoute(IntPoint position) {
-        getAgent().moveByRoute(position);
+        getAgentContext().moveByRoute(position);
     }
 
     public static void openContainer(KnownObject knownObject) {
-        getAgent().openContainer(knownObject);
+        getAgentContext().openContainer(knownObject);
     }
 
     public static boolean openHeap(Long knownObjectId) {
-        return getAgent().openHeap(knownObjectId);
+        return getAgentContext().openHeap(knownObjectId);
     }
 
     public static void takeItemInHandFromWorld(KnownObject knownItem) {
-        getAgent().takeItemInHandFromWorld(knownItem);
+        getAgentContext().takeItemInHandFromWorld(knownItem);
     }
 
     public static void takeItemInHandFromInventory(Long knownItemId) {
-        getAgent().takeItemInHandFromInventory(knownItemId);
+        getAgentContext().takeItemInHandFromInventory(knownItemId);
     }
 
     public static boolean takeItemInHandFromCurrentHeap() {
-        return getAgent().takeItemInHandFromCurrentHeap();
+        return getAgentContext().takeItemInHandFromCurrentHeap();
     }
 
     public static Long dropItemFromHandInInventory(AgentContext.InventoryType type) {
-        return getAgent().dropItemFromHandInInventory(type);
+        return getAgentContext().dropItemFromHandInInventory(type);
     }
 
     public static void dropItemFromHandInCurrentHeap() {
-        getAgent().dropItemFromHandInCurrentHeap();
+        getAgentContext().dropItemFromHandInCurrentHeap();
     }
 
     public static void dropItemFromHandInCurrentHeapOrPlaceHeap(IntPoint position) {
-        getAgent().dropItemFromHandInCurrentHeapOrPlaceHeap(position);
+        getAgentContext().dropItemFromHandInCurrentHeapOrPlaceHeap(position);
     }
 
     public static void dropItemFromHandInWorld() {
-        getAgent().dropItemFromHandInWorld();
+        getAgentContext().dropItemFromHandInWorld();
     }
 
     public static void dropItemFromHandInEquip(Integer position) {
-        getAgent().dropItemFromHandInEquip(position);
+        getAgentContext().dropItemFromHandInEquip(position);
     }
 
     public static void applyItemInHandOnObject(Long knownObjectId) {
-        getAgent().applyItemInHandOnObject(knownObjectId);
+        getAgentContext().applyItemInHandOnObject(knownObjectId);
     }
 
     public static void applyItemInHandOnItem(Long knownItemId) {
-        getAgent().applyItemInHandOnItem(knownItemId);
+        getAgentContext().applyItemInHandOnItem(knownItemId);
     }
 
     public static void closeCurrentInventory() {
-        getAgent().closeCurrentInventory();
+        getAgentContext().closeCurrentInventory();
     }
 
     public static KnownObject placeHeap(IntPoint position) {
-        return getAgent().placeHeap(position);
+        return getAgentContext().placeHeap(position);
     }
 
     public static void scan() {
-        getAgent().scan();
+        getAgentContext().scan();
     }
 
     public static boolean store(final Long areaId, final Long itemId) {

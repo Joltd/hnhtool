@@ -1,0 +1,34 @@
+<mat-spinner *ngIf="dataSource.loading | async"></mat-spinner>
+
+<mat-table
+        [dataSource]="dataSource"
+        matSort
+        matSortActive="id"
+        matSortDirection="desc"
+        class="mat-elevation-z8">
+
+    <ng-container matColumnDef="id">
+        <mat-header-cell mat-sort-header *matHeaderCellDef>Id</mat-header-cell>
+        <mat-cell *matCellDef="let item">{{item.id}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+        <mat-header-cell mat-sort-header *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let item">{{item.name}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="type">
+        <mat-header-cell mat-sort-header *matHeaderCellDef>Type</mat-header-cell>
+        <mat-cell *matCellDef="let item">{{item.type}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="enabled">
+        <mat-header-cell *matHeaderCellDef>Enabled</mat-header-cell>
+        <mat-cell *matCellDef="let item">
+            <mat-slide-toggle [(ngModel)]="item.enabled"></mat-slide-toggle>
+        </mat-cell>
+    </ng-container>
+
+</mat-table>
+
+<mat-paginator [length]="dataSource.total | async" [pageSize]="10"></mat-paginator>

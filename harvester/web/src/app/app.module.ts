@@ -10,6 +10,8 @@ import {ErrorInterceptor} from "./core/error-hub/service/error-interceptor";
 import {AgentManagementModule} from "./agent-management/agent-management.module";
 import {ViewerModule} from "./viewer/viewer.module";
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {TaskManagementModule} from "./task-management/task-management.module";
+import {JobManagementModule} from "./job-management/job-management.module";
 
 @NgModule({
   declarations: [
@@ -23,7 +25,9 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
     ResourceManagementModule,
     AgentManagementModule,
     ViewerModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    TaskManagementModule,
+    JobManagementModule
   ],
   providers: [
     {

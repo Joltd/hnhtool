@@ -8,6 +8,8 @@ import {map} from "rxjs/operators";
 import {Area} from "../model/area";
 import {Point} from "../model/point";
 import {Disabled, FollowCursor, Hoverable, Movement, Position, Selectable} from "../model/components";
+import {MatDialog} from "@angular/material/dialog";
+import {AreaEditComponent} from "../component/area-edit/area-edit.component";
 
 @Injectable()
 export class AreaService {
@@ -20,7 +22,8 @@ export class AreaService {
 
     constructor(
         private http: HttpClient,
-        private viewerService: ViewerService
+        private viewerService: ViewerService,
+        private dialog: MatDialog
     ) {
         this.viewerService.onModeChanged.subscribe(mode => {
             if (mode == 'COMMON') {
@@ -34,6 +37,7 @@ export class AreaService {
                 ]
             } else if (mode == 'AREA_EDIT') {
                 this.viewerService.commands = [
+                    new Command('title', () => this.name()),
                     new Command('done', () => this.apply()),
                     new Command('close', () => this.cancel())
                 ];
@@ -54,6 +58,7 @@ export class AreaService {
         this._areas.push(entity);
         let area = entity.add(new Area());
         area.id = entry.id;
+        area.name = entry.name;
         area.from.value = new Point(entry.from.x, entry.from.y);
         area.to.value = new Point(entry.to.x, entry.to.y);
         return entity;
@@ -172,12 +177,19 @@ export class AreaService {
         this._areas = newAreas;
     }
 
+    name() {
+        let area = this._area.get(Area);
+        let dialogRef = this.dialog.open(AreaEditComponent, {data: area.name});
+        dialogRef.afterClosed().subscribe(result => area.name = result);
+    }
+
     apply() {
 
         let area = this._area.get(Area);
         let toSave = {
             id: area.id,
             spaceId: this.viewerService.space.id,
+            name: area.name,
             from: {
                 x: area.from.value.x,
                 y: area.from.value.y
@@ -211,6 +223,9 @@ export class AreaService {
         this._from = null;
         this._to = null;
         this._area = null;
+        for (let entity of this.viewerService.entities) {
+            entity.remove(Disabled);
+        }
         this.viewerService.mode = 'AREA';
     }
 

@@ -25,11 +25,18 @@ public class AreaController {
     }
 
     @GetMapping
-    public List<AreaRecord> list(@RequestParam("space") final Long spaceId) {
-        return areaRepository.findBySpaceId(spaceId)
-                .stream()
-                .map(this::toRecord)
-                .collect(Collectors.toList());
+    public List<AreaRecord> list(@RequestParam(value = "space", required = false) final Long spaceId) {
+        if (spaceId == null) {
+            return areaRepository.findAll()
+                    .stream()
+                    .map(this::toRecord)
+                    .collect(Collectors.toList());
+        } else {
+            return areaRepository.findBySpaceId(spaceId)
+                    .stream()
+                    .map(this::toRecord)
+                    .collect(Collectors.toList());
+        }
     }
 
     @PostMapping
@@ -46,6 +53,7 @@ public class AreaController {
     private AreaRecord toRecord(final Area area) {
         return new AreaRecord(
                 area.getId(),
+                area.getName(),
                 area.getSpace().getId(),
                 area.getFrom(),
                 area.getTo()

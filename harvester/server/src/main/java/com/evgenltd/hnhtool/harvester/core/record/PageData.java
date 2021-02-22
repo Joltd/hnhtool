@@ -1,8 +1,8 @@
 package com.evgenltd.hnhtool.harvester.core.record;
 
-import com.evgenltd.hnhtools.entity.IntPoint;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
+import java.util.List;
+
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public final record AreaRecord(Long id, String name, Long spaceId, IntPoint from, IntPoint to) {
-}
+public record PageData<T>(List<T> data, long total) {}

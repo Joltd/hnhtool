@@ -73,6 +73,10 @@ public class Agent {
         this.accident = accident;
     }
 
+    public String asString() {
+        return String.format("%s (%s)", getUsername(), getCharacter());
+    }
+
     public enum Status {
         OFFLINE,
         IDLE,

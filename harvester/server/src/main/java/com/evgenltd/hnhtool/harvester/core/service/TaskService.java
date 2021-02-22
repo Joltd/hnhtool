@@ -1,7 +1,10 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Agent;
+import com.evgenltd.hnhtool.harvester.core.entity.Job;
 import com.evgenltd.hnhtool.harvester.core.entity.Task;
+import com.evgenltd.hnhtool.harvester.core.record.PageData;
+import com.evgenltd.hnhtool.harvester.core.record.TaskRecord;
 import com.evgenltd.hnhtool.harvester.core.repository.TaskRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +12,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -18,9 +24,12 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -57,7 +66,22 @@ public class TaskService {
                 });
     }
 
-//    @Scheduled(cron = "0 * * * * *")
+    public PageData<TaskRecord> listPageable(final PageRequest pageRequest) {
+        final Page<Task> result = taskRepository.findAll(pageRequest);
+        final List<TaskRecord> data = result.get()
+                .map(task -> new TaskRecord(
+                        task.getId(),
+                        task.getActual(),
+                        task.getStatus(),
+                        Optional.ofNullable(task.getAgent())
+                                .map(Agent::getUsername)
+                                .orElse(null)
+                ))
+                .collect(Collectors.toList());
+        return new PageData<>(data, result.getTotalElements());
+    }
+
+    @Scheduled(cron = "0 * * * * *")
     public void taskHandler() {
         final List<Task> tasks = taskRepository.findByStatusOrderByActualDesc(Task.Status.NEW);
         for (final Task task : tasks) {
@@ -108,13 +132,45 @@ public class TaskService {
         }
     }
 
-//    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(cron = "*/5 * * * * *")
     public void flushLogs() {
         A.logsForFlush(this::logAsString)
                 .forEach((taskId, log) -> {
                     final Task task = taskRepository.findOne(taskId);
                     saveLogToTask(task, log);
                 });
+    }
+
+    public void schedule(final String script) {
+        final Task task = new Task();
+        task.setActual(LocalDateTime.now());
+        task.setScript(script);
+        task.setStatus(Task.Status.NEW);
+        taskRepository.save(task);
+    }
+
+    public String loadLog(final Long id) {
+        try {
+            return String.join("\n", Files.readAllLines(Paths.get(id.toString() + ".json")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Task createTask(final Job job, final String script, final Agent agent) {
+        final Task task = new Task();
+        task.setStatus(Task.Status.NEW);
+        task.setActual(LocalDateTime.now());
+        task.setJob(job);
+        task.setScript(script);
+        task.setAgent(agent);
+        return taskRepository.save(task);
+    }
+
+    public boolean hasActualTaskForJob(final Job job) {
+        return taskRepository.findByJobId(job.getId())
+                .stream()
+                .anyMatch(task -> !task.getStatus().isTerminated());
     }
 
     private String logAsString(final Object logObject) {
@@ -136,8 +192,6 @@ public class TaskService {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
-//        task.setLog(log);
-//        taskRepository.save(task);
     }
 
     private void assignTask(final Task task, final Agent agent) {
@@ -145,7 +199,7 @@ public class TaskService {
         taskRepository.save(task);
     }
 
-    private void failTask(final Task task, final String failReason) {
+    public void failTask(final Task task, final String failReason) {
         task.setFailReason(failReason);
         updateTaskStatus(task, Task.Status.FAILED);
     }

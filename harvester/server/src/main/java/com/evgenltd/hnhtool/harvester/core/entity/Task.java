@@ -2,6 +2,7 @@ package com.evgenltd.hnhtool.harvester.core.entity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @Entity
 @Table(name = "tasks")
@@ -10,6 +11,10 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
 
     @ManyToOne
     @JoinColumn(name = "agent_id")
@@ -38,6 +43,13 @@ public class Task {
     }
     public void setAgent(final Agent agent) {
         this.agent = agent;
+    }
+
+    public Job getJob() {
+        return job;
+    }
+    public void setJob(final Job job) {
+        this.job = job;
     }
 
     public LocalDateTime getActual() {
@@ -79,7 +91,11 @@ public class Task {
         NEW,
         IN_PROGRESS,
         DONE,
-        FAILED
+        FAILED;
+
+        public boolean isTerminated() {
+            return Arrays.asList(DONE, FAILED).contains(this);
+        }
     }
 
 }

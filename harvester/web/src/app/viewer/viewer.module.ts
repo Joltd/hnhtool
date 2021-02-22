@@ -14,11 +14,16 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatButtonModule} from "@angular/material/button";
 import {AgentListComponent} from "./component/agent-list/agent-list.component";
 import {MatCardModule} from "@angular/material/card";
+import {AreaEditComponent} from "./component/area-edit/area-edit.component";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatInputModule} from "@angular/material/input";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
     declarations: [
         ViewerComponent,
-        AgentListComponent
+        AgentListComponent,
+        AreaEditComponent
     ],
     exports: [ViewerComponent],
     imports: [
@@ -28,7 +33,10 @@ import {MatCardModule} from "@angular/material/card";
         MatSelectModule,
         MatIconModule,
         MatButtonModule,
-        MatCardModule
+        MatCardModule,
+        MatDialogModule,
+        MatInputModule,
+        FormsModule
     ],
     providers: [
         ViewerService,

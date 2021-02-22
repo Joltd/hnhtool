@@ -1,0 +1,79 @@
+:host {
+  width: 100%;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: min-content 1fr min-content;
+  grid-template-areas:
+          "toolbar toolbar"
+          "table tree"
+          "paginator tree";
+}
+
+.toolbar {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: min-content 1fr min-content;
+  grid-template-rows: min-content;
+  grid-area: toolbar;
+  margin-bottom: 16px;
+  align-items: center;
+
+  .spacing {
+    margin-right: 16px;
+  }
+
+  button {
+    height: 36px;
+  }
+}
+
+table {
+  width: 100%;
+  grid-area: table;
+}
+
+mat-paginator {
+  grid-area: paginator;
+  margin-top: 20px;
+}
+
+.log-tree-container {
+  grid-area: tree;
+}
+
+.log-tree {
+  margin-left: 16px;
+  width: 60vw;
+}
+
+mat-list {
+  padding-top: 0;
+}
+
+mat-list mat-list {
+  padding-left: 40px;
+}
+
+.node {
+  width: 100%;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 1fr min-content;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+mat-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.info-severity {
+  background-color: #9ccc65;
+}
+
+.error-severity {
+  background-color: #ef5350;
+}

@@ -16,4 +16,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByStatusOrderByActualDesc(Task.Status status);
 
+    List<Task> findByJobId(Long jobId);
+
 }

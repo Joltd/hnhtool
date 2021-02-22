@@ -1,0 +1,1 @@
+alter table areas add name varchar(255);

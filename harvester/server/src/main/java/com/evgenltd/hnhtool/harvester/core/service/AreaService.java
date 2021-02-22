@@ -73,6 +73,7 @@ public class AreaService {
                 : new Area();
 
         final Space space = spaceRepository.findOne(areaRecord.spaceId());
+        area.setName(areaRecord.name());
         area.setSpace(space);
         area.setFrom(new IntPoint(
                 Math.min(areaRecord.from().getX(), areaRecord.to().getX()),
