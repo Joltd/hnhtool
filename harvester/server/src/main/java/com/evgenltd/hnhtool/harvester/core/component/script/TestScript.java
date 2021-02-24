@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.component.script;
 
 import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
+import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtool.harvester.core.service.A;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -25,7 +26,19 @@ public class TestScript {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        A.await(() -> {
+            final Character.Record character = A.getCharacter();
+            return !character.attributes().isEmpty();
+        });
+        final Character.Record character = A.getCharacter();
+        character.attributes()
+                .stream()
+                .filter(attribute -> attribute.name().equals("int"))
+                .findFirst()
+                .ifPresent(System.out::println);
         System.out.println();
+
 
 //        A.takeItemsInInventoryFromHeap(5440L, Agent.InventoryType.MAIN);
 //        A.takeItemInMainInventoryFromHeap(5440L);

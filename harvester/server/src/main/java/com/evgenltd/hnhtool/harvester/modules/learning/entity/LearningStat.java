@@ -15,7 +15,9 @@ public class LearningStat {
 
     private LocalDateTime date;
 
-    private String agent;
+    @ManyToOne
+    @JoinColumn(name = "learning_id")
+    private Learning learning;
 
     @ManyToOne
     @JoinColumn(name = "task_id")
@@ -43,12 +45,12 @@ public class LearningStat {
         this.date = date;
     }
 
-    public String getAgent() {
-        return agent;
+    public Learning getLearning() {
+        return learning;
     }
 
-    public void setAgent(final String agent) {
-        this.agent = agent;
+    public void setLearning(final Learning learning) {
+        this.learning = learning;
     }
 
     public Task getTask() {

@@ -1,0 +1,49 @@
+:host {
+  padding: 16px;
+  display: grid;
+  grid-template-rows: min-content 1fr min-content;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+          "toolbar view"
+          "table view"
+          "paginator view";
+}
+
+mat-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.toolbar {
+  margin-bottom: 16px;
+  grid-area: toolbar;
+
+  button {
+    height: 36px;
+  }
+}
+
+.mat-table {
+  grid-area: table;
+}
+
+.mat-column-id {
+  max-width: 128px;
+}
+
+.mat-column-remove {
+  max-width: 128px;
+  justify-content: flex-end;
+}
+
+.mat-paginator {
+  grid-area: paginator;
+  margin-top: 20px;
+}
+
+.view {
+  grid-area: view;
+  display: grid;
+  margin-left: 16px;
+}

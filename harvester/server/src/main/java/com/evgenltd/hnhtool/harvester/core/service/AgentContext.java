@@ -1,6 +1,5 @@
 package com.evgenltd.hnhtool.harvester.core.service;
 
-import com.evgenltd.hnhtool.harvester.core.AgentDeprecated;
 import com.evgenltd.hnhtool.harvester.core.aspect.AgentCommand;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Character;
 import com.evgenltd.hnhtool.harvester.core.component.agent.Hand;
@@ -17,10 +16,7 @@ import com.evgenltd.hnhtool.harvester.core.repository.KnownObjectRepository;
 import com.evgenltd.hnhtools.clientapp.ClientApp;
 import com.evgenltd.hnhtools.clientapp.ClientAppFactory;
 import com.evgenltd.hnhtools.clientapp.Prop;
-import com.evgenltd.hnhtools.clientapp.widgets.InventoryWidget;
-import com.evgenltd.hnhtools.clientapp.widgets.ItemWidget;
-import com.evgenltd.hnhtools.clientapp.widgets.StoreBoxWidget;
-import com.evgenltd.hnhtools.clientapp.widgets.Widget;
+import com.evgenltd.hnhtools.clientapp.widgets.*;
 import com.evgenltd.hnhtools.common.ApplicationException;
 import com.evgenltd.hnhtools.entity.IntPoint;
 import com.evgenltd.hnhtools.messagebroker.MessageBroker;
@@ -40,7 +36,7 @@ import java.util.stream.Collectors;
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Transactional
-public class AgentContext implements AgentDeprecated {
+public class AgentContext {
 
     private static final long DEFAULT_TIMEOUT = 60_000L;
 
@@ -167,7 +163,6 @@ public class AgentContext implements AgentDeprecated {
     // #                                                #
     // ##################################################
 
-    @Override
     public Character.Record getCharacter() {
         return character.toRecord(worldPoint.getPosition());
     }
@@ -176,17 +171,18 @@ public class AgentContext implements AgentDeprecated {
         return character.getProp().getPosition().add(worldPoint.getPosition());
     }
 
-    @Override
+    public void getCharacterAttributes() {
+
+    }
+
     public Heap.Record getHeap() {
         return currentHeap.toRecord();
     }
 
-    @Override
     public Hand.Record getHand() {
         return hand.toRecord();
     }
 
-    @Override
     public Long getCurrentSpace() {
         return worldPoint.getSpaceId();
     }
@@ -197,12 +193,10 @@ public class AgentContext implements AgentDeprecated {
     // #                                                #
     // ##################################################
 
-    @Override
     public void await(final Supplier<Boolean> condition) {
         await(condition, DEFAULT_TIMEOUT);
     }
 
-    @Override
     public void await(final Supplier<Boolean> condition, final long timeout) {
         clientApp.await(() -> {
             refreshState();
@@ -218,7 +212,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void move(final IntPoint position) {
         refreshState();
         final IntPoint newPosition = position.sub(worldPoint.getPosition());
@@ -236,7 +229,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void moveByRoute(final IntPoint position) {
         final List<RoutingService.Node> route = routingService.route(
                 WorldPoint.of(worldPoint.getSpaceId(), getCharacterPosition()),
@@ -250,7 +242,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void openContainer(final KnownObject knownObject) {
         refreshState();
         forClose.forEach(this::closeWidget);
@@ -287,7 +278,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public boolean openHeap(final Long knownObjectId) {
         refreshState();
         forClose.forEach(this::closeWidget);
@@ -329,7 +319,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void takeItemInHandFromWorld(final KnownObject knownItem) {
         hand.checkEmpty();
         refreshState();
@@ -372,7 +361,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void takeItemInHandFromInventory(final Long knownItemId) {
         hand.checkEmpty();
         refreshState();
@@ -396,7 +384,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public boolean takeItemInHandFromCurrentHeap() {
         refreshState();
         hand.checkEmpty();
@@ -454,7 +441,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public Long dropItemFromHandInInventory(final InventoryType type) {
         return switch (type) {
             case CURRENT -> dropItemFromHandInInventory(currentInventory, null);
@@ -514,7 +500,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void dropItemFromHandInCurrentHeap() {
         refreshState();
         final StoreBoxWidget storeBox = currentHeap.getStoreBoxOrThrow();
@@ -539,7 +524,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void dropItemFromHandInCurrentHeapOrPlaceHeap(final IntPoint position) {
         refreshState();
         if (currentHeap.isOpened()) {
@@ -550,7 +534,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void dropItemFromHandInWorld() {
         refreshState();
         final ItemWidget itemInHand = hand.getItemOrThrow();
@@ -585,7 +568,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public void dropItemFromHandInEquip(final Integer position) {
         refreshState();
     }
@@ -597,19 +579,16 @@ public class AgentContext implements AgentDeprecated {
 //    private void transferItemFromCurrentHeap() {}
 
     @AgentCommand
-    @Override
     public void applyItemInHandOnObject(final Long knownObjectId) {
         refreshState();
     }
 
     @AgentCommand
-    @Override
     public void applyItemInHandOnItem(final Long knownItemId) {
         refreshState();
     }
 
     @AgentCommand
-    @Override
     public void closeCurrentInventory() {
         refreshState();
         clientApp.sendWidgetCommand(currentInventory.getWidget().getId(), CLOSE_COMMAND);
@@ -627,7 +606,6 @@ public class AgentContext implements AgentDeprecated {
     }
 
     @AgentCommand
-    @Override
     public KnownObject placeHeap(final IntPoint position) {
         refreshState();
 
@@ -703,6 +681,7 @@ public class AgentContext implements AgentDeprecated {
                 case "inv" -> prepareInventory((InventoryWidget) widget);
                 case "item" -> prepareItem((ItemWidget) widget);
                 case "isbox" -> prepareHeap((StoreBoxWidget) widget);
+                case "chr" -> prepareCharacter((CharacterWidget) widget);
             }
         }
     }
@@ -781,6 +760,15 @@ public class AgentContext implements AgentDeprecated {
         }
     }
 
+    private void prepareCharacter(final CharacterWidget widget) {
+        character.setLearningPoints(widget.getLearningPoints());
+        character.setExperiencePoints(widget.getExperiencePoints());
+        widget.getAttributes()
+                .stream()
+                .map(attribute -> new Character.Attribute(attribute.name(), attribute.base(), attribute.complex()))
+                .forEach(attribute -> character.getAttributes().add(attribute));
+    }
+
     // ##################################################
     // #                                                #
     // #  Scan                                          #
@@ -788,7 +776,6 @@ public class AgentContext implements AgentDeprecated {
     // ##################################################
 
     @AgentCommand
-    @Override
     public void scan() {
         worldPoint = matchingService.researchObjects(new ArrayList<>(propIndex.values()), r -> true);
         knownObjectService.storeCharacter(character.getKnownObjectId(), worldPoint.getSpaceId(), getCharacterPosition());

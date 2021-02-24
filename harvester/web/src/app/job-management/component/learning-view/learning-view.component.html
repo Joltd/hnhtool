@@ -1,0 +1,74 @@
+<div class="form mat-elevation-z8">
+    <h1>Learning</h1>
+    <mat-form-field>
+        <mat-label>Agent</mat-label>
+        <mat-select [(ngModel)]="learning.agent">
+            <mat-option *ngFor="let agent of agents" [value]="agent.id">{{agent.name}}</mat-option>
+        </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Area</mat-label>
+        <mat-select [(ngModel)]="learning.area">
+            <mat-option *ngFor="let area of areas" [value]="area.id">{{area.name}}</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <button mat-button (click)="save()">Save</button>
+</div>
+
+<div class="stat">
+
+    <mat-spinner *ngIf="dataSource.loading | async"></mat-spinner>
+
+    <mat-table
+            [dataSource]="dataSource"
+            matSort
+            matSortActive="id"
+            matSortDirection="desc"
+            class="mat-elevation-z8">
+
+        <ng-container matColumnDef="id">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Id</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.id}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Date</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.date}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="agent">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Agent</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.agent}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="learningPoints">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Learning points</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.learningPoints}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="experiencePoints">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Experience points</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.experiencePoints}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="mentalWeights">
+            <mat-header-cell mat-sort-header *matHeaderCellDef>Mental weights</mat-header-cell>
+            <mat-cell *matCellDef="let item">{{item.mentalWeights}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="task">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let item">
+                <button mat-button><mat-icon>task</mat-icon></button>
+            </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="showingColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: showingColumns"></mat-row>
+
+    </mat-table>
+
+    <mat-paginator [length]="dataSource.total | async" [pageSize]="10"></mat-paginator>
+
+</div>

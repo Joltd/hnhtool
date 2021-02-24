@@ -11,7 +11,6 @@ import com.evgenltd.hnhtool.harvester.modules.learning.reposityory.LearningStatR
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class LearningScript {
@@ -34,17 +33,13 @@ public class LearningScript {
         final Task task = A.getTask();
         final Agent agent = A.getAgentContext().getAgent();
 
+        final Learning learning = (Learning) task.getJob();
+
         final LearningStat learningStat = new LearningStat();
+        learningStat.setLearning(learning);
         learningStat.setDate(LocalDateTime.now());
-        learningStat.setAgent(agent.asString());
         learningStat.setTask(task);
         learningStatRepository.save(learningStat);
-
-        final Optional<Learning> learning = learningRepository.findByJobId(task.getJob().getId());
-        if (learning.isEmpty()) {
-            taskService.failTask(task, "Task is not actual for learning");
-            return;
-        }
 
 
 

@@ -1,6 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.controller;
 
 import com.evgenltd.hnhtool.harvester.core.entity.Agent;
+import com.evgenltd.hnhtool.harvester.core.record.AgentRecord;
 import com.evgenltd.hnhtool.harvester.core.repository.AgentRepository;
 import com.evgenltd.hnhtool.harvester.core.service.AgentService;
 import com.evgenltd.hnhtools.entity.IntPoint;
@@ -30,28 +31,14 @@ public class AgentController {
     public List<AgentRecord> list() {
         return agentRepository.findAll()
                 .stream()
-                .map(agent -> new AgentRecord(
-                        agent.getId(),
-                        agent.getUsername(),
-                        agent.getCharacter(),
-                        agent.getStatus(),
-                        agent.isAccident(),
-                        agent.isEnabled()
-                ))
+                .map(AgentRecord::of)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public AgentRecord byId(@PathVariable final Long id) {
         final Agent agent = agentRepository.findOne(id);
-        return new AgentRecord(
-                agent.getId(),
-                agent.getUsername(),
-                agent.getCharacter(),
-                agent.getStatus(),
-                agent.isAccident(),
-                agent.isEnabled()
-        );
+        return AgentRecord.of(agent);
     }
 
     @PostMapping
@@ -104,15 +91,5 @@ public class AgentController {
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     public record AgentAuthenticationRecord(Long id, String username, String password) {}
-
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    public record AgentRecord(
-            Long id,
-            String username,
-            String character,
-            Agent.Status status,
-            boolean accident,
-            boolean enabled
-    ) {}
 
 }

@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "jobs")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Job {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)

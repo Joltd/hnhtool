@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -69,14 +69,7 @@ public class TaskService {
     public PageData<TaskRecord> listPageable(final PageRequest pageRequest) {
         final Page<Task> result = taskRepository.findAll(pageRequest);
         final List<TaskRecord> data = result.get()
-                .map(task -> new TaskRecord(
-                        task.getId(),
-                        task.getActual(),
-                        task.getStatus(),
-                        Optional.ofNullable(task.getAgent())
-                                .map(Agent::getUsername)
-                                .orElse(null)
-                ))
+                .map(TaskRecord::of)
                 .collect(Collectors.toList());
         return new PageData<>(data, result.getTotalElements());
     }
@@ -152,6 +145,9 @@ public class TaskService {
     public String loadLog(final Long id) {
         try {
             return String.join("\n", Files.readAllLines(Paths.get(id.toString() + ".json")));
+        } catch (NoSuchFileException e) {
+            log.warn("File [{}.json] not found", id);
+            return "{}";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -188,7 +184,7 @@ public class TaskService {
 
     private void saveLogToTask(final Task task, final String log) {
         try {
-            Files.writeString(Paths.get(task.getId().toString() + ".json"), log, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+            Files.writeString(Paths.get(task.getId().toString() + ".json"), log, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }

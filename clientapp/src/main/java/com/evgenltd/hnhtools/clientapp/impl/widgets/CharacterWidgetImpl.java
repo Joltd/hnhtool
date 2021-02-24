@@ -42,6 +42,21 @@ public final class CharacterWidgetImpl extends WidgetImpl implements CharacterWi
     }
 
     @Override
+    public Integer getLearningPoints() {
+        return learningPoints;
+    }
+
+    @Override
+    public Integer getExperiencePoints() {
+        return experiencePoints;
+    }
+
+    @Override
+    public List<Attribute> getAttributes() {
+        return attributes;
+    }
+
+    @Override
     public void handleMessage(final WidgetState.RelAccessor message) {
         switch (message.getWidgetMessageName()) {
             case EXP_NAME -> learningPoints = JsonUtil.asInt(message.getArgs().get(0));

@@ -1,0 +1,30 @@
+:host {
+  width: 60vw;
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-rows: min-content 1fr;
+}
+
+.form {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: min-content;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-rows: 1fr min-content;
+}
+
+.mat-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.mat-paginator {
+  margin-top: 20px;
+}

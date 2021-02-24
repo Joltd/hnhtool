@@ -1,5 +1,7 @@
 package com.evgenltd.hnhtool.harvester.core.entity;
 
+import com.evgenltd.hnhtools.common.Assert;
+
 import javax.persistence.*;
 
 @Entity
@@ -29,6 +31,16 @@ public class Agent {
     }
     public void setId(final Long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        if (Assert.isEmpty(getUsername())) {
+            return "None";
+        } else if (Assert.isEmpty(getCharacter())) {
+            return getUsername();
+        } else {
+            return String.format("%s (%s)", getUsername(), getCharacter());
+        }
     }
 
     public String getUsername() {
